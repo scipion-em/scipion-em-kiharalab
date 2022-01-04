@@ -93,17 +93,22 @@ class ProtDAQValidation(EMProtocol):
         else:
             shutil.copy(self.getStructFile(), pdbFile)
 
+        #Renaming volume to add protocol ID (results saved in different directory in DAQ repo)
+        localVolumeFile = self.getLocalVolumeFile()
+        shutil.copy(self.getVolumeFile(), localVolumeFile)
+
+
     def DAQStep(self):
         args = self.getDAQArgs()
         Plugin.runDAQ(self, args=args, outDir=self._getExtraPath('predictions'))
 
     def createOutputStep(self):
-        outDir = self._getExtraPath('predictions/{}'.format(self.getVolumeName()))
+        outDir = self._getExtraPath('predictions')
         outStruct = self._getPath(self.getStructName() + '_dqa.pdb')
-        outVolume = self._getPath(self.getStructName() + '_dqa.mrc')
+        #outVolume = self._getPath(self.getStructName() + '_dqa.mrc')
 
         shutil.copy(os.path.join(outDir, 'dqa_score_w9.pdb'), outStruct)
-        shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeName())), outVolume)
+        #shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeName())), outVolume)
 
         outAS = AtomStruct(filename=outStruct)
         outAS.setVolume(self.inputVolume.get())
@@ -128,7 +133,7 @@ class ProtDAQValidation(EMProtocol):
     # --------------------------- UTILS functions -----------------------------------
     def getDAQArgs(self):
         args = ' --mode=0 -F {} -P {} --window {} --stride {}'. \
-          format(self.getVolumeFile(), os.path.abspath(self.getPdbStruct()),
+          format(os.path.abspath(self.getLocalVolumeFile()), os.path.abspath(self.getPdbStruct()),
                  self.window.get(), self.stride.get())
 
         args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
@@ -145,9 +150,13 @@ class ProtDAQValidation(EMProtocol):
         return os.path.basename(os.path.splitext(self.getStructFile())[0])
 
     def getVolumeName(self):
-      return os.path.basename(os.path.splitext(self.getVolumeFile())[0])
+        return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
     def getPdbStruct(self):
         return self._getExtraPath(self.getStructName()) + '.pdb'
+
+    def getLocalVolumeFile(self):
+        oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
+        return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
 
 

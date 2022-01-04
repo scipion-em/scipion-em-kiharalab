@@ -67,7 +67,7 @@ class Plugin(pwem.Plugin):
                        default=True)
 
     @classmethod
-    def runDAQ(cls, protocol, args, outDir=None):
+    def runDAQ(cls, protocol, args, outDir=None, clean=True):
         """ Run DAQ script from a given protocol. """
         fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getDAQEnvActivation(), 'python3')
         if not 'main.py' in args:
@@ -75,9 +75,12 @@ class Plugin(pwem.Plugin):
         protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
 
         if outDir is None:
-            outDir = protocol._getExtraPath('Predict_Result')
+            outDir = protocol._getExtraPath('predictions')
 
-        shutil.copytree(os.path.join(cls._daqRepo, 'Predict_Result'), outDir)
+        daqDir = os.path.join(cls._daqRepo, 'Predict_Result', protocol.getVolumeName())
+        shutil.copytree(daqDir, outDir)
+        if clean:
+            shutil.rmtree(daqDir)
 
     @classmethod
     def getEnviron(cls):

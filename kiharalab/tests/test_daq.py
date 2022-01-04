@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pwem.protocols import ProtImportPdb
+from pwem.protocols import ProtImportPdb, ProtImportVolumes
 from ..protocols import ProtDAQValidation
 
 class TestDAQ(BaseTest):
@@ -35,6 +35,7 @@ class TestDAQ(BaseTest):
 
         setupTestProject(cls)
         cls._runImportPDB()
+        cls._runImportVolume()
 
     @classmethod
     def _runImportPDB(cls):
@@ -45,17 +46,33 @@ class TestDAQ(BaseTest):
         cls.launchProtocol(protImportPDB)
         cls.protImportPDB = protImportPDB
 
-    def _runFPocketFind(self):
-        protFPocket = self.newProtocol(
-            FpocketFindPockets,
-            inputAtomStruct=self.protImportPDB.outputPdb)
+    @classmethod
+    def _runImportVolume(cls):
+        args = {'filesPath': cls.ds.getFile(
+            'volumes/emd_3488.map'),
+            'samplingRate': 1.05,
+            'setOrigCoord': True,
+            'x': 0.0,
+            'y': 0.0,
+            'z': 0.0
+        }
+        protImportVolume = cls.newProtocol(ProtImportVolumes, **args)
+        cls.launchProtocol(protImportVolume)
+        cls.protImportVolume = protImportVolume
 
-        self.launchProtocol(protFPocket)
-        pdbOut = getattr(protFPocket, 'outputAtomStruct', None)
+    def _runDAQ(self):
+        protDAQ = self.newProtocol(
+            ProtDAQValidation,
+            inputAtomStruct=self.protImportPDB.outputPdb,
+            inputVolume=self.protImportVolume.outputVolume,
+            stride=2)
+
+        self.launchProtocol(protDAQ)
+        pdbOut = getattr(protDAQ, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
 
     def testFpocket(self):
-        self._runFPocketFind()
+        self._runDAQ()
 
 
 

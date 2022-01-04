@@ -4,4 +4,3 @@
 # Find documentation here: https://scipion-em.github.io/docs/docs/developer/creating-a-viewer
 # **************************************************************************
 
-from kiharalab.viewers.viewer_DAQ import viewerDAQ
