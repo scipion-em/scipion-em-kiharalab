@@ -57,7 +57,7 @@ class ProtDAQValidation(EMProtocol):
                        help='Select the atom structure to be validated')
 
         form.addParam('inputVolume', params.PointerParam,
-                      pointerClass='Volume', allowsNull=False,
+                      pointerClass='Volume', allowsNull=True,
                       label="Input volume: ",
                       help='Select the electron map of the structure')
 
@@ -111,7 +111,7 @@ class ProtDAQValidation(EMProtocol):
         #shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeName())), outVolume)
 
         outAS = AtomStruct(filename=outStruct)
-        outAS.setVolume(self.inputVolume.get())
+        outAS.setVolume(self._getInputVolume())
 
         self._defineOutputs(outputAtomStruct=outAS)
 
@@ -140,11 +140,18 @@ class ProtDAQValidation(EMProtocol):
           format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
         return args
 
+    def _getInputVolume(self):
+      if self.inputVolume.get() is None:
+        fnVol = self.inputAtomStruct.get().getVolume()
+      else:
+        fnVol = self.inputVolume.get()
+      return fnVol
+
     def getStructFile(self):
         return os.path.abspath(self.inputAtomStruct.get().getFileName())
 
     def getVolumeFile(self):
-        return os.path.abspath(self.inputVolume.get().getFileName())
+        return os.path.abspath(self._getInputVolume().getFileName())
 
     def getStructName(self):
         return os.path.basename(os.path.splitext(self.getStructFile())[0])
