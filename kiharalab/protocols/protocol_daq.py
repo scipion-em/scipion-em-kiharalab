@@ -46,6 +46,8 @@ class ProtDAQValidation(EMProtocol):
     Executes the DAQ software to validate a structure model
     """
     _label = 'DAQ model validation'
+    _OUTNAME = 'outputAtomStruct'
+    _possibleOutputs = {_OUTNAME: AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -113,7 +115,7 @@ class ProtDAQValidation(EMProtocol):
         outAS = AtomStruct(filename=outStruct)
         outAS.setVolume(self._getInputVolume())
 
-        self._defineOutputs(outputAtomStruct=outAS)
+        self._defineOutputs(**{self._OUTNAME: outAS})
 
 
     # --------------------------- INFO functions -----------------------------------
