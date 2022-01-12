@@ -33,6 +33,7 @@ from pwem.wizards import ColorScaleWizardBase
 import pyworkflow.protocol.params as params
 
 import pyworkflow.gui.plotter as plotter
+from pwem.viewers.plotter import EmPlotter
 
 class DAQViewer(pwviewer.ProtocolViewer):
   """ Viewer for plot the histogram of per-residue RMSD of a SetOfAtomStruct. """
@@ -54,10 +55,18 @@ class DAQViewer(pwviewer.ProtocolViewer):
                         'The color palette, intervals, lowest and highest values can be chosen in the '
                         'parameters above.\n The highest the value, the better the model.'
                    )
+    group = form.addGroup('Histogram visualization')
+    group.addParam('displayHistogram', params.LabelParam,
+                   label='Display histogram: ',
+                   help='Display the AtomStruct coloured by the DAQ score per residue.\n'
+                        'The color palette, intervals, lowest and highest values can be chosen in the '
+                        'parameters above.\n The highest the value, the better the model.'
+                   )
 
   def _getVisualizeDict(self):
     return {
       'displayStruct': self._showChimera,
+      'displayHistogram': self._showHistogram,
     }
 
   def _showChimera(self, paramName=None):
@@ -109,6 +118,38 @@ class DAQViewer(pwviewer.ProtocolViewer):
     view = ChimeraView(chimScript)
     return [view]
 
+  def _showHistogram(self, paramName=None):
+      prot = self.protocol
+
+      self.plotter = EmPlotter(x=1, y=1, windowTitle='DAQ scores', figure='active')
+      daqDic = prot.parseDAQScores(prot.outputAtomStruct.getFileName())
+      daqValues = list(daqDic.values())
+
+      a = self.plotter.createSubPlot("Per-residue DAQ", "DAQ score", "Count")
+      low, high = self.lowest.get(), self.highest.get()
+      a.set_xlim([low, high])
+
+      n = 2
+      mult = 10 ** n
+      stepSize = int(round(high / self.intervals.get(), n) * mult)
+      bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]
+      _, _, bars = a.hist(daqValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
+      for bar in bars:
+        if bar.get_x() < ((high - low) / 4) + low:
+          bar.set_facecolor('red')
+        elif bar.get_x() < (3 * (high - low) / 4) + low:
+          bar.set_facecolor('grey')
+        else:
+          bar.set_facecolor('blue')
+      a.grid(True)
+      self.show()
+
+  def show(self, block=True):
+    self.plotter.show(block=block)
+
+
+
+  ####################### UTILS ###################
   def getColors(self):
     stepColors = splitRange(self.highest.get(), self.lowest.get(),
                             splitNum=self.intervals.get())
@@ -148,3 +189,5 @@ class DAQViewer(pwviewer.ProtocolViewer):
         colorStr += command
         labelCount += 1
       return colorStr
+
+

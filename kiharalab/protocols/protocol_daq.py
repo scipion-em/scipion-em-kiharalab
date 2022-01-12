@@ -166,4 +166,18 @@ class ProtDAQValidation(EMProtocol):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
         return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
 
+    def parseDAQScores(self, pdbFile):
+        from pwchem.utils import splitPDBLine
+        daqDic = {}
+        with open(pdbFile) as f:
+            for line in f:
+                pdbLine = splitPDBLine(line)
+                if pdbLine is not None:
+                    resId = '{}:{}'.format(pdbLine[4], pdbLine[5])
+                    if not resId in daqDic:
+                      daqScore = float(pdbLine[10])
+                      daqDic[resId] = daqScore
+        return daqDic
+
+
 
