@@ -142,11 +142,7 @@ class DAQViewer(pwviewer.ProtocolViewer):
         else:
           bar.set_facecolor('blue')
       a.grid(True)
-      self.show()
-
-  def show(self, block=True):
-    self.plotter.show(block=block)
-
+      return [self.plotter]
 
 
   ####################### UTILS ###################
