@@ -35,7 +35,7 @@ import os, shutil
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct, Volume
-from pwem.convert.atom_struct import toPdb
+from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
 from pyworkflow.utils import Message
 
 from kiharalab import Plugin
@@ -46,6 +46,7 @@ class ProtDAQValidation(EMProtocol):
     Executes the DAQ software to validate a structure model
     """
     _label = 'DAQ model validation'
+    _ATTRNAME = 'DAQ_score'
     _OUTNAME = 'outputAtomStruct'
     _possibleOutputs = {_OUTNAME: AtomStruct}
 
@@ -99,23 +100,26 @@ class ProtDAQValidation(EMProtocol):
         localVolumeFile = self.getLocalVolumeFile()
         shutil.copy(self.getVolumeFile(), localVolumeFile)
 
-
     def DAQStep(self):
         args = self.getDAQArgs()
         Plugin.runDAQ(self, args=args, outDir=self._getExtraPath('predictions'))
 
     def createOutputStep(self):
-        outDir = self._getExtraPath('predictions')
-        outStruct = self._getPath(self.getStructName() + '_dqa.pdb')
-        #outVolume = self._getPath(self.getStructName() + '_dqa.mrc')
+        outStructFileName = self._getPath('outputStructure.cif')
+        outDQAFile = self._getExtraPath('predictions/dqa_score_w9.pdb')
 
-        shutil.copy(os.path.join(outDir, 'dqa_score_w9.pdb'), outStruct)
-        #shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeName())), outVolume)
+        #Write DAQ_score in a section of the output cif file
+        ASH = AtomicStructHandler()
+        daqScoresDic = self.parseDAQScores(outDQAFile)
+        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
+        cifDic = ASH.readLowLevel(inpAS)
+        cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
+        ASH._writeLowLevel(outStructFileName, cifDic)
 
-        outAS = AtomStruct(filename=outStruct)
-        outAS.setVolume(self._getInputVolume())
+        AS = AtomStruct(filename=outStructFileName)
+        AS.setVolume(self._getInputVolume())
 
-        self._defineOutputs(**{self._OUTNAME: outAS})
+        self._defineOutputs(**{self._OUTNAME: AS})
 
 
     # --------------------------- INFO functions -----------------------------------
@@ -169,6 +173,8 @@ class ProtDAQValidation(EMProtocol):
         return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
 
     def parseDAQScores(self, pdbFile):
+        '''Return a dictionary with {spec: value}
+        "spec" should be a chimera specifier'''
         from pwchem.utils import splitPDBLine
         daqDic = {}
         with open(pdbFile) as f:
@@ -177,9 +183,11 @@ class ProtDAQValidation(EMProtocol):
                 if pdbLine is not None:
                     resId = '{}:{}'.format(pdbLine[4], pdbLine[5])
                     if not resId in daqDic:
-                      daqScore = float(pdbLine[10])
+                      daqScore = pdbLine[10]
                       daqDic[resId] = daqScore
         return daqDic
 
+    def getDAQScoreFile(self):
+      return self._getPath('{}.defattr'.format(self._ATTRNAME))
 
 
