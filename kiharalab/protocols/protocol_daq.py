@@ -52,6 +52,11 @@ class ProtDAQValidation(EMProtocol):
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
+                       label="Choose GPU ID",
+                       help="GPU may have several cores. Set it to zero"
+                            " if you do not know what we are talking about."
+                            " First core index is 0, second 1 and so on.")
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputAtomStruct', params.PointerParam,
                        pointerClass='AtomStruct', allowsNull=False,
@@ -140,6 +145,8 @@ class ProtDAQValidation(EMProtocol):
 
         args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
           format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
+        args += ' --gpu {}'.format(self.getGPUIds()[0])
+        
         return args
 
     def _getInputVolume(self):
@@ -180,6 +187,9 @@ class ProtDAQValidation(EMProtocol):
                       daqScore = float(pdbLine[10])
                       daqDic[resId] = daqScore
         return daqDic
+    
+    def getGPUIds(self):
+        return self.gpuList.get().split(',')
 
 
 
