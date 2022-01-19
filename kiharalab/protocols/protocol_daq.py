@@ -175,15 +175,14 @@ class ProtDAQValidation(EMProtocol):
     def parseDAQScores(self, pdbFile):
         '''Return a dictionary with {spec: value}
         "spec" should be a chimera specifier'''
-        from pwchem.utils import splitPDBLine
         daqDic = {}
         with open(pdbFile) as f:
             for line in f:
-                pdbLine = splitPDBLine(line)
-                if pdbLine is not None:
-                    resId = '{}:{}'.format(pdbLine[4], pdbLine[5])
+                if line.startswith('ATOM') or line.startswith('HETATM'):
+                    resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
                     if not resId in daqDic:
-                      daqScore = pdbLine[10]
+                      daqScore = line[60:66].strip()
+                      print(daqScore)
                       daqDic[resId] = daqScore
         return daqDic
 
