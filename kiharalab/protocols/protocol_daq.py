@@ -182,7 +182,6 @@ class ProtDAQValidation(EMProtocol):
                     resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
                     if not resId in daqDic:
                       daqScore = line[60:66].strip()
-                      print(daqScore)
                       daqDic[resId] = daqScore
         return daqDic
 
