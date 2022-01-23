@@ -35,6 +35,7 @@ import os, shutil
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct, Volume
+from pwem.convert import Ccp4Header
 from pwem.convert.atom_struct import toPdb
 from pyworkflow.utils import Message
 
@@ -101,9 +102,9 @@ class ProtDAQValidation(EMProtocol):
             shutil.copy(self.getStructFile(), pdbFile)
 
         #Renaming volume to add protocol ID (results saved in different directory in DAQ repo)
-        localVolumeFile = self.getLocalVolumeFile()
-        shutil.copy(self.getVolumeFile(), localVolumeFile)
-
+        inVol = self._getInputVolume()
+        Ccp4Header.fixFile(inVol.getFileName(), self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
+                           inVol.getSamplingRate(), Ccp4Header.START)
 
     def DAQStep(self):
         args = self.getDAQArgs()
