@@ -36,6 +36,7 @@ from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct, Volume
 from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
+from pwem.convert import Ccp4Header
 from pyworkflow.utils import Message
 
 from kiharalab import Plugin
@@ -53,6 +54,11 @@ class ProtDAQValidation(EMProtocol):
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
+                       label="Choose GPU ID",
+                       help="GPU may have several cores. Set it to zero"
+                            " if you do not know what we are talking about."
+                            " First core index is 0, second 1 and so on.")
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputAtomStruct', params.PointerParam,
                        pointerClass='AtomStruct', allowsNull=False,
@@ -97,8 +103,10 @@ class ProtDAQValidation(EMProtocol):
             shutil.copy(self.getStructFile(), pdbFile)
 
         #Renaming volume to add protocol ID (results saved in different directory in DAQ repo)
-        localVolumeFile = self.getLocalVolumeFile()
-        shutil.copy(self.getVolumeFile(), localVolumeFile)
+
+        inVol = self._getInputVolume()
+        Ccp4Header.fixFile(inVol.getFileName(), self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
+                           inVol.getSamplingRate(), Ccp4Header.START)
 
     def DAQStep(self):
         args = self.getDAQArgs()
@@ -144,6 +152,8 @@ class ProtDAQValidation(EMProtocol):
 
         args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
           format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
+        args += ' --gpu {}'.format(self.getGPUIds()[0])
+        
         return args
 
     def _getInputVolume(self):
@@ -184,6 +194,9 @@ class ProtDAQValidation(EMProtocol):
                       daqScore = line[60:66].strip()
                       daqDic[resId] = daqScore
         return daqDic
+    
+    def getGPUIds(self):
+        return self.gpuList.get().split(',')
 
     def getDAQScoreFile(self):
       return self._getPath('{}.defattr'.format(self._ATTRNAME))

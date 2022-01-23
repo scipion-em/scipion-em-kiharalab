@@ -2,8 +2,9 @@
 Kihara Lab plugin
 =======================
 
-This is a **Scipion** plugin that offers different **Kihara Lab tools**.
-These tools will make it possible to carry out different functions for working with electron density maps
+This is a **Scipion** plugin that offers different **Kihara Lab tools** (https://kiharalab.org/).
+These tools will make it possible to carry out different functions for working with electron density maps.
+The code involving these functionalities can be found at https://github.com/kiharalab.
 
 Therefore, this plugin allows to use programs from the DAQ software suite
 within the Scipion framework.
