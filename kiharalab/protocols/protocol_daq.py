@@ -30,14 +30,15 @@
 This protocol is used to perform a pocket search on a protein structure using the FPocket software
 
 """
-import os, shutil
+import os, shutil, time
 
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct, Volume
 from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.convert import Ccp4Header
-from pyworkflow.utils import Message
+from pyworkflow.utils import Message, weakImport
+from pwem.viewers.viewer_chimera import Chimera
 
 from kiharalab import Plugin
 
@@ -69,6 +70,9 @@ class ProtDAQValidation(EMProtocol):
                       pointerClass='Volume', allowsNull=True,
                       label="Input volume: ",
                       help='Select the electron map of the structure')
+        form.addParam('chimeraResampling', params.BooleanParam,
+                      label="Resample using Chimerax: ", default=True,
+                      help='Resample volume to 1.0 using chimerax software')
 
         group = form.addGroup('Network parameters')
         group.addParam('window', params.IntParam, default='9', label='Half window size: ',
@@ -102,9 +106,24 @@ class ProtDAQValidation(EMProtocol):
         else:
             shutil.copy(self.getStructFile(), pdbFile)
 
-        #Renaming volume to add protocol ID (results saved in different directory in DAQ repo)
-
+        #Resampling volume to 1.0 using chimera if installed
         inVol = self._getInputVolume()
+        if self.chimeraResampling:
+            if chimeraInstalled() and inVol.getSamplingRate() != 1.0:
+                with weakImport("chimera"):
+                    resampledFile = os.path.abspath(self._getExtraPath('resampled.mrc'))
+                    from chimera import Plugin as chimeraPlugin
+                    resampleScript = self.chimeraResampleScript(inVol, newSampling=1.0, outFile=resampledFile)
+                    chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
+                                                    resampleScript + "&", cwd=os.getcwd())
+                    while not os.path.exists(resampledFile):
+                        time.sleep(1)
+                    inVol.setLocation(resampledFile)
+                    inVol.setSamplingRate(1.0)
+            else:
+                print('ChimeraX not found, resampling with DAQ (slower than ChimeraX)')
+
+        # Volume header fixed to have correct origin
         Ccp4Header.fixFile(inVol.getFileName(), self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
                            inVol.getSamplingRate(), Ccp4Header.START)
 
@@ -142,6 +161,10 @@ class ProtDAQValidation(EMProtocol):
     def _warnings(self):
         """ Try to find warnings on define params. """
         warnings=[]
+        if self.chimeraResampling and not chimeraInstalled():
+            warnings.append('Chimera program is not found were it was expected: \n\n{}\n\n' \
+                            'Either install ChimeraX in this path or install our ' \
+                            'scipion-em-chimera plugin'.format(Chimera.getProgram()))
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
@@ -200,5 +223,18 @@ class ProtDAQValidation(EMProtocol):
 
     def getDAQScoreFile(self):
       return self._getPath('{}.defattr'.format(self._ATTRNAME))
+
+    def chimeraResampleScript(self, inVol, newSampling, outFile):
+        scriptFn = self._getTmpPath('resampleVolume.cxc')
+        with open(scriptFn, 'w') as f:
+            f.write('cd %s\n' % os.getcwd())
+            f.write("open %s\n" % inVol.getFileName())
+            f.write('vol resample #1 spacing {}\n'.format(newSampling))
+            f.write('save {} model #2\n'.format(outFile))
+        return scriptFn
+
+
+def chimeraInstalled():
+  return Chimera.getHome() and os.path.exists(Chimera.getProgram())
 
 
