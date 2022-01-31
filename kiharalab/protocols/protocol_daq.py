@@ -39,6 +39,7 @@ from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipi
 from pwem.convert import Ccp4Header
 from pyworkflow.utils import Message, weakImport
 from pwem.viewers.viewer_chimera import Chimera
+from pwem.emlib.image import ImageHandler
 
 from kiharalab import Plugin
 
@@ -71,8 +72,8 @@ class ProtDAQValidation(EMProtocol):
                       label="Input volume: ",
                       help='Select the electron map of the structure')
         form.addParam('chimeraResampling', params.BooleanParam,
-                      label="Resample using Chimerax: ", default=True,
-                      help='Resample volume to 1.0 using chimerax software')
+                      label="Resample using ChimeraX: ", default=True,
+                      help='Resample volume to 1.0 using ChimeraX software')
 
         group = form.addGroup('Network parameters')
         group.addParam('window', params.IntParam, default='9', label='Half window size: ',
@@ -106,26 +107,29 @@ class ProtDAQValidation(EMProtocol):
         else:
             shutil.copy(self.getStructFile(), pdbFile)
 
-        #Resampling volume to 1.0 using chimera if installed
         inVol = self._getInputVolume()
-        if self.chimeraResampling:
-            if chimeraInstalled() and inVol.getSamplingRate() != 1.0:
-                with weakImport("chimera"):
-                    resampledFile = os.path.abspath(self._getExtraPath('resampled.mrc'))
-                    from chimera import Plugin as chimeraPlugin
-                    resampleScript = self.chimeraResampleScript(inVol, newSampling=1.0, outFile=resampledFile)
-                    chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
-                                                    resampleScript + "&", cwd=os.getcwd())
-                    while not os.path.exists(resampledFile):
-                        time.sleep(1)
-                    inVol.setLocation(resampledFile)
-                    inVol.setSamplingRate(1.0)
+        inVolFile, inVolSR = inVol.getFileName(), inVol.getSamplingRate()
+
+        #Convert volume to mrc
+        if not inVolFile.endswith('.mrc'):
+            mrcFile = self._getTmpPath('inpVolume.mrc')
+            ImageHandler().convert(inVolFile, mrcFile)
+            Ccp4Header.fixFile(mrcFile, mrcFile, inVol.getOrigin(force=True).getShifts(),
+                               inVolSR, Ccp4Header.START)
+
+        #Resample volume to 1A/px with ChimeraX if present
+        daqSR = 1.0
+        if self.chimeraResampling and inVol.getSamplingRate() != daqSR:
+            if chimeraInstalled():
+                resampledFile = os.path.abspath(self._getTmpPath('resampled.mrc'))
+                inVolFile = self.chimeraResample(inVolFile, daqSR, resampledFile)
+                inVolSR = daqSR
             else:
                 print('ChimeraX not found, resampling with DAQ (slower than ChimeraX)')
 
         # Volume header fixed to have correct origin
-        Ccp4Header.fixFile(inVol.getFileName(), self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
-                           inVol.getSamplingRate(), Ccp4Header.START)
+        Ccp4Header.fixFile(inVolFile, self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
+                           inVolSR, Ccp4Header.START)
 
     def DAQStep(self):
         args = self.getDAQArgs()
@@ -224,14 +228,24 @@ class ProtDAQValidation(EMProtocol):
     def getDAQScoreFile(self):
       return self._getPath('{}.defattr'.format(self._ATTRNAME))
 
-    def chimeraResampleScript(self, inVol, newSampling, outFile):
+    def chimeraResampleScript(self, inVolFile, newSampling, outFile):
         scriptFn = self._getTmpPath('resampleVolume.cxc')
         with open(scriptFn, 'w') as f:
             f.write('cd %s\n' % os.getcwd())
-            f.write("open %s\n" % inVol.getFileName())
+            f.write("open %s\n" % inVolFile)
             f.write('vol resample #1 spacing {}\n'.format(newSampling))
             f.write('save {} model #2\n'.format(outFile))
         return scriptFn
+
+    def chimeraResample(self, inVolFile, newSR, outFile):
+        with weakImport("chimera"):
+            from chimera import Plugin as chimeraPlugin
+            resampleScript = self.chimeraResampleScript(inVolFile, newSampling=newSR, outFile=outFile)
+            chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
+                                            resampleScript + "&", cwd=os.getcwd())
+            while not os.path.exists(outFile):
+              time.sleep(1)
+        return outFile
 
 
 def chimeraInstalled():
