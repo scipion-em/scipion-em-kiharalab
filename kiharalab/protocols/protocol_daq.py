@@ -235,6 +235,7 @@ class ProtDAQValidation(EMProtocol):
             f.write("open %s\n" % inVolFile)
             f.write('vol resample #1 spacing {}\n'.format(newSampling))
             f.write('save {} model #2\n'.format(outFile))
+            f.write('exit\n')
         return scriptFn
 
     def chimeraResample(self, inVolFile, newSR, outFile):
@@ -242,7 +243,7 @@ class ProtDAQValidation(EMProtocol):
             from chimera import Plugin as chimeraPlugin
             resampleScript = self.chimeraResampleScript(inVolFile, newSampling=newSR, outFile=outFile)
             chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
-                                            resampleScript + "&", cwd=os.getcwd())
+                                            resampleScript, cwd=os.getcwd())
             while not os.path.exists(outFile):
               time.sleep(1)
         return outFile
