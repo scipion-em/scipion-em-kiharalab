@@ -111,25 +111,24 @@ class ProtDAQValidation(EMProtocol):
         inVolFile, inVolSR = inVol.getFileName(), inVol.getSamplingRate()
 
         #Convert volume to mrc
-        if not inVolFile.endswith('.mrc'):
-            mrcFile = self._getTmpPath('inpVolume.mrc')
-            ImageHandler().convert(inVolFile, mrcFile)
-            Ccp4Header.fixFile(mrcFile, mrcFile, inVol.getOrigin(force=True).getShifts(),
-                               inVolSR, Ccp4Header.START)
+        mrcFile = self._getExtraPath('inpVolume.mrc')
+        ImageHandler().convert(inVolFile, mrcFile)
+        Ccp4Header.fixFile(mrcFile, mrcFile, inVol.getOrigin(force=True).getShifts(),
+                           inVolSR, Ccp4Header.START)
 
         #Resample volume to 1A/px with ChimeraX if present
         daqSR = 1.0
         if self.chimeraResampling and inVol.getSamplingRate() != daqSR:
             if chimeraInstalled():
-                resampledFile = os.path.abspath(self._getTmpPath('resampled.mrc'))
-                inVolFile = self.chimeraResample(inVolFile, daqSR, resampledFile)
+                resampledFile = os.path.abspath(self._getExtraPath('resampled.mrc'))
+                mrcFile = self.chimeraResample(mrcFile, daqSR, resampledFile)
                 inVolSR = daqSR
             else:
                 print('ChimeraX not found, resampling with DAQ (slower than ChimeraX)')
 
         # Volume header fixed to have correct origin
-        Ccp4Header.fixFile(inVolFile, self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
-                           inVolSR, Ccp4Header.START)
+        Ccp4Header.fixFile(mrcFile, self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
+                           inVolSR, Ccp4Header.ORIGIN)
 
     def DAQStep(self):
         args = self.getDAQArgs()
@@ -142,7 +141,7 @@ class ProtDAQValidation(EMProtocol):
         #Write DAQ_score in a section of the output cif file
         ASH = AtomicStructHandler()
         daqScoresDic = self.parseDAQScores(outDQAFile)
-        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
+        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getExtraPath('inputStruct.cif'))
         cifDic = ASH.readLowLevel(inpAS)
         cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
         ASH._writeLowLevel(outStructFileName, cifDic)
@@ -229,7 +228,7 @@ class ProtDAQValidation(EMProtocol):
       return self._getPath('{}.defattr'.format(self._ATTRNAME))
 
     def chimeraResampleScript(self, inVolFile, newSampling, outFile):
-        scriptFn = self._getTmpPath('resampleVolume.cxc')
+        scriptFn = self._getExtraPath('resampleVolume.cxc')
         with open(scriptFn, 'w') as f:
             f.write('cd %s\n' % os.getcwd())
             f.write("open %s\n" % inVolFile)
