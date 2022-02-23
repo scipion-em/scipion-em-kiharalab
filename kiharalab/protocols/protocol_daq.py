@@ -111,7 +111,7 @@ class ProtDAQValidation(EMProtocol):
         inVolFile, inVolSR = inVol.getFileName(), inVol.getSamplingRate()
 
         #Convert volume to mrc
-        mrcFile = self._getExtraPath('inpVolume.mrc')
+        mrcFile = self._getTmpPath('inpVolume.mrc')
         ImageHandler().convert(inVolFile, mrcFile)
         Ccp4Header.fixFile(mrcFile, mrcFile, inVol.getOrigin(force=True).getShifts(),
                            inVolSR, Ccp4Header.START)
@@ -120,7 +120,7 @@ class ProtDAQValidation(EMProtocol):
         daqSR = 1.0
         if self.chimeraResampling and inVol.getSamplingRate() != daqSR:
             if chimeraInstalled():
-                resampledFile = os.path.abspath(self._getExtraPath('resampled.mrc'))
+                resampledFile = os.path.abspath(self._getTmpPath('resampled.mrc'))
                 mrcFile = self.chimeraResample(mrcFile, daqSR, resampledFile)
                 inVolSR = daqSR
             else:
@@ -132,22 +132,25 @@ class ProtDAQValidation(EMProtocol):
 
     def DAQStep(self):
         args = self.getDAQArgs()
-        Plugin.runDAQ(self, args=args, outDir=self._getExtraPath('predictions'))
+        Plugin.runDAQ(self, args=args, outDir=self._getTmpPath('predictions'))
 
     def createOutputStep(self):
         outStructFileName = self._getPath('outputStructure.cif')
-        outDQAFile = self._getExtraPath('predictions/dqa_score_w9.pdb')
+        outDQAFile = self._getTmpPath('predictions/dqa_score_w9.pdb')
 
         #Write DAQ_score in a section of the output cif file
         ASH = AtomicStructHandler()
         daqScoresDic = self.parseDAQScores(outDQAFile)
-        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getExtraPath('inputStruct.cif'))
+        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
         cifDic = ASH.readLowLevel(inpAS)
         cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
         ASH._writeLowLevel(outStructFileName, cifDic)
 
         AS = AtomStruct(filename=outStructFileName)
-        AS.setVolume(self._getInputVolume())
+        outVol = self._getInputVolume().clone()
+        outVol.setLocation(self.getLocalVolumeFile())
+        outVol.setSamplingRate(1.0)
+        AS.setVolume(outVol)
 
         self._defineOutputs(**{self._OUTNAME: AS})
 
@@ -202,7 +205,7 @@ class ProtDAQValidation(EMProtocol):
         return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
     def getPdbStruct(self):
-        return self._getExtraPath(self.getStructName()) + '.pdb'
+        return self._getTmpPath(self.getStructName()) + '.pdb'
 
     def getLocalVolumeFile(self):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
