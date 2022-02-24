@@ -149,7 +149,8 @@ class ProtDAQValidation(EMProtocol):
         AS = AtomStruct(filename=outStructFileName)
         outVol = self._getInputVolume().clone()
         outVol.setLocation(self.getLocalVolumeFile())
-        outVol.setSamplingRate(1.0)
+        if self.chimeraResampling and self._getInputVolume().getSamplingRate() != 1.0 and chimeraInstalled():
+            outVol.setSamplingRate(1.0)
         AS.setVolume(outVol)
 
         self._defineOutputs(**{self._OUTNAME: AS})
