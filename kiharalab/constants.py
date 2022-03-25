@@ -24,18 +24,23 @@
 # *
 # **************************************************************************
 
-
+KIHARALAB_GIT = 'https://github.com/kiharalab/'
 KIHARALAB_HOME = 'KIHARA_HOME'
 DAQ_HOME = 'DAQ_HOME'
+EMAP2SEC_HOME = 'EMAP2SEC_HOME'
+PYMOL_HOME = 'PYMOL_HOME'
+
 
 # Supported Versions
 V1_0 = '1.0'
 KIHARALAB_DEFAULT_VERSION = V1_0
 DAQ_DEFAULT_VERSION = V1_0
+EMAP2SEC_DEFAULT_VERSION = V1_0
 
+# Plugin and protocol names
 KIHARALAB = 'kiharalab'
 DAQ = 'DAQ'
+EMAP2SEC = 'Emap2sec'
 
-PYMOL_HOME = 'PYMOL_HOME'
-
-
+# Protocol name list
+PROTOCOL_LIST = [DAQ, EMAP2SEC]

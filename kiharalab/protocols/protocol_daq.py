@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'you@yourinstitution.email'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -46,6 +46,7 @@ class ProtDAQValidation(EMProtocol):
     Executes the DAQ software to validate a structure model
     """
     _label = 'DAQ model validation'
+    _possibleOutputs = {'outputAtomStruct': AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):

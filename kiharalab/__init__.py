@@ -34,42 +34,85 @@ _references = ['genki2021DAQ']
 
 
 class Plugin(pwem.Plugin):
-    _daqHome = os.path.join(pwem.Config.EM_ROOT, DAQ + '-' + DAQ_DEFAULT_VERSION)
-    _daqRepo = os.path.join(_daqHome, 'DAQ')
+    """
+    Definition of class variables.
+    For each protocol, a variable of type _<protocolName>Home and _<protocolName>Repo will be created
+    _<protocolNameInLowercase>Home will be a folder located inside EM_ROOT and its name will be <protocolNameInUppercase>-<protocolVersion>. For example, "DAQ-1.0"
+    _<protocolNameInLowercase>Repo will be a folder inside _<protocolNameInLowercase>Home and its name will be <protocolNameInUppercase>. For example: "DAQ"
+    """
+    names = [name.upper() for name in PROTOCOL_LIST]
+    for name in names:
+        nameInLowercase = name.lower()
+        locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, globals()[name] + '-' + globals()[name + "_DEFAULT_VERSION"])
+        locals()["_" + nameInLowercase + "Repo"] = os.path.join(locals()["_" + nameInLowercase + "Home"], globals()[name])
+    print("CLASS DEFINITION - ") # REMOVE
 
     @classmethod
     def _defineVariables(cls):
-        """ Return and write a variable in the config file.
+        print("CUSTOM PRINT - start - _defineVariables") # REMOVE
         """
-        cls._defineEmVar(DAQ_HOME, DAQ + '-' + DAQ_DEFAULT_VERSION)
-        cls._defineVar("DAQ_ENV_ACTIVATION", 'conda activate daq-env')
+        Return and write a home and conda enviroment variable in the config file.
+        Each protocol will have a variable called <protocolNameInUppercase>_HOME, and another called <protocolNameInUppercase>_ENV
+        <protocolNameInUppercase>_HOME will contain the path to the protocol installation. For example: "~/Documents/scipion/software/em/DAQ-1.0"
+        <protocolNameInUppercase>_ENV will contain the name of the conda enviroment for that protocol. For example: "DAQ-1.0"
+        """
+        for name in cls.names:
+            protocolHomeAndEnv = globals()[name] + "-" + globals()[name + "_DEFAULT_VERSION"]
+            cls._defineEmVar(globals()[name + "_HOME"], protocolHomeAndEnv)
+            cls._defineEmVar(name + "_ENV", protocolHomeAndEnv)
+        print("CUSTOM PRINT - end - _defineVariables") # REMOVE
 
     @classmethod
     def defineBinaries(cls, env):
-        cls.addDAQPackage(env)
+        """
+        This function defines the binaries for each protocol.
+        """
+        print("CUSTOM PRINT - start - defineBinaries") # REMOVE
+        for name in cls.names:
+            nameInLowercase = name.lower()
+            cls.addProtocolPackage(env,
+                                    name,
+                                    getattr(cls, "_" + nameInLowercase + "Home"),
+                                    getattr(cls, "_" + nameInLowercase + "Repo"),
+                                    globals()[name],
+                                    globals()[name + "_DEFAULT_VERSION"])
+        print("CUSTOM PRINT - end - defineBinaries") # REMOVE
 
     @classmethod
-    def addDAQPackage(cls, env):
-        installationCmd = 'cd {} && git clone {} && '.format(cls._daqHome, cls.getGitUrl())
-        installationCmd += 'conda create -y -n daq-env python=3.8.5 && {} {} && ' \
-            .format(cls.getCondaActivationCmd(), cls.getDAQEnvActivation())
-        installationCmd += 'cd DAQ && pip install -r requirement.txt && '
+    def addProtocolPackage(cls, env, protocolName, protocolHome, protocolRepo, folderName, protocolVersion):
+        print("Params:")
+        print("Name: ", protocolName)
+        print("Home: ", protocolHome)
+        print("Repo :", protocolRepo)
+        print("folderName: ", folderName)
+        print("Version :", protocolVersion)
+        return;
+        exit()
+        print("CUSTOM PRINT - start - addProtocolPackage") # REMOVE
+        installationCmd = 'cd {} && git clone {} && '.format(protocolHome, cls.getGitUrl(protocolName))
+        installationCmd += '{} && conda create -y -n {}-env python=3.8.5 && {} && ' \
+            .format(cls.getCondaActivationCmd(), protocolName.lower(), cls.getEnvActivation(protocolName))
+        installationCmd += 'cd {} && pip install -r requirement.txt && '.format(protocolRepo)
 
         # Creating validation file
-        DAQ_INSTALLED = '%s_installed' % DAQ
-        installationCmd += 'cd .. && touch %s' % DAQ_INSTALLED  # Flag installation finished
+        PROTOCOL_INSTALLED = '%s_installed' % folderName
+        installationCmd += 'cd .. && touch %s' % PROTOCOL_INSTALLED  # Flag installation finished
+        print("CUSTOM PRINT - middle - addProtocolPackage - installationCmd") # REMOVE
+        print(installationCmd) # REMOVE
 
-        env.addPackage(DAQ,
-                       version=DAQ_DEFAULT_VERSION,
+        env.addPackage(folderName,
+                       version=protocolVersion,
                        tar='void.tgz',
-                       commands=[(installationCmd, DAQ_INSTALLED)],
+                       commands=[(installationCmd, PROTOCOL_INSTALLED)],
                        neededProgs=["conda", "pip"],
                        default=True)
+        print("CUSTOM PRINT - end - addProtocolPackage")
 
     @classmethod
     def runDAQ(cls, protocol, args, outDir=None, clean=True):
+        print("CUSTOM PRINT - start - runDAQ") # REMOVE
         """ Run DAQ script from a given protocol. """
-        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getDAQEnvActivation(), 'python3')
+        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getEnvActivation('DAQ'), 'python3')
         if not 'main.py' in args:
             args = '{}/main.py '.format(cls._daqRepo) + args
         protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
@@ -81,18 +124,47 @@ class Plugin(pwem.Plugin):
         shutil.copytree(daqDir, outDir)
         if clean:
             shutil.rmtree(daqDir)
+        print("CUSTOM PRINT - ebd - runDAQ") # REMOVE
+    
+    @classmethod
+    def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
+        print("CUSTOM PRINT - start - runEmap2sec") # REMOVE
+        """ Run Emap2sec script from a given protocol. """
+        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getEnvActivation('EMAP2SEC'), 'python3')
+        if not 'main.py' in args:
+            args = '{}/main.py '.format(cls._emap2secRepo) + args
+        protocol.runJob(fullProgram, args, cwd=cls._emap2secRepo)
+
+        if outDir is None:
+            outDir = protocol._getExtraPath('predictions')
+
+        emap2secDir = os.path.join(cls._emap2secRepo, 'Predict_Result', protocol.getVolumeName())
+        shutil.copytree(emap2secDir, outDir)
+        if clean:
+            shutil.rmtree(emap2secDir)
+        print("CUSTOM PRINT - end - runEmap2sec") # REMOVE
 
     @classmethod
     def getEnviron(cls):
+        print("CUSTOM PRINT - start - getEnviron") # REMOVE
+        print("CUSTOM PRINT - end - getEnviron") # REMOVE
         pass
 
     @classmethod
-    def getDAQEnvActivation(cls):
-        return cls.getVar("DAQ_ENV_ACTIVATION")
-
+    def getEnvActivation(cls, protocolName):
+        print("CUSTOM PRINT - getEnvActivation ", protocolName) # REMOVE
+        print("EXAMPLE 1 - ", cls.getVar(protocolName + "_ENV_ACTIVATION")) # REMOVE
+        print("EXAMPLE 2 - ", cls.getVar("DAQ_ENV_ACTIVATION")) # REMOVE
+        return cls.getVar(protocolName + "_ENV_ACTIVATION") # REMOVE
+    
     @classmethod
-    def getGitUrl(cls):
-        return "https://github.com/kiharalab/DAQ"
+    def getGitUrl(cls, protocolName):
+        print("CUSTOM PRINT - getGitUrl ", protocolName) # REMOVE
+        return KIHARALAB_GIT + protocolName
+    
+    @classmethod
+    def getProtocolActivationCommand(cls, protocolName):
+        pass
 
     # ---------------------------------- Utils functions  -----------------------
 
