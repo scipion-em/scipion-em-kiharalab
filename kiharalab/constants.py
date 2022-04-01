@@ -46,3 +46,17 @@ EMAP2SEC = 'Emap2sec'
 
 # Protocol name list
 PROTOCOL_LIST = [DAQ, EMAP2SEC]
+
+# Download links for extra files
+# Extra files are defined as a list of tuples with two elements
+# 	The first element will be the download link
+#	The second element is the path for the file to be downloaded. Leave as an empty string for default value (current folder)
+# Variable name has to be <PROTOCOL_NAME>_EXTRA_FILES. For example: DAQ_EXTRA_FILES, or EMAP2SEC_EXTRA_FILES
+EMAP2SEC_EXTRA_FILES = [("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", "models/emap2sec_models_exp1"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", "models/emap2sec_models_exp1"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", "models/emap2sec_models_exp1"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", "models/emap2sec_models_exp1"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", "models/emap2sec_models_exp2"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"),
+	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")]
