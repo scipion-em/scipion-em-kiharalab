@@ -82,7 +82,10 @@ class Plugin(pwem.Plugin):
         cloneCmd clones the repo in the right folder.
         envCreationCmd creates the conda enviroment and installs the required python packages.
         """
+        # Cloning repo
         cloneCmd = 'cd {} && git clone {} && touch REPO_CLONED' .format(protocolHome, cls.getGitUrl(protocolName))
+        
+        # Creating conda virtual enviroment and installing requirements
         envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch ENVIROMENT_CREATED'\
             .format(cls.getCondaActivationCmd(),
                     getattr(cls, protocolVariableName + "_WITH_VERSION"),
@@ -100,16 +103,22 @@ class Plugin(pwem.Plugin):
                         protocolRepo)
         ## REMOVE LATER ##
 
+        # Initial command list with fixed commands
         commandList = [(cloneCmd, "REPO_CLONED"), (envCreationCmd, "ENVIROMENT_CREATED")]
         
         # Check if protocol has extra files to download
         extraFilesVariableName = protocolVariableName + "_EXTRA_FILES"
         if (extraFilesVariableName in globals()):
             # Add all extra files as separate commands to create one checkpoint per file
+            # Checkpoint file names will be "EXTRA_FILE_0", "EXTRA_FILE_1"...
             downloadCommandList = cls.getProtocolExtraFiles(globals()[extraFilesVariableName])
-            for i in range(len(downloadCommandList)):
-                checkpointName = "EXTRA_FILE_" + str(i)
-                commandList.append(("cd " + protocolRepo + " && " + downloadCommandList[i] + " && cd " + protocolHome + " && touch " + checkpointName, checkpointName))
+            commandList = cls.addCommandsToList(commandList, downloadCommandList, "EXTRA_FILE_", protocolRepo, protocolHome)
+        
+        # Check if protocol has extra commands to execute
+        extraCommandsVariableName = protocolVariableName + "_EXTRA_COMMANDS"
+        if (extraCommandsVariableName in globals()):
+            extraCommands = globals()[extraCommandsVariableName]
+            commandList = cls.addCommandsToList(commandList, extraCommands, "EXTRA_COMMAND_", protocolRepo, protocolHome)
 
         env.addPackage(protocolVariableName,
                        version=protocolVersion,
@@ -117,6 +126,8 @@ class Plugin(pwem.Plugin):
                        commands=commandList,
                        neededProgs=["conda", "pip"],
                        default=True)
+    
+    # ---------------------------------- Utils functions  -----------------------
     
     @classmethod
     def getProtocolExtraFiles(cls, files):
@@ -134,48 +145,22 @@ class Plugin(pwem.Plugin):
             commandList.append("mkdir -p " + filePath + " && wget -O " + filePath + "/" + fileName + " " + file[0])
         
         return commandList
-
-    @classmethod
-    def runDAQ(cls, protocol, args, outDir=None, clean=True):
-        print("CUSTOM PRINT - start - runDAQ") # REMOVE
-        """ Run DAQ script from a given protocol. """
-        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getEnvActivation('DAQ'), 'python3')
-        if not 'main.py' in args:
-            args = '{}/main.py '.format(cls._daqRepo) + args
-        protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
-
-        if outDir is None:
-            outDir = protocol._getExtraPath('predictions')
-
-        daqDir = os.path.join(cls._daqRepo, 'Predict_Result', protocol.getVolumeName())
-        shutil.copytree(daqDir, outDir)
-        if clean:
-            shutil.rmtree(daqDir)
-        print("CUSTOM PRINT - ebd - runDAQ") # REMOVE
     
     @classmethod
-    def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
-        print("CUSTOM PRINT - start - runEmap2sec") # REMOVE
+    def addCommandsToList(cls, commandList, newCommands, checkpointPrefix, protocolRepo, protocolHome):
         """
-        Run Emap2sec script from a given protocol.
+        Appends the given commands to the scipion command list with checkpoints.
         """
-        fullProgram = "{} {} && {}"\
-            .format(cls.getCondaActivationCmd(),
-                cls.getProtocolActivationCommand('EMAP2SEC'),
-                'python3')
-        if not 'main.py' in args:
-            args = '{}/main.py '.format(cls._emap2secRepo) + args
-        protocol.runJob(fullProgram, args, cwd=cls._emap2secRepo)
-
-        if outDir is None:
-            outDir = protocol._getExtraPath('predictions')
-
-        emap2secDir = os.path.join(cls._emap2secRepo, 'Predict_Result', protocol.getVolumeName())
-        shutil.copytree(emap2secDir, outDir)
-        if clean:
-            shutil.rmtree(emap2secDir)
-        print("CUSTOM PRINT - end - runEmap2sec") # REMOVE
-
+        for i in range(len(newCommands)):
+            checkpointName = checkpointPrefix + str(i)
+            commandList.append(("cd {} && {} && cd {} && touch {}"\
+                .format(protocolRepo,
+                        newCommands[i],
+                        protocolHome,
+                        checkpointName),
+                checkpointName))
+        return commandList
+    
     @classmethod
     def getGitUrl(cls, protocolName):
         """
@@ -190,4 +175,38 @@ class Plugin(pwem.Plugin):
         """
         return "conda activate " + getattr(cls, variableName + "_WITH_VERSION")
 
-    # ---------------------------------- Utils functions  -----------------------
+    # ---------------------------------- Protocol execution functions  -----------------------
+
+    @classmethod
+    def runDAQ(cls, protocol, args, outDir=None, clean=True):
+        """
+        Run DAQ script from a given protocol.
+        """
+        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getEnvActivation('DAQ'), 'python3')
+        if not 'main.py' in args:
+            args = '{}/main.py '.format(cls._daqRepo) + args
+        protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
+
+        if outDir is None:
+            outDir = protocol._getExtraPath('predictions')
+
+        daqDir = os.path.join(cls._daqRepo, 'Predict_Result', protocol.getVolumeName())
+        shutil.copytree(daqDir, outDir)
+        if clean:
+            shutil.rmtree(daqDir)
+    
+    @classmethod
+    def runEmap2sec(cls, protocol, args):
+        print("CUSTOM PRINT - start - runEmap2sec") # REMOVE
+        """
+        Run Emap2sec script from a given protocol.
+        """
+        # Required commands before actual protocol execution
+        fullProgram = "{} {} && {} && cd {}"\
+            .format(cls.getCondaActivationCmd(),
+                cls.getProtocolActivationCommand('EMAP2SEC'),
+                cls._emap2secRepo)
+        
+        # Actual protocol execution
+        protocol.runJob(fullProgram, "./run.sh " + args, cwd=cls._emap2secRepo)
+        print("CUSTOM PRINT - end - runEmap2sec") # REMOVE
