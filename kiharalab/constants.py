@@ -60,3 +60,6 @@ EMAP2SEC_EXTRA_FILES = [("https://kiharalab.org/Emap2sec_models/emap2sec_models_
 	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"),
 	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"),
 	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")]
+
+# Extra commands needed for proper project execution
+EMAP2SEC_EXTRA_COMMANDS = ["chmod 777 run.sh"]
