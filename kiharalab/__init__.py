@@ -93,16 +93,6 @@ class Plugin(pwem.Plugin):
                     cls.getProtocolActivationCommand(protocolVariableName),
                     protocolRepo)
         
-        ## REMOVE LATER ##
-        if protocolVariableName == 'EMAP2SEC': # REMOVE WHEN PR APPROVED
-            envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && echo \'tensorflow==1.15\\nscikit-learn==0.24.2\\npandas==1.1.5\\nnumpy==1.16.4\' > requirements.txt && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch ENVIROMENT_CREATED'\
-                .format(cls.getCondaActivationCmd(),
-                        getattr(cls, protocolVariableName + "_WITH_VERSION"),
-                        globals()[protocolVariableName + "_PYTHON_VERSION"],
-                        cls.getProtocolActivationCommand(protocolVariableName),
-                        protocolRepo)
-        ## REMOVE LATER ##
-
         # Initial command list with fixed commands
         commandList = [(cloneCmd, "REPO_CLONED"), (envCreationCmd, "ENVIROMENT_CREATED")]
         
