@@ -26,12 +26,11 @@
 
 import pwem
 from .constants import *
-import shutil, os
+import shutil, os, subprocess
 
 _version_ = '0.1'
 _logo = "kiharalab_logo.png"
 _references = ['genki2021DAQ']
-
 
 class Plugin(pwem.Plugin):
     """
@@ -172,9 +171,10 @@ class Plugin(pwem.Plugin):
         """
         Run DAQ script from a given protocol.
         """
-        fullProgram = '%s %s && %s' % (cls.getCondaActivationCmd(), cls.getEnvActivation('DAQ'), 'python3')
+        fullProgram = '{} {} && {}'\
+            .format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('DAQ'), 'python3')
         if not 'main.py' in args:
-            args = '{}/main.py '.format(cls._daqRepo) + args
+            args = '{}/main.py {}'.format(cls._daqRepo, args)
         protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
 
         if outDir is None:
@@ -186,17 +186,52 @@ class Plugin(pwem.Plugin):
             shutil.rmtree(daqDir)
     
     @classmethod
-    def runEmap2sec(cls, protocol, args):
-        print("CUSTOM PRINT - start - runEmap2sec") # REMOVE
+    def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
         """
         Run Emap2sec script from a given protocol.
         """
-        # Required commands before actual protocol execution
-        fullProgram = "{} {} && {} && cd {}"\
-            .format(cls.getCondaActivationCmd(),
-                cls.getProtocolActivationCommand('EMAP2SEC'),
-                cls._emap2secRepo)
+        # Building commands before actual protocol execution
+        print("-------- BEGIN EMAP2SEC --------")
+        # Enviroment activation command. Needed to execute befor every other standalone command.
+        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SEC'))
         
-        # Actual protocol execution
-        protocol.runJob(fullProgram, "./run.sh " + args, cwd=cls._emap2secRepo)
-        print("CUSTOM PRINT - end - runEmap2sec") # REMOVE
+        # Command to move to Emap2sec's repo's root directory.
+        # Needed to be executed once before the actual workflow commands
+        moveToRepoCommand = "cd "
+        protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
+
+        # Trimapp generation command
+        trimappCommand = "{} && map2train_src/bin/map2train ".format(envActivationCommand)
+        protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
+
+        # Dataset generation command
+        datasetCommand = "{} && python data_generate/dataset_wo_stride.py ".format(envActivationCommand)
+        protocol.runJob(datasetCommand, args[1], cwd=cls._emap2secRepo)
+
+        # Input file for Emap2sec.py
+        protocol.runJob("echo ", args[2], cwd=cls._emap2secRepo)
+
+        # Emap2sec execution command
+        emap2secCommand = "{} && python emap2sec/Emap2sec.py ".format(envActivationCommand)
+        protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
+        
+        print("-------- END EMAP2SEC --------")
+        return;
+
+        # If output directory is set, move results to output directory
+        resultsFolder = os.path.join(cls._emap2secRepo, 'results')
+        if outDir:
+            for i in range(1, 2):
+                file = "visual_{}.pdb".format(i)
+                fileWithPath = os.path.join(resultsFolder, file)
+                subprocess.call(["mv", fileWithPath, outDir])
+
+        # Removing result predictions generated before visual conversion
+        if clean:
+            for i in range(1, 2):
+                file = os.path.join(resultsFolder, 'outputP{}_0'.format(i))
+                try:
+                    os.remove(file)
+                except OSError:
+                    # Don't raise exception if the file does not exist
+                    pass
