@@ -44,7 +44,7 @@ class ProtEmap2sec(EMProtocol):
     """
     Executes the Emap2sec software to indentify protein secondary strctures, alpha helices, beta sheets, and others
     """
-    _label = 'Emap2sec protein structure prediction'
+    _label = 'Emap2sec'
     _possibleOutputs = {'outputAtomStruct1': AtomStruct, 'outputAtomStruct2': AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
