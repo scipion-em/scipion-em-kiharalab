@@ -65,6 +65,7 @@ EMAP2SEC_EXTRA_FILES = [
 
 # Extra commands needed for proper project execution
 EMAP2SEC_EXTRA_COMMANDS = [
+	"mkdir -p results",
 	"chmod -R +x *",
 	"cd map2train_src && make && cd .."
 ]
