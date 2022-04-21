@@ -223,7 +223,7 @@ class ProtEmap2sec(EMProtocol):
             args.append('data/{}trimapp'.format(filePrefix))
             args.append('data/{}dataset'.format(filePrefix))
             args.append('data/{}input.txt'.format(protocolPrefix))
-            for i in range(1, 2):
+            for i in range(1, 3):
                 args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
         return args
 
