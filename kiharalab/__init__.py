@@ -217,7 +217,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
         
         # Secondary structures visualization command
-        visualCommand = "{} && Visual/visual.pl".format(envActivationCommand)
+        visualCommand = "{} && Visual/Visual.pl".format(envActivationCommand)
         protocol.runJob(visualCommand, args[4], cwd=cls._emap2secRepo)
         protocol.runJob(visualCommand, args[5], cwd=cls._emap2secRepo)
 
