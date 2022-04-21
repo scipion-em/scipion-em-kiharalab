@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+from ast import arg
 import pwem
 from .constants import *
 import shutil, os, subprocess
@@ -201,23 +202,27 @@ class Plugin(pwem.Plugin):
         protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
 
         # Trimapp generation command
-        trimappCommand = "{} && map2train_src/bin/map2train ".format(envActivationCommand)
+        trimappCommand = "{} && map2train_src/bin/map2train".format(envActivationCommand)
         protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
 
         # Dataset generation command
-        datasetCommand = "{} && python data_generate/dataset_wo_stride.py ".format(envActivationCommand)
+        datasetCommand = "{} && python data_generate/dataset_wo_stride.py".format(envActivationCommand)
         protocol.runJob(datasetCommand, args[1], cwd=cls._emap2secRepo)
 
         # Input file for Emap2sec.py
-        protocol.runJob("echo ", args[2], cwd=cls._emap2secRepo)
+        protocol.runJob("echo", args[2], cwd=cls._emap2secRepo)
 
         # Emap2sec execution command
-        emap2secCommand = "{} && python emap2sec/Emap2sec.py ".format(envActivationCommand)
+        emap2secCommand = "{} && python emap2sec/Emap2sec.py".format(envActivationCommand)
         protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
         
+        # Secondary structures visualization command
+        visualCommand = "{} && Visual/visual.pl".format(envActivationCommand)
+        protocol.runJob(visualCommand, args[4], cwd=cls._emap2secRepo)
+        protocol.runJob(visualCommand, args[5], cwd=cls._emap2secRepo)
+
         print("-------- END EMAP2SEC --------")
         return;
-
         # If output directory is set, move results to output directory
         resultsFolder = os.path.join(cls._emap2secRepo, 'results')
         if outDir:
