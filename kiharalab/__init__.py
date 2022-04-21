@@ -187,12 +187,11 @@ class Plugin(pwem.Plugin):
             shutil.rmtree(daqDir)
     
     @classmethod
-    def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
+    def runEmap2sec(cls, protocol, args, clean=True):
         """
         Run Emap2sec script from a given protocol.
         """
         # Building commands before actual protocol execution
-        print("-------- BEGIN EMAP2SEC --------")
         # Enviroment activation command. Needed to execute befor every other standalone command.
         envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SEC'))
         
@@ -203,11 +202,13 @@ class Plugin(pwem.Plugin):
 
         # Trimapp generation command
         trimappCommand = "{} && map2train_src/bin/map2train".format(envActivationCommand)
-        protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
+        for trimappArg in args[0]:
+            protocol.runJob(trimappCommand, trimappArg, cwd=cls._emap2secRepo)
 
         # Dataset generation command
         datasetCommand = "{} && python data_generate/dataset_wo_stride.py".format(envActivationCommand)
-        protocol.runJob(datasetCommand, args[1], cwd=cls._emap2secRepo)
+        for datasetArg in args[1]:
+            protocol.runJob(datasetCommand, datasetArg, cwd=cls._emap2secRepo)
 
         # Input file for Emap2sec.py
         protocol.runJob("echo", args[2], cwd=cls._emap2secRepo)
@@ -218,30 +219,12 @@ class Plugin(pwem.Plugin):
         
         # Secondary structures visualization command
         visualCommand = "{} && Visual/Visual.pl".format(envActivationCommand)
-        protocol.runJob(visualCommand, args[4], cwd=cls._emap2secRepo)
-        protocol.runJob(visualCommand, args[5], cwd=cls._emap2secRepo)
+        for visualArg1 in args[4]:
+            protocol.runJob(visualCommand, visualArg1, cwd=cls._emap2secRepo)
+        for visualArg2 in args[5]:
+            protocol.runJob(visualCommand, visualArg2, cwd=cls._emap2secRepo)
 
         # Remove temporary files
         if clean:
             for tmp_file in args[6]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secRepo)
-        
-        print("-------- END EMAP2SEC --------")
-        return;
-        # If output directory is set, move results to output directory
-        resultsFolder = os.path.join(cls._emap2secRepo, 'results')
-        if outDir:
-            for i in range(1, 2):
-                file = "visual_{}.pdb".format(i)
-                fileWithPath = os.path.join(resultsFolder, file)
-                subprocess.call(["mv", fileWithPath, outDir])
-
-        # Removing result predictions generated before visual conversion
-        if clean:
-            for i in range(1, 2):
-                file = os.path.join(resultsFolder, 'outputP{}_0'.format(i))
-                try:
-                    os.remove(file)
-                except OSError:
-                    # Don't raise exception if the file does not exist
-                    pass
