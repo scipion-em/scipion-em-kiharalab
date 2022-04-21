@@ -57,6 +57,8 @@ class ProtEmap2sec(EMProtocol):
                       pointerClass='Volume', allowsNull=False,
                       label="Input volume: ",
                       help='Select the electron map to be processed')
+        form.addParam('cleanTemps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
+                        help='Clean temporary files after finishing the execution. This is useful to reduce unnecessary disk usage.')
 
         trimappGroup = form.addGroup('Trimapp generation')
         trimappGroup.addParam('contour', params.FloatParam, default='2.75', label='Contour: ',
@@ -93,6 +95,9 @@ class ProtEmap2sec(EMProtocol):
         # Getting full path for input file
         inputFile = self.getVolumeAbsolutePath()
 
+        # Prefix for all files
+        prefix = self.getOutputFilePrefix()
+
         # Defining arguments for each command to execute
         # args will be a list of strings, where each string are the arguments for a given command
         args = [
@@ -101,22 +106,17 @@ class ProtEmap2sec(EMProtocol):
             self.getInputLocationFileArgs(),
             self.getEmap2secArgs(),
             self.getVisualArgs(1),
-            self.getVisualArgs(2)
+            self.getVisualArgs(2),
+            [
+                'data/{}trimapp'.format(prefix),
+                'data/{}dataset'.format(prefix),
+                'data/{}input.txt'.format(prefix),
+                'results/{}outputP1_{}dataset'.format(prefix, prefix),
+                'results/{}outputP2_{}dataset'.format(prefix, prefix)
+            ]
         ]
 
-        Plugin.runEmap2sec(self, args=args, outDir=self._getExtraPath('results'))
-        return;
-
-        # Separating extension from file path and name
-        inputFileName, inputFileExtension = os.path.splitext(inputFile)
-
-
-        print("TEST: ", os.path.basename(os.path.splitext(self.getVolumeFile())[0]).replace('import_', ''))
-        print("TEST 2: ", self.getLocalVolumeFile())
-        Plugin.runEmap2sec(self, args='', outDir=self._getExtraPath('results'))
-        return;
-        args = self.getDAQArgs()
-        Plugin.runDAQ(self, args=args, outDir=self._getExtraPath('results'))
+        Plugin.runEmap2sec(self, args=args, outDir=self._getExtraPath('results'), clean=self.cleanTemps.get())
 
     def createOutputStep(self):
         outDir = self._getExtraPath('predictions')

@@ -221,6 +221,11 @@ class Plugin(pwem.Plugin):
         protocol.runJob(visualCommand, args[4], cwd=cls._emap2secRepo)
         protocol.runJob(visualCommand, args[5], cwd=cls._emap2secRepo)
 
+        # Remove temporary files
+        if clean:
+            for tmp_file in args[6]:
+                protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secRepo)
+        
         print("-------- END EMAP2SEC --------")
         return;
         # If output directory is set, move results to output directory
