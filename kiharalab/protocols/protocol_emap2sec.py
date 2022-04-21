@@ -62,7 +62,7 @@ class ProtEmap2sec(EMProtocol):
         trimappGroup.addParam('contour', params.FloatParam, default='2.75', label='Contour: ',
                        help='The level of isosurface to generate density values for.'
                        ' You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
-        trimappGroup.addParam('sstep', params.IntParam, default='2', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
+        trimappGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
                        help='This option sets the stride size of the sliding cube used for input data generation.'
                        ' We recommend using a value of 2 that slides the cube by 2Å in each direction.'
                        ' Decreasing this value to 1 produces 8 times more data (increase by a factor of 2 in each direction)'
@@ -99,9 +99,10 @@ class ProtEmap2sec(EMProtocol):
             self.getTrimappArgs(inputFile),
             self.getDatasetArgs(),
             self.getInputLocationFileArgs(),
-            self.getEmap2secArgs()
+            self.getEmap2secArgs(),
+            self.getVisualArgs(1),
+            self.getVisualArgs(2)
         ]
-        print("NAME: ", args)
 
         Plugin.runEmap2sec(self, args=args, outDir=self._getExtraPath('results'))
         return;
@@ -160,14 +161,13 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments neccessary for the trimapp generation.
         """
-        return '{} -c {} -sstep {} -vw {} {} > data/{}_{}_trimapp'\
+        return '{} -c {} -sstep {} -vw {} {} > data/{}trimapp'\
             .format(inputFile,
                 self.contour.get(),
                 self.sstep.get(),
                 self.vw.get(),
                 '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
-                self.getObjId(),
-                os.path.splitext(self.getCleanVolumeName())[0])
+                self.getOutputFilePrefix())
     
     def getDatasetArgs(self):
         """
@@ -188,7 +188,19 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments neccessary for the Emap2sec.py's execution.
         """
-        return 'data/{}input.txt'.format(self.getOutputFilePrefix())
+        return 'data/{}input.txt --prefix results/{}'.format(self.getOutputFilePrefix(), self.getOutputFilePrefix())
+
+    def getVisualArgs(self, phase):
+        """
+        This method returns the arguments neccessary for the Secondary Structure visualization.
+        """
+        return 'data/{}trimapp results/{}outputP{}_{}dataset -p > results/{}visual{}.pdb'\
+            .format(self.getOutputFilePrefix(),
+            self.getOutputFilePrefix(),
+            phase,
+            self.getOutputFilePrefix(),
+            self.getOutputFilePrefix(),
+            phase)
 
     def getStructFile(self):
         return os.path.abspath(self.inputAtomStruct.get().getFileName())
@@ -209,14 +221,17 @@ class ProtEmap2sec(EMProtocol):
             and current directory is /home/username/documents
             this will return /test/import_file.mrc
         """
-        return self.inputVolume.get().getFileName()
+        # Adding '\' to folders with spaces to scape the spaces
+        return self.inputVolume.get().getFileName().replace(' ', '\ ')
 
     def getVolumeAbsolutePath(self):
         """
         This method returns the absolute path for the volume file.
         Example: /home/username/documents/test/import_file.mrc
         """
-        return os.path.abspath(self.getVolumeRelativePath())
+        # os.path.baspath adds '\\' when finding a foldername with '\ ', so '\\\' needs to be replaced with ''
+        # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
+        return os.path.abspath(self.getVolumeRelativePath()).replace('\\\ ', ' ').replace(' ', '\ ')
 
     def getVolumeName(self):
         """
