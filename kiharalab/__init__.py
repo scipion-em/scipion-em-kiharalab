@@ -187,7 +187,7 @@ class Plugin(pwem.Plugin):
             shutil.rmtree(daqDir)
     
     @classmethod
-    def runEmap2sec(cls, protocol, args, clean=True):
+    def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
         """
         Run Emap2sec script from a given protocol.
         """
@@ -195,6 +195,10 @@ class Plugin(pwem.Plugin):
         # Enviroment activation command. Needed to execute befor every other standalone command.
         envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SEC'))
         
+        # If custom output directory is specified, create it if it does not exist
+        if outDir:
+            protocol.runJob("mkdir -p", outDir, cwd=cls._emap2secRepo)
+
         # Command to move to Emap2sec's repo's root directory.
         # Needed to be executed once before the actual workflow commands
         moveToRepoCommand = "cd "

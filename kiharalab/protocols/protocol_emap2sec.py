@@ -29,11 +29,12 @@
 This protocol is used to identify protein secondary structures, alpha helices, beta sheets,
 others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.
 """
+from fileinput import filename
 import os, shutil
 
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
-from pwem.objects import AtomStruct
+from pwem.objects import SetOfAtomStructs, AtomStruct
 from pwem.convert.atom_struct import toPdb
 from pyworkflow.utils import Message
 
@@ -45,7 +46,7 @@ class ProtEmap2sec(EMProtocol):
     Executes the Emap2sec software to indentify protein secondary strctures, alpha helices, beta sheets, and others
     """
     _label = 'Emap2sec'
-    _possibleOutputs = {'outputAtomStruct1': AtomStruct, 'outputAtomStruct2': AtomStruct}
+    _possibleOutputs = {'outputAtomStructsPhase1': SetOfAtomStructs, 'outputAtomStructsPhase2': SetOfAtomStructs}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -89,7 +90,7 @@ class ProtEmap2sec(EMProtocol):
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('mainExecutionStep')
-        #self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep')
 
     def mainExecutionStep(self):
         # Defining arguments for each command to execute
@@ -104,26 +105,43 @@ class ProtEmap2sec(EMProtocol):
             self.getFilesToRemove()
         ]
 
-        Plugin.runEmap2sec(self, args=args, clean=self.cleanTmps.get())
+        Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
 
     def createOutputStep(self):
-        """ outDir = self._getExtraPath('results')
-        outStruct = self._getPath(self.getVolumeNames() + '_1.pdb')
-        print("OUTPUT: ", outDir)
-        print("OUTPUT 2: ", outStruct) """
         print("------ BEGIN TEST ------")
+        # Defining empty sets of AtomStruct
+        outputAtomStructSet1 = SetOfAtomStructs().create(self._getPath())
+        outputAtomStructSet2 = SetOfAtomStructs().create(self._getPath())
+        print("outputAtomStructSet1 - ", outputAtomStructSet1)
+        print("outputAtomStructSet2 - ", outputAtomStructSet2)
+
+        # For each input file, two output files are produced, one for each Emap2sec's phase
+        for file in self.getVolumeAbsolutePaths():
+            for i in range(1, 3):
+                print("OUTPUT FILE: ", self.getOutputFile(file, i))
+                auxAtomStruct = AtomStruct(filename=self.getOutputFile(file, i))
+                #auxAtomStruct.setVolume(file)
+                if i == 1:
+                    try:
+                        outputAtomStructSet1.append(auxAtomStruct)
+                    except:
+                        print("NO SE PUEDE 1")
+                else:
+                    try:
+                        outputAtomStructSet2.append(auxAtomStruct)
+                    except:
+                        print("NO SE PUEDE 2")
+        
+        print("OUTPUT ATOM STRUCTS: ", outputAtomStructSet2)
+        #test = SetOfAtomStructs(outputAtomStructSet1)
+        #test.enableAppend()
+        #test.append(auxAtomStruct)
+        #test.setVolume(self.inputVolume.get())
+        #print("SET: ", test)
         print("------ END TEST ------")
         return;
-        #outVolume = self._getPath(self.getStructName() + '_dqa.mrc')
-
-        shutil.copy(os.path.join(outDir, 'dqa_score_w9.pdb'), outStruct)
-        #shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeNames())), outVolume)
-
-        outAS = AtomStruct(filename=outStruct)
-        outAS.setVolume(self.inputVolume.get())
-
-        self._defineOutputs(outputAtomStruct=outAS)
-
+        # Defining protocol output
+        self._defineOutputs(outputAtomStructsPhase1=test, outputAtomStructsPhase2=test)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -203,13 +221,12 @@ class ProtEmap2sec(EMProtocol):
         """
         args = []
         for file in self.getVolumeAbsolutePaths():
-            args.append('data/{}trimapp results/{}outputP{}_{}dataset -p > results/{}visual{}.pdb'\
+            args.append('data/{}trimapp results/{}outputP{}_{}dataset -p > {}'\
                 .format(self.getProtocolFilePrefix(file),
                     self.getProtocolPrefix(),
                     phase,
                     self.getProtocolFilePrefix(file),
-                    self.getProtocolFilePrefix(file),
-                    phase))
+                    self.getOutputFile(file, phase)))
         return args
     
     def getFilesToRemove(self):
@@ -307,3 +324,17 @@ class ProtEmap2sec(EMProtocol):
         for volume in self.getVolumeNames():
             volumes.append(self.getCleanVolumeName(volume))
         return volumes
+
+    def getOutputPath(self):
+        """
+        This method returns the absolute path to the custom output directory.
+        Spaces in the folder names are scaped to avoid errors.
+        """
+        rawPath = os.path.abspath(self._getExtraPath('results'))
+        return rawPath.replace(' ', '\ ')
+
+    def getOutputFile(self, inputFile, phase):
+        """
+        This method returns the full output file with the absolute path given an input file and the phase.
+        """
+        return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual' + str(phase) + '.pdb'
