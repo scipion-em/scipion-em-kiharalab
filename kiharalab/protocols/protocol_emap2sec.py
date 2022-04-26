@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors: Martín Salinas Antón (ssalinasmartin@gmail.com)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -59,22 +59,22 @@ class ProtEmap2sec(EMProtocol):
                       label="Input volume/s: ",
                       help='Select the electron map/s to be processed')
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
-                        help='Clean temporary files after finishing the execution. This is useful to reduce unnecessary disk usage.')
+                        help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
         trimappGroup = form.addGroup('Trimapp generation')
         trimappGroup.addParam('contour', params.FloatParam, default='2.75', label='Contour: ',
-                       help='The level of isosurface to generate density values for.'
-                       ' You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
+                       help='The level of isosurface to generate density values for.\n'
+                       'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimappGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
-                       help='This option sets the stride size of the sliding cube used for input data generation.'
-                       ' We recommend using a value of 2 that slides the cube by 2Å in each direction.'
-                       ' Decreasing this value to 1 produces 8 times more data (increase by a factor of 2 in each direction)'
+                       help='This option sets the stride size of the sliding cube used for input data generation.\n'
+                       'We recommend using a value of 4 that slides the cube by 4Å in each direction.\n'
+                       'Decreasing this value by 1 produces 8 times more data (increase by a factor of 2 in each direction)'
                        ' and thus slows the running time down by 8 times so please be mindful lowering this value.')
         trimappGroup.addParam('vw', params.IntParam, default='5', label='Sliding cube dimensions: ', expertLevel=params.LEVEL_ADVANCED,
-                       help='This option sets the dimensions of sliding cube used for input data generation.'
-                       ' The size of the cube is calculated as 2vw+1.'
-                       ' We recommend using a value of 5 for this option that generates input cube of size 11*11*11.'
-                       ' Please be mindful while increasing this option as it increases the portion of an EM map a single cube covers.'
+                       help='This option sets the dimensions of sliding cube used for input data generation.\n'
+                       'The size of the cube is calculated as 2vw+1.\n'
+                       'We recommend using a value of 5 for this option that generates input cube of size 11*11*11.\n'
+                       'Please be mindful while increasing this option as it increases the portion of an EM map a single cube covers.'
                        ' Increasing this value also increases running time.')
         trimappGroup.addParam('norm', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_NORM_GLOBAL, label='Normalization type: ',
                         expertLevel=params.LEVEL_ADVANCED, choices=['Global', 'Local'],
