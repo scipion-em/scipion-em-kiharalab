@@ -105,6 +105,7 @@ class ProtEmap2sec(EMProtocol):
             self.getFilesToRemove()
         ]
 
+        # Running protocol
         Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
 
     def createOutputStep(self):
@@ -330,10 +331,9 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the type of input received by the protocol.
         """
-        volumeInput = self.inputVolume.get()
         try:
             # Trying to obtain each file from the volume list
-            for volume in volumeInput:
+            for volume in self.inputVolume.get():
                 # If volumes are iterable, means it is a set
                 return 'SetOfVolumes'
         except:
