@@ -108,40 +108,27 @@ class ProtEmap2sec(EMProtocol):
         Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
 
     def createOutputStep(self):
-        print("------ BEGIN TEST ------")
         # Defining empty sets of AtomStruct
-        outputAtomStructSet1 = SetOfAtomStructs().create(self._getPath())
-        outputAtomStructSet2 = SetOfAtomStructs().create(self._getPath())
-        print("outputAtomStructSet1 - ", outputAtomStructSet1)
-        print("outputAtomStructSet2 - ", outputAtomStructSet2)
+        outputAtomStructSet1 = SetOfAtomStructs().create(self._getPath(), suffix="01")
+        outputAtomStructSet2 = SetOfAtomStructs().create(self._getPath(), suffix="02")
+
+        # Check if input type is Volume or SetOfVolumes
+        inputIsVolume = self.getInputType() == 'Volume'
 
         # For each input file, two output files are produced, one for each Emap2sec's phase
         for file in self.getVolumeAbsolutePaths():
             for i in range(1, 3):
-                print("OUTPUT FILE: ", self.getOutputFile(file, i))
                 auxAtomStruct = AtomStruct(filename=self.getOutputFile(file, i))
-                #auxAtomStruct.setVolume(file)
+                # If input is Volume, assign volume to AtomStruct
+                if inputIsVolume:
+                    auxAtomStruct.setVolume(self.inputVolume.get())
                 if i == 1:
-                    try:
-                        outputAtomStructSet1.append(auxAtomStruct)
-                    except:
-                        print("NO SE PUEDE 1")
+                    outputAtomStructSet1.append(auxAtomStruct)
                 else:
-                    try:
-                        outputAtomStructSet2.append(auxAtomStruct)
-                    except:
-                        print("NO SE PUEDE 2")
+                    outputAtomStructSet2.append(auxAtomStruct)
         
-        print("OUTPUT ATOM STRUCTS: ", outputAtomStructSet2)
-        #test = SetOfAtomStructs(outputAtomStructSet1)
-        #test.enableAppend()
-        #test.append(auxAtomStruct)
-        #test.setVolume(self.inputVolume.get())
-        #print("SET: ", test)
-        print("------ END TEST ------")
-        return;
         # Defining protocol output
-        self._defineOutputs(outputAtomStructsPhase1=test, outputAtomStructsPhase2=test)
+        self._defineOutputs(outputAtomStructsPhase1=outputAtomStructSet1, outputAtomStructsPhase2=outputAtomStructSet2)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -338,3 +325,17 @@ class ProtEmap2sec(EMProtocol):
         This method returns the full output file with the absolute path given an input file and the phase.
         """
         return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual' + str(phase) + '.pdb'
+    
+    def getInputType(self):
+        """
+        This method returns the type of input received by the protocol.
+        """
+        volumeInput = self.inputVolume.get()
+        try:
+            # Trying to obtain each file from the volume list
+            for volume in volumeInput:
+                # If volumes are iterable, means it is a set
+                return 'SetOfVolumes'
+        except:
+            # If it is not iterable, then it is a single volume
+            return 'Volume'
