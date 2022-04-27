@@ -62,7 +62,7 @@ class ProtEmap2sec(EMProtocol):
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
         trimappGroup = form.addGroup('Trimapp generation')
-        trimappGroup.addParam('contour', params.FloatParam, default='2.75', label='Contour: ',
+        trimappGroup.addParam('contour', params.FloatParam, label='Contour: ',
                        help='The level of isosurface to generate density values for.\n'
                        'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimappGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
