@@ -136,12 +136,21 @@ class ProtEmap2sec(EMProtocol):
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
+        """
+        This method returns a summary of the text provided by '_methods'.
+        """
         return []
 
     def _methods(self):
+        """
+        This method returns a text intended to be copied and pasted in the paper section 'materials & methods'.
+        """
         return []
 
     def _warnings(self):
+        """
+        This method warns about potentially problematic input values that will be used anyway.
+        """
         return []
 
     # --------------------------- UTILS functions -----------------------------------
