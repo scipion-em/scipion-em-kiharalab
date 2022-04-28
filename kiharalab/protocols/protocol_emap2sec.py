@@ -29,22 +29,21 @@
 This protocol is used to identify protein secondary structures, alpha helices, beta sheets,
 others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.
 """
-from fileinput import filename
-import os, shutil
+# Common imports
+import os
 
+# Pyworkflow imports
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import SetOfAtomStructs, AtomStruct
-from pwem.convert.atom_struct import toPdb
 from pyworkflow.utils import Message
 
+# Kiharalab imports
 from kiharalab import Plugin
 from kiharalab.constants import *
 
 class ProtEmap2sec(EMProtocol):
-    """
-    Executes the Emap2sec software to indentify protein secondary strctures, alpha helices, beta sheets, and others
-    """
+    """Executes the Emap2sec software to indentify protein secondary strctures, alpha helices, beta sheets, and others."""
     _label = 'Emap2sec'
     _possibleOutputs = {'outputAtomStructsPhase1': SetOfAtomStructs, 'outputAtomStructsPhase2': SetOfAtomStructs}
 
@@ -133,8 +132,11 @@ class ProtEmap2sec(EMProtocol):
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
-        summary = []
-        return summary
+        return ("Emap2sec is a computational tool using deep learning that can accurately identify protein secondary structures,"
+        " alpha helices, beta sheets, others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.\n"
+        "Original software can be found in https://github.com/kiharalab/Emap2sec\n\n"
+        "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
+        "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source")
 
     def _methods(self):
         methods = []
