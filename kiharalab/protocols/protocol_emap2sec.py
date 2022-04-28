@@ -43,7 +43,11 @@ from kiharalab import Plugin
 from kiharalab.constants import *
 
 class ProtEmap2sec(EMProtocol):
-    """Executes the Emap2sec software to indentify protein secondary strctures, alpha helices, beta sheets, and others."""
+    ("Emap2sec is a computational tool using deep learning that can accurately identify protein secondary structures,"
+    " alpha helices, beta sheets, others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.\n"
+    "Original software can be found in https://github.com/kiharalab/Emap2sec\n\n"
+    "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
+    "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
     _label = 'Emap2sec'
     _possibleOutputs = {'outputAtomStructsPhase1': SetOfAtomStructs, 'outputAtomStructsPhase2': SetOfAtomStructs}
 
@@ -132,20 +136,13 @@ class ProtEmap2sec(EMProtocol):
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
-        return ("Emap2sec is a computational tool using deep learning that can accurately identify protein secondary structures,"
-        " alpha helices, beta sheets, others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.\n"
-        "Original software can be found in https://github.com/kiharalab/Emap2sec\n\n"
-        "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
-        "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source")
+        return []
 
     def _methods(self):
-        methods = []
-        return methods
+        return []
 
     def _warnings(self):
-        """ Try to find warnings on define params. """
-        warnings=[]
-        return warnings
+        return []
 
     # --------------------------- UTILS functions -----------------------------------
     def getProtocolPrefix(self):
