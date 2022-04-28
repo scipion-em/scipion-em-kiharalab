@@ -113,16 +113,16 @@ class ProtEmap2sec(EMProtocol):
         outputAtomStructSet1 = SetOfAtomStructs().create(self._getPath(), suffix="01")
         outputAtomStructSet2 = SetOfAtomStructs().create(self._getPath(), suffix="02")
 
-        # Check if input type is Volume or SetOfVolumes
-        inputIsVolume = self.getInputType() == 'Volume'
+        # Getting input volumes
+        rawInputVolumes = self.inputVolume.get()
+        inputVolumes = [rawInputVolumes] if self.getInputType() == 'Volume' else rawInputVolumes
 
         # For each input file, two output files are produced, one for each Emap2sec's phase
-        for file in self.getVolumeAbsolutePaths():
+        for file, volume in zip(self.getVolumeAbsolutePaths(), inputVolumes):
             for i in range(1, 3):
                 auxAtomStruct = AtomStruct(filename=self.getOutputFile(file, i))
-                # If input is Volume, assign volume to AtomStruct
-                if inputIsVolume:
-                    auxAtomStruct.setVolume(self.inputVolume.get())
+                # Linking volume file to AtomStruct
+                auxAtomStruct.setVolume(volume)
                 if i == 1:
                     outputAtomStructSet1.append(auxAtomStruct)
                 else:
