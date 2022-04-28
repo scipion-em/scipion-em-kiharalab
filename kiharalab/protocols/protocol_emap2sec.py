@@ -128,7 +128,7 @@ class ProtEmap2sec(EMProtocol):
                 else:
                     outputAtomStructSet2.append(auxAtomStruct)
         
-        # Defining protocol output
+        # Defining protocol outputs
         self._defineOutputs(outputAtomStructsPhase1=outputAtomStructSet1, outputAtomStructsPhase2=outputAtomStructSet2)
 
     # --------------------------- INFO functions -----------------------------------
