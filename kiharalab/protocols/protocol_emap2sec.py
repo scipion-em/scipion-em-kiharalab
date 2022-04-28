@@ -234,17 +234,6 @@ class ProtEmap2sec(EMProtocol):
                 args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
         return args
 
-    def getStructFile(self):
-        return os.path.abspath(self.inputAtomStruct.get().getFileName())
-    
-    def getStructName(self):
-        return os.path.basename(os.path.splitext(self.getStructFile())[0])
-
-
-    def getPdbStruct(self):
-        return self._getExtraPath(self.getStructName()) + '.pdb'
-
-    
     def getVolumeRelativePaths(self):
         """
         This method returns a list with the volume paths relative to current directory.
