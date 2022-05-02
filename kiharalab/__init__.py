@@ -223,12 +223,10 @@ class Plugin(pwem.Plugin):
         
         # Secondary structures visualization command
         visualCommand = "{} && Visual/Visual.pl".format(envActivationCommand)
-        for visualArg1 in args[4]:
-            protocol.runJob(visualCommand, visualArg1, cwd=cls._emap2secRepo)
-        for visualArg2 in args[5]:
-            protocol.runJob(visualCommand, visualArg2, cwd=cls._emap2secRepo)
+        for visualArg in args[4]:
+            protocol.runJob(visualCommand, visualArg, cwd=cls._emap2secRepo)
 
         # Remove temporary files
         if clean:
-            for tmp_file in args[6]:
+            for tmp_file in args[5]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secRepo)

@@ -49,7 +49,7 @@ class ProtEmap2sec(EMProtocol):
     "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
     "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
     _label = 'Emap2sec'
-    _possibleOutputs = {'outputAtomStructsPhase1': SetOfAtomStructs, 'outputAtomStructsPhase2': SetOfAtomStructs}
+    _possibleOutputs = {'outputAtomStructs': SetOfAtomStructs}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -103,8 +103,7 @@ class ProtEmap2sec(EMProtocol):
             self.getDatasetArgs(),
             self.getInputLocationFileArgs(),
             self.getEmap2secArgs(),
-            self.getVisualArgs(1),
-            self.getVisualArgs(2),
+            self.getVisualArgs(),
             self.getFilesToRemove()
         ]
 
@@ -113,26 +112,21 @@ class ProtEmap2sec(EMProtocol):
 
     def createOutputStep(self):
         # Defining empty sets of AtomStruct
-        outputAtomStructSet1 = SetOfAtomStructs().create(self._getPath(), suffix="01")
-        outputAtomStructSet2 = SetOfAtomStructs().create(self._getPath(), suffix="02")
+        outputAtomStructs = SetOfAtomStructs().create(self._getPath())
 
         # Getting input volumes
         rawInputVolumes = self.inputVolume.get()
         inputVolumes = [rawInputVolumes] if self.getInputType() == 'Volume' else rawInputVolumes
 
-        # For each input file, two output files are produced, one for each Emap2sec's phase
+        # For each input file, one output files is produced
         for file, volume in zip(self.getVolumeAbsolutePaths(), inputVolumes):
-            for i in range(1, 3):
-                auxAtomStruct = AtomStruct(filename=self.getOutputFile(file, i))
-                # Linking volume file to AtomStruct
-                auxAtomStruct.setVolume(volume)
-                if i == 1:
-                    outputAtomStructSet1.append(auxAtomStruct)
-                else:
-                    outputAtomStructSet2.append(auxAtomStruct)
+            auxAtomStruct = AtomStruct(filename=self.getOutputFile(file))
+            # Linking volume file to AtomStruct
+            auxAtomStruct.setVolume(volume)
+            outputAtomStructs.append(auxAtomStruct)
         
         # Defining protocol outputs
-        self._defineOutputs(outputAtomStructsPhase1=outputAtomStructSet1, outputAtomStructsPhase2=outputAtomStructSet2)
+        self._defineOutputs(outputAtomStructs=outputAtomStructs)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -211,18 +205,17 @@ class ProtEmap2sec(EMProtocol):
         """
         return 'data/{}input.txt --prefix results/{}'.format(self.getProtocolPrefix(), self.getProtocolPrefix())
 
-    def getVisualArgs(self, phase):
+    def getVisualArgs(self):
         """
         This method returns the arguments neccessary for the Secondary Structure visualization.
         """
         args = []
         for file in self.getVolumeAbsolutePaths():
-            args.append('data/{}trimapp results/{}outputP{}_{}dataset -p > {}'\
+            args.append('data/{}trimapp results/{}outputP2_{}dataset -p > {}'\
                 .format(self.getProtocolFilePrefix(file),
                     self.getProtocolPrefix(),
-                    phase,
                     self.getProtocolFilePrefix(file),
-                    self.getOutputFile(file, phase)))
+                    self.getOutputFile(file)))
         return args
     
     def getFilesToRemove(self):
@@ -318,11 +311,11 @@ class ProtEmap2sec(EMProtocol):
         rawPath = os.path.abspath(self._getExtraPath('results'))
         return rawPath.replace(' ', '\ ')
 
-    def getOutputFile(self, inputFile, phase):
+    def getOutputFile(self, inputFile):
         """
-        This method returns the full output file with the absolute path given an input file and the phase.
+        This method returns the full output file with the absolute path given an input file.
         """
-        return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual' + str(phase) + '.pdb'
+        return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual.pdb'
     
     def getInputType(self):
         """
