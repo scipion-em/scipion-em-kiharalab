@@ -60,7 +60,7 @@ class TestEmap2sec(BaseTest):
         else:
             cls.protImportVolumes = protImportVolumes
     
-    def _runemap2sec(self, single=False):
+    def _runEmap2sec(self, single=False):
         # Getting input volumes and defining output variable string
         inputData = self.protImportVolume.outputVolume if single else self.protImportVolumes.outputVolumes
         outputVariable = 'outputAtomStruct' + ('' if single else 's')
@@ -80,10 +80,10 @@ class TestEmap2sec(BaseTest):
         """First test. Runs Emap2sec with Volume as input"""
         print("Running Emap2sec with Volume as input")
         # Running Emap2se with Volume as input
-        self._runemap2sec(True)
+        self._runEmap2sec(True)
     
     def testEmap2sec2(self):
         """Second test. Runs Emap2sec with SetOfVolumes as input"""
         print("Running Emap2sec with SetOfVolumes as input")
         # Running Emap2se with SetOfVolumes as input
-        self._runemap2sec()
+        self._runEmap2sec()
