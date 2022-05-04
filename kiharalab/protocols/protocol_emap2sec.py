@@ -31,6 +31,7 @@ others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low res
 """
 # Common imports
 import os
+from re import A
 
 # Pyworkflow imports
 from pyworkflow.protocol import params
@@ -49,7 +50,7 @@ class ProtEmap2sec(EMProtocol):
     "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
     "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
     _label = 'Emap2sec'
-    _possibleOutputs = {'outputAtomStructs': SetOfAtomStructs}
+    _possibleOutputs = {'outputAtomStruct': AtomStruct, 'outputAtomStructs': SetOfAtomStructs}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -110,22 +111,34 @@ class ProtEmap2sec(EMProtocol):
         Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
 
     def createOutputStep(self):
-        # Defining empty sets of AtomStruct
-        outputAtomStructs = SetOfAtomStructs().create(self._getPath())
+        # Checking whether input is one volume or a set of volumes to define output type
+        isOneVolume = self.getInputType() == 'Volume'
+
+        # Getting input files deppending on type
+        inputData = self.getVolumeAbsolutePaths()[0] if isOneVolume else self.getVolumeAbsolutePaths()
 
         # Getting input volumes
-        rawInputVolumes = self.inputVolume.get()
-        inputVolumes = [rawInputVolumes] if self.getInputType() == 'Volume' else rawInputVolumes
+        inputVolumes = self.inputVolume.get()
 
-        # For each input file, one output files is produced
-        for file, volume in zip(self.getVolumeAbsolutePaths(), inputVolumes):
-            auxAtomStruct = AtomStruct(filename=self.getOutputFile(file))
-            # Linking volume file to AtomStruct
-            auxAtomStruct.setVolume(volume)
-            outputAtomStructs.append(auxAtomStruct)
-        
-        # Defining protocol outputs
-        self._defineOutputs(outputAtomStructs=outputAtomStructs)
+        if isOneVolume:
+            # Creating output AtomStruct, linking volume to it, and defining protocol output
+            outputAtomStruct = AtomStruct(filename=self.getOutputFile(inputData))
+            outputAtomStruct.setVolume(self.inputVolume.get())
+            self._defineOutputs(outputAtomStruct=outputAtomStruct)
+        else:
+            # Defining empty sets of AtomStruct
+            outputAtomStructs = SetOfAtomStructs().create(self._getPath())
+
+            # For each input file, one output files is produced
+            for file, volume in zip(inputData, inputVolumes):
+                auxAtomStruct = AtomStruct(filename=self.getOutputFile(file))
+
+                # Linking volume file to AtomStruct and adding to set
+                auxAtomStruct.setVolume(volume)
+                outputAtomStructs.append(auxAtomStruct)
+            
+                # Defining protocol output
+                self._defineOutputs(outputAtomStructs=outputAtomStructs)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
