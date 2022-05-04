@@ -205,7 +205,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
 
         # Trimapp generation command
-        trimappCommand = "{} && map2train_src/bin/map2train".format(envActivationCommand)
+        trimappCommand = "map2train_src/bin/map2train"
         for trimappArg in args[0]:
             protocol.runJob(trimappCommand, trimappArg, cwd=cls._emap2secRepo)
 
@@ -222,7 +222,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
         
         # Secondary structures visualization command
-        visualCommand = "{} && Visual/Visual.pl".format(envActivationCommand)
+        visualCommand = "Visual/Visual.pl"
         for visualArg in args[4]:
             protocol.runJob(visualCommand, visualArg, cwd=cls._emap2secRepo)
 
