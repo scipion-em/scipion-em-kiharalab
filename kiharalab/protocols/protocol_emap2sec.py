@@ -64,29 +64,28 @@ class ProtEmap2sec(EMProtocol):
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
-        trimappGroup = form.addGroup('Trimapp generation')
-        trimappGroup.addParam('contour', params.FloatParam, label='Contour: ',
+        trimmapGroup = form.addGroup('Trimmap generation')
+        trimmapGroup.addParam('contour', params.FloatParam, label='Contour: ',
                        help='The level of isosurface to generate density values for.\n'
                        'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
-        trimappGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
+        trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
                        help='This option sets the stride size of the sliding cube used for input data generation.\n'
                        'We recommend using a value of 4 that slides the cube by 4Å in each direction.\n'
                        'Decreasing this value by 1 produces 8 times more data (increase by a factor of 2 in each direction)'
                        ' and thus slows the running time down by 8 times so please be mindful lowering this value.')
-        trimappGroup.addParam('vw', params.IntParam, default='5', label='Sliding cube dimensions: ', expertLevel=params.LEVEL_ADVANCED,
+        trimmapGroup.addParam('vw', params.IntParam, default='5', label='Sliding cube dimensions: ', expertLevel=params.LEVEL_ADVANCED,
                        help='This option sets the dimensions of sliding cube used for input data generation.\n'
                        'The size of the cube is calculated as 2vw+1.\n'
                        'We recommend using a value of 5 for this option that generates input cube of size 11*11*11.\n'
                        'Please be mindful while increasing this option as it increases the portion of an EM map a single cube covers.'
                        ' Increasing this value also increases running time.')
-        trimappGroup.addParam('norm', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_NORM_GLOBAL, label='Normalization type: ',
+        trimmapGroup.addParam('norm', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_NORM_GLOBAL, label='Normalization type: ',
                         expertLevel=params.LEVEL_ADVANCED, choices=['Global', 'Local'],
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
                        ' by global or local maximum density value.')
         
-        form.addSection(label=Message.LABEL_EXPERT_ADVANCE)
-        visualGroup = form.addGroup('Secondary structures visualization')
-        visualGroup.addParam('predict', params.BooleanParam, default='True', label='Show predicted data: ',
+        form.addSection(label='Secondary Structures')
+        form.addParam('predict', params.BooleanParam, default='True', label='Show predicted data: ',
                         help='Show predicted data (Predicted secondary structures)')
 
     # --------------------------- STEPS functions ------------------------------
@@ -99,7 +98,7 @@ class ProtEmap2sec(EMProtocol):
         # Defining arguments for each command to execute
         # args will be a list of strings, where each string are the arguments for a given command
         args = [
-            self.getTrimappArgs(),
+            self.getTrimmapArgs(),
             self.getDatasetArgs(),
             self.getInputLocationFileArgs(),
             self.getEmap2secArgs(),
@@ -163,13 +162,13 @@ class ProtEmap2sec(EMProtocol):
         """
         return '{}{}_'.format(self.getProtocolPrefix(), os.path.splitext(self.getCleanVolumeName(filename))[0])
 
-    def getTrimappArgs(self):
+    def getTrimmapArgs(self):
         """
-        This method returns a list with the arguments neccessary for the trimapp generation for each volume file.
+        This method returns a list with the arguments neccessary for the trimmap generation for each volume file.
         """
         args = []
         for file in self.getVolumeAbsolutePaths():
-            args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimapp'\
+            args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
             .format(file,
                 self.contour.get(),
                 self.sstep.get(),
@@ -185,7 +184,7 @@ class ProtEmap2sec(EMProtocol):
         args = []
         for file in self.getVolumeAbsolutePaths():
             outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(file))
-            args.append('{}trimapp {}dataset'.format(outputPefix, outputPefix))
+            args.append('{}trimmap {}dataset'.format(outputPefix, outputPefix))
         return args
     
     def getInputLocationFileArgs(self):
@@ -211,7 +210,7 @@ class ProtEmap2sec(EMProtocol):
         """
         args = []
         for file in self.getVolumeAbsolutePaths():
-            args.append('data/{}trimapp results/{}outputP2_{}dataset -p > {}'\
+            args.append('data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
                 .format(self.getProtocolFilePrefix(file),
                     self.getProtocolPrefix(),
                     self.getProtocolFilePrefix(file),
@@ -226,7 +225,7 @@ class ProtEmap2sec(EMProtocol):
         for file in self.getVolumeAbsolutePaths():
             protocolPrefix = self.getProtocolPrefix()
             filePrefix = self.getProtocolFilePrefix(file)
-            args.append('data/{}trimapp'.format(filePrefix))
+            args.append('data/{}trimmap'.format(filePrefix))
             args.append('data/{}dataset'.format(filePrefix))
             args.append('data/{}input.txt'.format(protocolPrefix))
             for i in range(1, 3):
