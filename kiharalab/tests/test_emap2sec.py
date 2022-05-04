@@ -35,15 +35,15 @@ class TestEmap2sec(BaseTest):
         cls.ds = DataSet.getDataSet('model_building_tutorial')
 
         # Running test with volume as input
-        cls._runImportVolumes(True)
+        cls._runImportVolumes(False)
 
         # Running test with set of volumes as input
         cls._runImportVolumes()
 
     @classmethod
-    def _runImportVolumes(cls, single=False):
+    def _runImportVolumes(cls, isSet=True):
         # Creating arguments for import volumes protocol
-        inputPath = 'volumes/1733' + ('' if single else '*') + '.mrc'
+        inputPath = 'volumes/1733' + ('*' if isSet else '') + '.mrc'
         args = {
             'filesPath': cls.ds.getFile(inputPath),
             'samplingRate': 1.0,
@@ -55,15 +55,15 @@ class TestEmap2sec(BaseTest):
         cls.launchProtocol(protImportVolumes)
 
         # Storing results in different variable if input is Volume or SetOfVolumes
-        if single:
-            cls.protImportVolume = protImportVolumes
-        else:
+        if isSet:
             cls.protImportVolumes = protImportVolumes
+        else:
+            cls.protImportVolume = protImportVolumes
     
-    def _runEmap2sec(self, single=False):
+    def _runEmap2sec(self, isSet=True):
         # Getting input volumes and defining output variable string
-        inputData = self.protImportVolume.outputVolume if single else self.protImportVolumes.outputVolumes
-        outputVariable = 'outputAtomStruct' + ('' if single else 's')
+        inputData = self.protImportVolumes.outputVolumes if isSet else self.protImportVolume.outputVolume
+        outputVariable = 'outputAtomStruct' + ('s' if isSet else '')
 
         # Running protocol
         protEmap2sec = self.newProtocol(
@@ -80,7 +80,7 @@ class TestEmap2sec(BaseTest):
         """First test. Runs Emap2sec with Volume as input"""
         print("Running Emap2sec with Volume as input")
         # Running Emap2se with Volume as input
-        self._runEmap2sec(True)
+        self._runEmap2sec(False)
     
     def testEmap2sec2(self):
         """Second test. Runs Emap2sec with SetOfVolumes as input"""
