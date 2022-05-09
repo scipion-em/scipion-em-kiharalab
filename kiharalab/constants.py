@@ -24,28 +24,46 @@
 # *
 # **************************************************************************
 
+PLUGIN_NAME = 'KIHARALAB'
 KIHARALAB_GIT = 'https://github.com/kiharalab/'
 KIHARALAB_HOME = 'KIHARA_HOME'
 DAQ_HOME = 'DAQ_HOME'
 EMAP2SEC_HOME = 'EMAP2SEC_HOME'
-PYMOL_HOME = 'PYMOL_HOME'
 
-
-# Supported Versions
+# Supported versions
 V1_0 = '1.0'
+
+# Plugin version
 KIHARALAB_DEFAULT_VERSION = V1_0
+
+# Protocol versions 
 DAQ_DEFAULT_VERSION = V1_0
 EMAP2SEC_DEFAULT_VERSION = V1_0
+
+# Protocol repo versions
+DAQ_REPO_DEFAULT_VERSION = V1_0
+EMAP2SEC_REPO_DEFAULT_VERSION = V1_0
+EMAP2SECPLUS_REPO_DEFAULT_VERSION = V1_0
+
+# Repo python versions
 DAQ_PYTHON_VERSION = '3.8.5'
 EMAP2SEC_PYTHON_VERSION = '3.6'
+EMAP2SECPLUS_PYTHON_VERSION = '3.6.9'
 
 # Plugin and protocol names
 KIHARALAB = 'kiharalab'
 DAQ = 'DAQ'
 EMAP2SEC = 'Emap2sec'
+EMAP2SECPLUS = 'Emap2secPlus'
 
 # Protocol name list
-PROTOCOL_LIST = [DAQ, EMAP2SEC]
+PROTOCOL_NAME_LIST = [EMAP2SEC]
+#PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC]
+
+# Protocol list. Each protocol can contain multiple repos if functionality of those repos is similar.
+# Protocol list is defined as a dictionary with protocol name as key and protocol repo list as value.
+#PROTOCOL_LIST = {DAQ: [DAQ]}, {EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
+PROTOCOL_LIST = {EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
 
 # Download links for extra files
 # Extra files are defined as a list of tuples with two elements
@@ -63,11 +81,22 @@ EMAP2SEC_EXTRA_FILES = [
 	("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")
 ]
 
+EMAP2SECPLUS_EXTRA_FILES = [
+	("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz", "."),
+	("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz", ".")
+]
+
 # Extra commands needed for proper project execution
 EMAP2SEC_EXTRA_COMMANDS = [
 	"mkdir -p results",
 	"chmod -R +x *",
 	"cd map2train_src && make && cd .."
+]
+
+EMAP2SECPLUS_EXTRA_COMMANDS = [
+	"tar -xf best_model.tar.gz && rm -f best_model.tar.gz",
+	"tar -xf nocontour_best_model.tar.gz && rm -f nocontour_best_model.tar.gz",
+	"chmod -R +x *"
 ]
 
 # Emap2sec param constants

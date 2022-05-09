@@ -24,10 +24,9 @@
 # *
 # **************************************************************************
 
-from ast import arg
 import pwem
 from .constants import *
-import shutil, os, subprocess
+import shutil, os
 
 _version_ = '0.1'
 _logo = "kiharalab_logo.png"
@@ -35,17 +34,23 @@ _references = ['genki2021DAQ']
 
 class Plugin(pwem.Plugin):
     """
-    Definition of class variables. For each protocol, three variables will be created.
+    Definition of class variables. For each protocol repo, three variables will be created.
     <protocolNameInUppercase>_WITH_VERSION will contain <protocolNameInUppercase>-<protocolVersion>. For example, "DAQ-1.0"
     _<protocolNameInLowercase>Home will contain the full path of the protocol, ending with a folder whose name will be <protocolNameInUppercase>_WITH_VERSION variable. For example: "~/Documents/scipion/software/em/DAQ-1.0"
     _<protocolNameInLowercase>Repo will be a folder inside _<protocolNameInLowercase>Home and its name will be <protocolNameInUppercase>. For example: "DAQ"
     """
-    names = [name.upper() for name in PROTOCOL_LIST]
+    names = [name for name in PROTOCOL_NAME_LIST]
     for name in names:
-        nameInLowercase = name.lower()
-        locals()[name + "_WITH_VERSION"] = name + '-' + globals()[name + "_DEFAULT_VERSION"]
-        locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[name + "_WITH_VERSION"])
-        locals()["_" + nameInLowercase + "Repo"] = os.path.join(locals()["_" + nameInLowercase + "Home"], globals()[name])
+        for protocolRepoName in PROTOCOL_LIST[name]:
+            nameInLowercase = protocolRepoName.lower()
+            nameInUppercase = protocolRepoName.upper()
+            locals()[nameInUppercase + "_WITH_VERSION"] = nameInUppercase + '-' + globals()[nameInUppercase + "_REPO_DEFAULT_VERSION"]
+            locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[name.upper() + "_WITH_VERSION"])
+            locals()["_" + nameInLowercase + "Repo"] = os.path.join(locals()["_" + nameInLowercase + "Home"], globals()[nameInUppercase])
+        
+        # Substituting each name with the same name in uppercase
+        nameIndex = names.index(name)
+        names[nameIndex] = name.upper()
 
     @classmethod
     def _defineVariables(cls):
@@ -70,45 +75,59 @@ class Plugin(pwem.Plugin):
             cls.addProtocolPackage(env,
                                     globals()[name],
                                     getattr(cls, "_" + nameInLowercase + "Home"),
-                                    getattr(cls, "_" + nameInLowercase + "Repo"),
                                     name,
                                     globals()[name + "_DEFAULT_VERSION"])
 
     @classmethod
-    def addProtocolPackage(cls, env, protocolName, protocolHome, protocolRepo, protocolVariableName, protocolVersion):
+    def addProtocolPackage(cls, env, protocolName, protocolHome, protocolVariableName, protocolVersion):
         """
         Define and execute commands for protocol installation.
         Every command has it's own checkpoint so if, for some reason, process is interrupted, only commands that were not completed will be repeated.
         cloneCmd clones the repo in the right folder.
         envCreationCmd creates the conda enviroment and installs the required python packages.
         """
-        # Cloning repo
-        cloneCmd = 'cd {} && git clone {} && touch REPO_CLONED' .format(protocolHome, cls.getGitUrl(protocolName))
-        
-        # Creating conda virtual enviroment and installing requirements
-        envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch ENVIROMENT_CREATED'\
-            .format(cls.getCondaActivationCmd(),
-                    getattr(cls, protocolVariableName + "_WITH_VERSION"),
-                    globals()[protocolVariableName + "_PYTHON_VERSION"],
-                    cls.getProtocolActivationCommand(protocolVariableName),
-                    protocolRepo)
-        
-        # Initial command list with fixed commands
-        commandList = [(cloneCmd, "REPO_CLONED"), (envCreationCmd, "ENVIROMENT_CREATED")]
-        
-        # Check if protocol has extra files to download
-        extraFilesVariableName = protocolVariableName + "_EXTRA_FILES"
-        if (extraFilesVariableName in globals()):
-            # Add all extra files as separate commands to create one checkpoint per file
-            # Checkpoint file names will be "EXTRA_FILE_0", "EXTRA_FILE_1"...
-            downloadCommandList = cls.getProtocolExtraFiles(globals()[extraFilesVariableName])
-            commandList = cls.addCommandsToList(commandList, downloadCommandList, "EXTRA_FILE_", protocolRepo, protocolHome)
-        
-        # Check if protocol has extra commands to execute
-        extraCommandsVariableName = protocolVariableName + "_EXTRA_COMMANDS"
-        if (extraCommandsVariableName in globals()):
-            extraCommands = globals()[extraCommandsVariableName]
-            commandList = cls.addCommandsToList(commandList, extraCommands, "EXTRA_COMMAND_", protocolRepo, protocolHome)
+        # Defining initial empty list of commands
+        commandList = []
+
+        for repoName in PROTOCOL_LIST[protocolName]:
+            # Defining repo variables
+            repoVariableName = repoName.upper()
+            protocolRepo = getattr(cls, "_" + repoName.lower() + "Repo")
+
+            # Defining checkpoint filenames
+            checkpointPrefix = repoVariableName + "_"
+            repoClonedCheckpoint = checkpointPrefix + "REPO_CLONED"
+            enviromentCreatedCheckpoint = checkpointPrefix + "ENVIROMENT_CREATED"
+            extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
+            extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
+
+            # Cloning repo
+            cloneCmd = 'cd {} && git clone {} && touch {}'.format(protocolHome, cls.getGitUrl(repoName), repoClonedCheckpoint)
+            commandList.append((cloneCmd, repoClonedCheckpoint))
+            
+            # Creating conda virtual enviroment and installing requirements
+            envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
+                .format(cls.getCondaActivationCmd(),
+                        getattr(cls, repoVariableName + "_WITH_VERSION"),
+                        globals()[repoVariableName + "_PYTHON_VERSION"],
+                        cls.getProtocolActivationCommand(repoVariableName),
+                        protocolRepo,
+                        enviromentCreatedCheckpoint)
+            commandList.append((envCreationCmd, enviromentCreatedCheckpoint))
+            
+            # Check if protocol repo has extra files to download
+            extraFilesVariableName = repoVariableName + "_EXTRA_FILES"
+            if (extraFilesVariableName in globals()):
+                # Add all extra files as separate commands to create one checkpoint per file
+                # Checkpoint file names will be "EXTRA_FILE_0", "EXTRA_FILE_1"...
+                downloadCommandList = cls.getProtocolExtraFiles(globals()[extraFilesVariableName])
+                commandList = cls.addCommandsToList(commandList, downloadCommandList, extraFileCheckpoint, protocolRepo, protocolHome)
+            
+            # Check if protocol repo has extra commands to execute
+            extraCommandsVariableName = repoVariableName + "_EXTRA_COMMANDS"
+            if (extraCommandsVariableName in globals()):
+                extraCommands = globals()[extraCommandsVariableName]
+                commandList = cls.addCommandsToList(commandList, extraCommands, extraCommandCheckpoint, protocolRepo, protocolHome)
 
         env.addPackage(protocolVariableName,
                        version=protocolVersion,
@@ -118,7 +137,7 @@ class Plugin(pwem.Plugin):
                        default=True)
     
     # ---------------------------------- Utils functions  -----------------------
-    
+
     @classmethod
     def getProtocolExtraFiles(cls, files):
         """
@@ -154,9 +173,9 @@ class Plugin(pwem.Plugin):
     @classmethod
     def getGitUrl(cls, protocolName):
         """
-        Returns the GitHub url for the given Kiharalab protocol.
+        Returns the GitHub url for the given plugin protocol.
         """
-        return KIHARALAB_GIT + protocolName
+        return globals()[PLUGIN_NAME + "_GIT"] + protocolName
     
     @classmethod
     def getProtocolActivationCommand(cls, variableName):
