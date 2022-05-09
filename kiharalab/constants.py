@@ -57,13 +57,11 @@ EMAP2SEC = 'Emap2sec'
 EMAP2SECPLUS = 'Emap2secPlus'
 
 # Protocol name list
-PROTOCOL_NAME_LIST = [EMAP2SEC]
-#PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC]
+PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC]
 
 # Protocol list. Each protocol can contain multiple repos if functionality of those repos is similar.
 # Protocol list is defined as a dictionary with protocol name as key and protocol repo list as value.
-#PROTOCOL_LIST = {DAQ: [DAQ]}, {EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
-PROTOCOL_LIST = {EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
+PROTOCOL_LIST = {DAQ: [DAQ], EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
 
 # Download links for extra files
 # Extra files are defined as a list of tuples with two elements
