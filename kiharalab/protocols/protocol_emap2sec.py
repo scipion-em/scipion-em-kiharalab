@@ -31,7 +31,6 @@ others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low res
 """
 # Common imports
 import os
-from re import A
 
 # Pyworkflow imports
 from pyworkflow.protocol import params
@@ -60,19 +59,19 @@ class ProtEmap2sec(EMProtocol):
         """
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputVolume', params.PointerParam,
-                      pointerClass='Volume,SetOfVolumes', allowsNull=False,
-                      label="Input volume/s: ",
-                      help='Select the electron map/s to be processed')
+                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
+                        label="Input volume/s: ",
+                        help='Select the electron map/s to be processed.')
         form.addParam('executionType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_TYPE_EMAP2SEC,
-                      choices=['Emap2sec', 'Emap2sec+'], label="Execution type: ",
-                      help='Select the type of execution between Emap2sec and Emap2sec+.\n'
-                      'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
+                        choices=['Emap2sec', 'Emap2sec+'], label="Execution type: ",
+                        help='Select the type of execution between Emap2sec and Emap2sec+.\n'
+                        'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
         # -------------------------------------- Emap2sec params --------------------------------------
         trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
-        trimmapGroup.addParam('contour', params.FloatParam, label='Contour: ',
+        trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ',
                        help='The level of isosurface to generate density values for.\n'
                        'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
@@ -93,11 +92,15 @@ class ProtEmap2sec(EMProtocol):
         
         form.addParam('predict', params.BooleanParam, default='True', label='Show Secondary Structures predicted data: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC, expertLevel=params.LEVEL_ADVANCED,
-                        help='Show predicted data (Predicted secondary structures)')
+                        help='Show predicted data (Predicted secondary structures).')
         
         # -------------------------------------- Emap2sec+ params --------------------------------------
         form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         help='Select the GPU id where the process will run on.')
+        form.addParam('emap2secplusContour', params.FloatParam, default='0.0', label='Contour: ',
+                       condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
+                       'You can use the author recommended contour level, which will be used by a specific model,'
+                       ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
         form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_MODE_DETECT_STRUCTS, label='Mode: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4'],
@@ -106,6 +109,11 @@ class ProtEmap2sec(EMProtocol):
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
                             '- Detect structures fold 4: Detect structure for experimental maps with 4 fold models\n\n'
                             '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n')
+        form.addParam('inputStruct', params.PointerParam,
+                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SEC_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SEC_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
+                        pointerClass='AtomStruct,SetOfAtomStructs', allowsNull=False,
+                        label="Input atom structs/s: ",
+                        help='Select the atom struct/s to evaluate the model with.')
         form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_RESIZE_NUMBA, label='Map resize: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Numba', 'Scipy'],
                         help='Set this option to define the python package used to resize the maps. The options are:\n\n'
@@ -124,6 +132,7 @@ class ProtEmap2sec(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def mainExecutionStep(self):
+        # Defining which software will be run
         executionIsEmap2sec = self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
 
         # Defining arguments for each command to execute
@@ -136,7 +145,8 @@ class ProtEmap2sec(EMProtocol):
             self.getVisualArgs(),
             self.getFilesToRemove()
         ] if executionIsEmap2sec else [
-
+            '',
+            []
         ]
 
         # Running protocol
@@ -218,7 +228,7 @@ class ProtEmap2sec(EMProtocol):
         for file in self.getVolumeAbsolutePaths():
             args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
             .format(file,
-                self.contour.get(),
+                self.emap2secContour.get(),
                 self.sstep.get(),
                 self.vw.get(),
                 '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
