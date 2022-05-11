@@ -98,6 +98,7 @@ class Plugin(pwem.Plugin):
             # Defining checkpoint filenames
             checkpointPrefix = repoVariableName + "_"
             repoClonedCheckpoint = checkpointPrefix + "REPO_CLONED"
+            repoRenamedCheckpoint = checkpointPrefix + "REPO_RENAMED"
             enviromentCreatedCheckpoint = checkpointPrefix + "ENVIROMENT_CREATED"
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
@@ -105,6 +106,11 @@ class Plugin(pwem.Plugin):
             # Cloning repo
             cloneCmd = 'cd {} && git clone {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoClonedCheckpoint)
             commandList.append((cloneCmd, repoClonedCheckpoint))
+
+            # If repository URL was different than desired repository local name, change name
+            if repoName != repoURLName:
+                moveCmd = 'mv {} {} && touch {}'.format(repoURLName, repoName, repoRenamedCheckpoint)
+                commandList.append((moveCmd, repoRenamedCheckpoint))
             
             # Creating conda virtual enviroment and installing requirements if project runs on Python
             try:

@@ -95,21 +95,21 @@ EMAP2SECPLUS_EXTRA_FILES = [
 ]
 
 # Extra commands needed for proper project execution
+GRANT_EXECUTION_ACCESS = "chmod -R +x *"
 EMAP2SEC_EXTRA_COMMANDS = [
 	"mkdir -p results",
-	"chmod -R +x *",
+	GRANT_EXECUTION_ACCESS,
 	"cd map2train_src && make && cd .."
 ]
 
 EMAP2SECPLUS_EXTRA_COMMANDS = [
 	"tar -xf best_model.tar.gz && rm -f best_model.tar.gz",
 	"tar -xf nocontour_best_model.tar.gz && rm -f nocontour_best_model.tar.gz",
-	"chmod -R +x *"
+	GRANT_EXECUTION_ACCESS
 ]
 
 MAINMAST_EXTRA_COMMANDS = [
-	"mv {} {}".format(MAINMAST_REPO_URL_NAME, MAINMAST),
-	"chmod -R +x *"
+	GRANT_EXECUTION_ACCESS
 ]
 
 # Emap2sec param constants
