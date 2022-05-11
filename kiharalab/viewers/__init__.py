@@ -5,3 +5,4 @@
 # **************************************************************************
 
 from .viewer_daq import DAQViewer
+from .viewer_mainmast import MainMastViewer
