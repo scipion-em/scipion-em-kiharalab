@@ -249,3 +249,29 @@ class Plugin(pwem.Plugin):
         if clean:
             for tmp_file in args[5]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secRepo)
+    
+    @classmethod
+    def runEmap2secPlus(cls, protocol, args, outDir=None, clean=True):
+        """
+        Run Emap2secPlus script from a given protocol.
+        """
+        # Building commands before actual protocol execution
+        # Enviroment activation command. Needed to execute befor every other standalone command.
+        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SECPLUS'))
+        
+        # If custom output directory is specified, create it if it does not exist
+        if outDir:
+            protocol.runJob("mkdir -p", outDir, cwd=cls._emap2secplusRepo)
+
+        # Command to move to Emap2sec+'s repo's root directory.
+        # Needed to be executed once before the actual workflow commands
+        moveToRepoCommand = "cd "
+        protocol.runJob(moveToRepoCommand, cls._emap2secplusRepo, cwd=cls._emap2secplusRepo)
+
+        # TODO: Protocol execution
+
+        # Remove temporary files
+        return # TODO REMOVE LATER
+        if clean:
+            for tmp_file in args[1]:
+                protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secplusRepo)

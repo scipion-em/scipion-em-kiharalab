@@ -46,7 +46,8 @@ from kiharalab.constants import *
 class ProtEmap2sec(EMProtocol):
     ("Emap2sec is a computational tool using deep learning that can accurately identify protein secondary structures,"
     " alpha helices, beta sheets, others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.\n"
-    "Original software can be found in https://github.com/kiharalab/Emap2sec\n\n"
+    "Emap2sec+ also covers DNA/RNA.\n"
+    "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus\n\n"
     "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
     "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
     _label = 'Emap2sec'
@@ -62,10 +63,15 @@ class ProtEmap2sec(EMProtocol):
                       pointerClass='Volume,SetOfVolumes', allowsNull=False,
                       label="Input volume/s: ",
                       help='Select the electron map/s to be processed')
+        form.addParam('executionType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_TYPE_EMAP2SEC,
+                      choices=['Emap2sec', 'Emap2sec+'], label="Execution type: ",
+                      help='Select the type of execution between Emap2sec and Emap2sec+.\n'
+                      'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
-        trimmapGroup = form.addGroup('Trimmap generation')
+        # -------------------------------------- Emap2sec params --------------------------------------
+        trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
         trimmapGroup.addParam('contour', params.FloatParam, label='Contour: ',
                        help='The level of isosurface to generate density values for.\n'
                        'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
@@ -85,9 +91,31 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
                        ' by global or local maximum density value.')
         
-        form.addSection(label='Secondary Structures')
-        form.addParam('predict', params.BooleanParam, default='True', label='Show predicted data: ',
+        form.addParam('predict', params.BooleanParam, default='True', label='Show Secondary Structures predicted data: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC, expertLevel=params.LEVEL_ADVANCED,
                         help='Show predicted data (Predicted secondary structures)')
+        
+        # -------------------------------------- Emap2sec+ params --------------------------------------
+        form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+                        help='Select the GPU id where the process will run on.')
+        form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_MODE_DETECT_STRUCTS, label='Mode: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
+                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4'],
+                        help='Set this option to define the execution mode. The options are:\n\n'
+                            '- Detect structures: Detect structures for EM Map\n\n'
+                            '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
+                            '- Detect structures fold 4: Detect structure for experimental maps with 4 fold models\n\n'
+                            '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n')
+        form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_RESIZE_NUMBA, label='Map resize: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Numba', 'Scipy'],
+                        help='Set this option to define the python package used to resize the maps. The options are:\n\n'
+                            '- Numba: Optimized, but some map sizes are not supported.\n'
+                            '- Scipy: Relatively slow but supports almost all maps.\n')
+        form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+                        expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.')
+        form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_FOLD4, label='Fold model: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
+                        help='Set this option to specify the fold model used for detecting the experimental map.')
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
@@ -96,6 +124,8 @@ class ProtEmap2sec(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def mainExecutionStep(self):
+        executionIsEmap2sec = self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
+
         # Defining arguments for each command to execute
         # args will be a list of strings, where each string are the arguments for a given command
         args = [
@@ -105,10 +135,15 @@ class ProtEmap2sec(EMProtocol):
             self.getEmap2secArgs(),
             self.getVisualArgs(),
             self.getFilesToRemove()
+        ] if executionIsEmap2sec else [
+
         ]
 
         # Running protocol
-        Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
+        if executionIsEmap2sec:
+            Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
+        else:
+            Plugin.runEmap2secPlus(self, args=args, outDir=None, clean=self.cleanTmps.get())
 
     def createOutputStep(self):
         # Checking whether input is one volume or a set of volumes to define output type
@@ -341,3 +376,12 @@ class ProtEmap2sec(EMProtocol):
         except:
             # If it is not iterable, then it is a single volume
             return 'Volume'
+    
+    # -------------------------------- Emap2sec+ specific functions --------------------------------
+
+    def getFoldModel(self):
+        """
+        This method returns the real fold value selected by the user.
+        That is the value returned by the form + 1, because input param list starts by 1 but arrays start by 0.
+        """
+        return self.fold.get() + 1
