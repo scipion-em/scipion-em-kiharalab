@@ -220,76 +220,6 @@ class ProtEmap2sec(EMProtocol):
         """
         return '{}{}_'.format(self.getProtocolPrefix(), os.path.splitext(self.getCleanVolumeName(filename))[0])
 
-    def getTrimmapArgs(self):
-        """
-        This method returns a list with the arguments neccessary for the trimmap generation for each volume file.
-        """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
-            .format(file,
-                self.emap2secContour.get(),
-                self.sstep.get(),
-                self.vw.get(),
-                '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
-                self.getProtocolFilePrefix(file)))
-        return args
-    
-    def getDatasetArgs(self):
-        """
-        This method returns the arguments neccessary for the dataset generation.
-        """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(file))
-            args.append('{}trimmap {}dataset'.format(outputPefix, outputPefix))
-        return args
-    
-    def getInputLocationFileArgs(self):
-        """
-        This method returns the arguments neccessary for input location file generation,
-        used for Emap2sec.py.
-        """
-        inputFileLocations = '\''
-        for file in self.getVolumeAbsolutePaths():
-            inputFileLocations = inputFileLocations + 'data/{}dataset\n'.format(self.getProtocolFilePrefix(file))
-        inputFileLocations = inputFileLocations[:-1]
-        return inputFileLocations + '\' > data/{}input.txt'.format(self.getProtocolPrefix())
-    
-    def getEmap2secArgs(self):
-        """
-        This method returns the arguments neccessary for the Emap2sec.py's execution.
-        """
-        return 'data/{}input.txt --prefix results/{}'.format(self.getProtocolPrefix(), self.getProtocolPrefix())
-
-    def getVisualArgs(self):
-        """
-        This method returns the arguments neccessary for the Secondary Structure visualization.
-        """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            args.append('data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
-                .format(self.getProtocolFilePrefix(file),
-                    self.getProtocolPrefix(),
-                    self.getProtocolFilePrefix(file),
-                    self.getOutputFile(file)))
-        return args
-    
-    def getFilesToRemove(self):
-        """
-        This method returns a list of all the temporary files to be removed if the user chose to do it.
-        """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            protocolPrefix = self.getProtocolPrefix()
-            filePrefix = self.getProtocolFilePrefix(file)
-            args.append('data/{}trimmap'.format(filePrefix))
-            args.append('data/{}dataset'.format(filePrefix))
-            args.append('data/{}input.txt'.format(protocolPrefix))
-            for i in range(1, 3):
-                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
-        return args
-
     def getVolumeRelativePaths(self):
         """
         This method returns a list with the volume paths relative to current directory.
@@ -360,20 +290,6 @@ class ProtEmap2sec(EMProtocol):
             volumes.append(self.getCleanVolumeName(volume))
         return volumes
 
-    def getOutputPath(self):
-        """
-        This method returns the absolute path to the custom output directory.
-        Spaces in the folder names are scaped to avoid errors.
-        """
-        rawPath = os.path.abspath(self._getExtraPath('results'))
-        return rawPath.replace(' ', '\ ')
-
-    def getOutputFile(self, inputFile):
-        """
-        This method returns the full output file with the absolute path given an input file.
-        """
-        return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual.pdb'
-    
     def getInputType(self):
         """
         This method returns the type of input received by the protocol.
@@ -386,9 +302,93 @@ class ProtEmap2sec(EMProtocol):
         except:
             # If it is not iterable, then it is a single volume
             return 'Volume'
+
+    def getOutputPath(self): # EMAP2SEC SPECIFIC? CHECK WHEN EMAP2SEC+ COMPLETED
+        """
+        This method returns the absolute path to the custom output directory.
+        Spaces in the folder names are scaped to avoid errors.
+        """
+        rawPath = os.path.abspath(self._getExtraPath('results'))
+        return rawPath.replace(' ', '\ ')
+
+    def getOutputFile(self, inputFile): # EMAP2SEC SPECIFIC? CHECK WHEN EMAP2SEC+ COMPLETED
+        """
+        This method returns the full output file with the absolute path given an input file.
+        """
+        return os.path.join(self.getOutputPath(), self.getProtocolFilePrefix(inputFile)) + 'visual.pdb'
+
+    # -------------------------------- Emap2sec specific functions --------------------------------
+    def getTrimmapArgs(self):
+        """
+        This method returns a list with the arguments neccessary for the trimmap generation for each volume file.
+        """
+        args = []
+        for file in self.getVolumeAbsolutePaths():
+            args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
+            .format(file,
+                self.emap2secContour.get(),
+                self.sstep.get(),
+                self.vw.get(),
+                '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
+                self.getProtocolFilePrefix(file)))
+        return args
+    
+    def getDatasetArgs(self):
+        """
+        This method returns the arguments neccessary for the dataset generation.
+        """
+        args = []
+        for file in self.getVolumeAbsolutePaths():
+            outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(file))
+            args.append('{}trimmap {}dataset'.format(outputPefix, outputPefix))
+        return args
+    
+    def getInputLocationFileArgs(self):
+        """
+        This method returns the arguments neccessary for input location file generation,
+        used for Emap2sec.py.
+        """
+        inputFileLocations = '\''
+        for file in self.getVolumeAbsolutePaths():
+            inputFileLocations = inputFileLocations + 'data/{}dataset\n'.format(self.getProtocolFilePrefix(file))
+        inputFileLocations = inputFileLocations[:-1]
+        return inputFileLocations + '\' > data/{}input.txt'.format(self.getProtocolPrefix())
+    
+    def getEmap2secArgs(self):
+        """
+        This method returns the arguments neccessary for the Emap2sec.py's execution.
+        """
+        return 'data/{}input.txt --prefix results/{}'.format(self.getProtocolPrefix(), self.getProtocolPrefix())
+
+    def getVisualArgs(self):
+        """
+        This method returns the arguments neccessary for the Secondary Structure visualization.
+        """
+        args = []
+        for file in self.getVolumeAbsolutePaths():
+            args.append('data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
+                .format(self.getProtocolFilePrefix(file),
+                    self.getProtocolPrefix(),
+                    self.getProtocolFilePrefix(file),
+                    self.getOutputFile(file)))
+        return args
+    
+    def getFilesToRemove(self):
+        """
+        This method returns a list of all the temporary files to be removed if the user chose to do it.
+        """
+        args = []
+        for file in self.getVolumeAbsolutePaths():
+            protocolPrefix = self.getProtocolPrefix()
+            filePrefix = self.getProtocolFilePrefix(file)
+            args.append('data/{}trimmap'.format(filePrefix))
+            args.append('data/{}dataset'.format(filePrefix))
+            args.append('data/{}input.txt'.format(protocolPrefix))
+            for i in range(1, 3):
+                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
+        return args
     
     # -------------------------------- Emap2sec+ specific functions --------------------------------
-
     def getFoldModel(self):
         """
         This method returns the real fold value selected by the user.
