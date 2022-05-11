@@ -214,7 +214,7 @@ class ProtDAQValidation(EMProtocol):
 
     def parseDAQScores(self, pdbFile):
         '''Return a dictionary with {spec: value}
-        "spec" should be a chimera specifier'''
+        "spec" should be a chimera specifier. In this case:  chainId:residueIdx'''
         daqDic = {}
         with open(pdbFile) as f:
             for line in f:
