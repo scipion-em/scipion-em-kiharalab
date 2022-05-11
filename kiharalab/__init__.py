@@ -93,6 +93,7 @@ class Plugin(pwem.Plugin):
             # Defining repo variables
             repoVariableName = repoName.upper()
             protocolRepo = getattr(cls, "_" + repoName.lower() + "Repo")
+            repoURLName = globals()[repoVariableName + "_REPO_URL_NAME"]
 
             # Defining checkpoint filenames
             checkpointPrefix = repoVariableName + "_"
@@ -102,18 +103,23 @@ class Plugin(pwem.Plugin):
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
 
             # Cloning repo
-            cloneCmd = 'cd {} && git clone {} && touch {}'.format(protocolHome, cls.getGitUrl(repoName), repoClonedCheckpoint)
+            cloneCmd = 'cd {} && git clone {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoClonedCheckpoint)
             commandList.append((cloneCmd, repoClonedCheckpoint))
             
-            # Creating conda virtual enviroment and installing requirements
-            envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
-                .format(cls.getCondaActivationCmd(),
-                        getattr(cls, repoVariableName + "_WITH_VERSION"),
-                        globals()[repoVariableName + "_PYTHON_VERSION"],
-                        cls.getProtocolActivationCommand(repoVariableName),
-                        protocolRepo,
-                        enviromentCreatedCheckpoint)
-            commandList.append((envCreationCmd, enviromentCreatedCheckpoint))
+            # Creating conda virtual enviroment and installing requirements if project runs on Python
+            try:
+                repoPythonVersion = globals()[repoVariableName + "_PYTHON_VERSION"]
+            except:
+                repoPythonVersion = None
+            if repoPythonVersion: 
+                envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
+                    .format(cls.getCondaActivationCmd(),
+                            getattr(cls, repoVariableName + "_WITH_VERSION"),
+                            repoPythonVersion,
+                            cls.getProtocolActivationCommand(repoVariableName),
+                            protocolRepo,
+                            enviromentCreatedCheckpoint)
+                commandList.append((envCreationCmd, enviromentCreatedCheckpoint))
             
             # Check if protocol repo has extra files to download
             extraFilesVariableName = repoVariableName + "_EXTRA_FILES"
@@ -220,7 +226,7 @@ class Plugin(pwem.Plugin):
 
         # Command to move to Emap2sec's repo's root directory.
         # Needed to be executed once before the actual workflow commands
-        moveToRepoCommand = "cd "
+        moveToRepoCommand = "cd"
         protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
 
         # Trimapp generation command
@@ -265,13 +271,14 @@ class Plugin(pwem.Plugin):
 
         # Command to move to Emap2sec+'s repo's root directory.
         # Needed to be executed once before the actual workflow commands
-        moveToRepoCommand = "cd "
+        moveToRepoCommand = "cd"
         protocol.runJob(moveToRepoCommand, cls._emap2secplusRepo, cwd=cls._emap2secplusRepo)
 
-        # TODO: Protocol execution
+        # Emap2sec+ execution command
+        runCommand = "{} && python3".format(envActivationCommand)
+        protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
 
         # Remove temporary files
-        return # TODO REMOVE LATER
         if clean:
             for tmp_file in args[1]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secplusRepo)

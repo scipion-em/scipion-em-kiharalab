@@ -29,6 +29,7 @@ KIHARALAB_GIT = 'https://github.com/kiharalab/'
 KIHARALAB_HOME = 'KIHARA_HOME'
 DAQ_HOME = 'DAQ_HOME'
 EMAP2SEC_HOME = 'EMAP2SEC_HOME'
+MAINMAST_HOME = 'MAINMAST_HOME'
 
 # Supported versions
 V1_0 = '1.0'
@@ -39,11 +40,13 @@ KIHARALAB_DEFAULT_VERSION = V1_0
 # Protocol versions 
 DAQ_DEFAULT_VERSION = V1_0
 EMAP2SEC_DEFAULT_VERSION = V1_0
+MAINMAST_DEFAULT_VERSION = V1_0
 
 # Protocol repo versions
 DAQ_REPO_DEFAULT_VERSION = V1_0
 EMAP2SEC_REPO_DEFAULT_VERSION = V1_0
 EMAP2SECPLUS_REPO_DEFAULT_VERSION = V1_0
+MAINMAST_REPO_DEFAULT_VERSION = V1_0
 
 # Repo python versions
 DAQ_PYTHON_VERSION = '3.8.5'
@@ -55,13 +58,20 @@ KIHARALAB = 'kiharalab'
 DAQ = 'DAQ'
 EMAP2SEC = 'Emap2sec'
 EMAP2SECPLUS = 'Emap2secPlus'
+MAINMAST = 'MainMast'
+
+# Repository names
+DAQ_REPO_URL_NAME = DAQ
+EMAP2SEC_REPO_URL_NAME = EMAP2SEC
+EMAP2SECPLUS_REPO_URL_NAME = EMAP2SECPLUS
+MAINMAST_REPO_URL_NAME = 'MAINMASTseg'
 
 # Protocol name list
-PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC]
+PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC, MAINMAST]
 
 # Protocol list. Each protocol can contain multiple repos if functionality of those repos is similar.
 # Protocol list is defined as a dictionary with protocol name as key and protocol repo list as value.
-PROTOCOL_LIST = {DAQ: [DAQ], EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS]}
+PROTOCOL_LIST = {DAQ: [DAQ], EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS], MAINMAST: [MAINMAST]}
 
 # Download links for extra files
 # Extra files are defined as a list of tuples with two elements
@@ -94,6 +104,11 @@ EMAP2SEC_EXTRA_COMMANDS = [
 EMAP2SECPLUS_EXTRA_COMMANDS = [
 	"tar -xf best_model.tar.gz && rm -f best_model.tar.gz",
 	"tar -xf nocontour_best_model.tar.gz && rm -f nocontour_best_model.tar.gz",
+	"chmod -R +x *"
+]
+
+MAINMAST_EXTRA_COMMANDS = [
+	"mv {} {}".format(MAINMAST_REPO_URL_NAME, MAINMAST),
 	"chmod -R +x *"
 ]
 
