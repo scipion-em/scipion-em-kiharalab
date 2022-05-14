@@ -196,8 +196,9 @@ class Plugin(pwem.Plugin):
         """
         return "conda activate " + getattr(cls, variableName + "_WITH_VERSION")
 
-    # ---------------------------------- Protocol execution functions  -----------------------
+    # ---------------------------------- Protocol execution functions  ----------------------------------
 
+    # ---------------------------------- DAQ ----------------------------------
     @classmethod
     def runDAQ(cls, protocol, args, outDir=None, clean=True):
         """
@@ -217,6 +218,7 @@ class Plugin(pwem.Plugin):
         if clean:
             shutil.rmtree(daqDir)
     
+    # ---------------------------------- Emap2sec ----------------------------------
     @classmethod
     def runEmap2sec(cls, protocol, args, outDir=None, clean=True):
         """
@@ -262,6 +264,7 @@ class Plugin(pwem.Plugin):
             for tmp_file in args[5]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secRepo)
     
+    # ---------------------------------- Emap2sc+ ----------------------------------
     @classmethod
     def runEmap2secPlus(cls, protocol, args, outDir=None, clean=True):
         """
@@ -288,3 +291,14 @@ class Plugin(pwem.Plugin):
         if clean:
             for tmp_file in args[1]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secplusRepo)
+
+    # ---------------------------------- MainMast ----------------------------------
+    @classmethod
+    def runSegmentation(cls, protocol, args, cwd=None):
+        mainMastCall = os.path.join(cls._mainmastRepo, 'MainmastSeg')
+        protocol.runJob(mainMastCall, args, cwd=cwd)
+    
+    @classmethod
+    def convertMatrix(cls, protocol, args, cwd=None):
+        convertCall = os.path.join(cls._mainmastRepo, 'conv_ncs.pl')
+        protocol.runJob(convertCall, args, cwd=cwd)
