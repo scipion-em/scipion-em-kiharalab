@@ -285,7 +285,9 @@ class Plugin(pwem.Plugin):
 
         # Emap2sec+ execution command
         runCommand = "{} && python3".format(envActivationCommand)
-        protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
+        testCommand = "echo \'{} {}\'".format(runCommand, args[0])
+        protocol.runJob(testCommand, '', cwd=cls._emap2secplusRepo)
+        #protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
 
         # Remove temporary files
         if clean:
