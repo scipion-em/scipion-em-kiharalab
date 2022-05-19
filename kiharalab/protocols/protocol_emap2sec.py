@@ -35,7 +35,7 @@ import os
 # Pyworkflow imports
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
-from pwem.objects import SetOfAtomStructs, AtomStruct
+from pwem.objects import SetOfAtomStructs, AtomStruct, SetOfVolumes
 from pyworkflow.utils import Message
 
 # Kiharalab imports
@@ -71,7 +71,7 @@ class ProtEmap2sec(EMProtocol):
 
         # -------------------------------------- Emap2sec params --------------------------------------
         trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
-        trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ',
+        trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
                        help='The level of isosurface to generate density values for.\n'
                        'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
@@ -145,9 +145,10 @@ class ProtEmap2sec(EMProtocol):
             self.getVisualArgs(),
             self.getFilesToRemove()
         ] if executionIsEmap2sec else [
-            '',
+            self.getEmap2secPlusArgs(),
             []
         ]
+        print(args)
 
         # Running protocol
         if executionIsEmap2sec:
@@ -395,3 +396,20 @@ class ProtEmap2sec(EMProtocol):
         That is the value returned by the form + 1, because input param list starts by 1 but arrays start by 0.
         """
         return self.fold.get() + 1
+    
+    def getEmap2secPlusArgs(self):
+        """
+        This method returns the arguments necessary to execute Emap2sec+.
+        """
+        params = []
+        # Creating a param string for each input file
+        for inputFile in self.getVolumeAbsolutePaths():
+            executionMode = self.mode.get()
+            param = '-F={} --mode={} --resize={}'.format(inputFile, executionMode, self.resize.get())
+            if executionMode == 1 or executionMode == 3:
+                param = '{} --P={}'.format(param, )
+            param = '{} {}'.format(param, type(self.inputVolume.get())==SetOfVolumes)
+            params.append(param)
+        print(params)
+
+        return params
