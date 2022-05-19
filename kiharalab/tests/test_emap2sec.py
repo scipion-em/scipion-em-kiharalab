@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import shutil, os
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes
 from ..protocols import ProtEmap2sec
@@ -32,6 +33,7 @@ class TestEmap2sec(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
+        cls.tmpFiles = []
         cls.ds = DataSet.getDataSet('model_building_tutorial')
 
         # Running test with volume as input
@@ -43,12 +45,19 @@ class TestEmap2sec(BaseTest):
     @classmethod
     def _runImportVolumes(cls, isSet=True):
         # Creating arguments for import volumes protocol
-        inputPath = 'volumes/1733' + ('*' if isSet else '') + '.mrc'
+        inputPrefix = 'volumes/emd_6838'
+        inputPath = inputPrefix + ('*' if isSet else '') + '.mrc'
         args = {
             'filesPath': cls.ds.getFile(inputPath),
             'samplingRate': 1.0,
             'setOrigCoord': False
         }
+
+        # If is set of volumes, duplicate mrc file to have at least two valid volume files
+        if isSet:
+            shutil.copyfile(cls.ds.getFile(inputPrefix + '.mrc'), cls.ds.getFile(inputPrefix + '_2.mrc'))
+            # Set duplicated file in a variable for later removal
+            cls.tmpFiles.append(cls.ds.getFile(inputPrefix + '_2.mrc'))
 
         # Creating and launching import volumes protocol
         protImportVolumes = cls.newProtocol(ProtImportVolumes, **args)
@@ -82,13 +91,22 @@ class TestEmap2sec(BaseTest):
             self.assertIsNotNone(pdbOut.getVolume())
 
     def testEmap2sec1(self):
-        """First test. Runs Emap2sec with Volume as input"""
+        """First test. Runs Emap2sec with Volume as input."""
         print("Running Emap2sec with Volume as input")
         # Running Emap2se with Volume as input
         self._runEmap2sec(False)
     
     def testEmap2sec2(self):
-        """Second test. Runs Emap2sec with SetOfVolumes as input"""
+        """Second test. Runs Emap2sec with SetOfVolumes as input."""
         print("Running Emap2sec with SetOfVolumes as input")
         # Running Emap2se with SetOfVolumes as input
         self._runEmap2sec()
+        # Last test calls cleaning function so it does not count as a separate test
+        self.cleanTest()
+    
+    def cleanTest(self):
+        """This function removes all temporary files produced during the execution."""
+        # Cleaning up duplicated files
+        for tmpFile in self.tmpFiles:
+            if os.path.exists(tmpFile):
+                os.remove(tmpFile)
