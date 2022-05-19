@@ -148,7 +148,6 @@ class ProtEmap2sec(EMProtocol):
             self.getEmap2secPlusArgs(),
             []
         ]
-        print(args)
 
         # Running protocol
         if executionIsEmap2sec:
@@ -410,6 +409,5 @@ class ProtEmap2sec(EMProtocol):
                 param = '{} --P={}'.format(param, )
             param = '{} {}'.format(param, type(self.inputVolume.get())==SetOfVolumes)
             params.append(param)
-        print(params)
 
         return params
