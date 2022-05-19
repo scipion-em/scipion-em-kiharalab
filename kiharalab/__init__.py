@@ -98,20 +98,14 @@ class Plugin(pwem.Plugin):
             # Defining checkpoint filenames
             checkpointPrefix = repoVariableName + "_"
             repoClonedCheckpoint = checkpointPrefix + "REPO_CLONED"
-            repoRenamedCheckpoint = checkpointPrefix + "REPO_RENAMED"
             enviromentCreatedCheckpoint = checkpointPrefix + "ENVIROMENT_CREATED"
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
 
             # Cloning repo
-            cloneCmd = 'cd {} && git clone {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoClonedCheckpoint)
+            cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
             commandList.append((cloneCmd, repoClonedCheckpoint))
 
-            # If repository URL was different than desired repository local name, change name
-            if repoName != repoURLName:
-                moveCmd = 'mv {} {} && touch {}'.format(repoURLName, repoName, repoRenamedCheckpoint)
-                commandList.append((moveCmd, repoRenamedCheckpoint))
-            
             # Creating conda virtual enviroment and installing requirements if project runs on Python
             try:
                 repoPythonVersion = globals()[repoVariableName + "_PYTHON_VERSION"]
@@ -285,9 +279,11 @@ class Plugin(pwem.Plugin):
 
         # Emap2sec+ execution command
         runCommand = "{} && python3".format(envActivationCommand)
-        testCommand = "echo \'{} {}\'".format(runCommand, args[0])
-        protocol.runJob(testCommand, '', cwd=cls._emap2secplusRepo)
-        #protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
+        print(args[0])
+        for emap2secPlusArgs in args[0]:
+            testCommand = "echo \'{} {}\'".format(runCommand, emap2secPlusArgs)
+            protocol.runJob(testCommand, '', cwd=cls._emap2secplusRepo)
+            #protocol.runJob(runCommand, emap2secPlusArgs, cwd=cls._emap2secplusRepo)
 
         # Remove temporary files
         if clean:
