@@ -75,6 +75,11 @@ class TestEmap2sec(BaseTest):
         # Checking function output
         pdbOut = getattr(protEmap2sec, outputVariable, None)
         self.assertIsNotNone(pdbOut)
+        if isSet:
+            for atomStruct in pdbOut:
+                self.assertIsNotNone(atomStruct.getVolume())
+        else:        
+            self.assertIsNotNone(pdbOut.getVolume())
 
     def testEmap2sec1(self):
         """First test. Runs Emap2sec with Volume as input"""
