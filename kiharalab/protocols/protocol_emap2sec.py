@@ -130,6 +130,9 @@ class ProtEmap2sec(EMProtocol):
                         condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
                         expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
                         help='Set this option to specify the fold model used for detecting the experimental map.')
+        form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+                        expertLevel=params.LEVEL_ADVANCED,
+                        help='Set this option to specify the path to a custom model to be used by Emap2sec+.')
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
@@ -236,15 +239,14 @@ class ProtEmap2sec(EMProtocol):
         """
         return '{}{}_'.format(self.getProtocolPrefix(), os.path.splitext(self.getCleanVolumeName(filename))[0])
     
-    def getFileAbsolutePath(self, file):
+    def scapePath(self, path):
         """
-        This method returns the absolute path of a given file, scaping any spaces a foldername in that path could have.
-        It also takes into account possible scaping already done to the filename string, which could be a relative path.
+        This function returns the given path with all the spaces in folder names scaped to avoid errors.
         """
         # os.path.baspath adds '\\' when finding a foldername with '\ ', so '\\\' needs to be replaced with ''
         # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
-        return os.path.abspath(file).replace('\\\ ', ' ').replace(' ', '\ ')
-
+        return path.replace('\\\ ', ' ').replace(' ', '\ ')
+    
     def getVolumeRelativePaths(self):
         """
         This method returns a list with the volume paths relative to current directory.
@@ -259,10 +261,10 @@ class ProtEmap2sec(EMProtocol):
             # Trying to obtain each file from the volume list
             for volume in rawVolumeInput:
                 # Adding '\' to folders with spaces to scape the spaces
-                volumes.append(volume.getFileName().replace(' ', '\ '))
+                volumes.append(self.scapePath(volume.getFileName()))
         except:
             # If we get an exception, it means it si a single volume
-            volumes = [rawVolumeInput.getFileName().replace(' ', '\ ')]
+            volumes = [self.scapePath(rawVolumeInput.getFileName())]
         return volumes
 
     def getVolumeAbsolutePaths(self):
@@ -272,7 +274,7 @@ class ProtEmap2sec(EMProtocol):
         """
         volumes = []
         for volume in self.getVolumeRelativePaths():
-            volumes.append(self.getFileAbsolutePath(volume))
+            volumes.append(self.scapePath(os.path.abspath(volume)))
         return volumes
     
     def getVolumeName(self, filename):
@@ -332,7 +334,7 @@ class ProtEmap2sec(EMProtocol):
         Spaces in the folder names are scaped to avoid errors.
         """
         rawPath = os.path.abspath(self._getExtraPath('results'))
-        return rawPath.replace(' ', '\ ')
+        return self.scapePath(rawPath)
 
     def getOutputFile(self, inputFile): # EMAP2SEC SPECIFIC? CHECK WHEN EMAP2SEC+ COMPLETED
         """
@@ -435,14 +437,21 @@ class ProtEmap2sec(EMProtocol):
             and current directory is /home/username/documents
             this will return '/test/my_atom_struct_file.pdb'
         """
-        return self.inputStruct.get().getFileName().replace(' ', '\ ')
+        return self.scapePath(self.inputStruct.get().getFileName())
     
     def getStructAbsolutePath(self):
         """
         This method returns the absolute path for the atom struc file.
         Example: '/home/username/documents/test/my_atom_struct_file.pdb'
         """
-        return self.getFileAbsolutePath(self.getStructRelativePath())
+        return self.scapePath(os.path.abspath(self.getStructRelativePath()))
+    
+    def getCustomModel(self):
+        """
+        This function returns the string for the custom model path.
+        """
+        customModel = self.customModel.get()
+        return (' -M=' + self.scapePath(customModel)) if customModel else ''
     
     def getEmap2secPlusArgs(self):
         """
@@ -452,9 +461,9 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.mode.get()
-            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --output_folder={}'\
-                .format(inputFile, executionMode, self.mapType.get(), self.resize.get(),
-                        self.getContourLevel(), self.gpuId.get(), self.classes.get(), self.getOutputPath())
+            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --output_folder={}{}'\
+                .format(inputFile, executionMode, self.mapType.get(), self.resize.get(), self.getContourLevel(),
+                        self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
             
             # If selected mode is not a fold4 mode, add fold selection
             if executionMode == 0 or executionMode == 1:
