@@ -95,34 +95,40 @@ class ProtEmap2sec(EMProtocol):
                         help='Show predicted data (Predicted secondary structures).')
         
         # -------------------------------------- Emap2sec+ params --------------------------------------
+        form.addParam('mapType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_TYPE_EXPERIMENTAL, label='Map type: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
+                        choices=['Simulated map at 6Å', 'Simulated map at 10Å', 'Simulated map at 6-10Å', 'Experimental map'],
+                        help='Set this option to define the type of input map.')
         form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         help='Select the GPU id where the process will run on.')
         form.addParam('emap2secplusContour', params.FloatParam, default='0.0', label='Contour: ',
                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
                        'You can use the author recommended contour level, which will be used by a specific model,'
                        ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
-        form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_MODE_DETECT_STRUCTS, label='Mode: ',
+        form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4'],
                         help='Set this option to define the execution mode. The options are:\n\n'
                             '- Detect structures: Detect structures for EM Map\n\n'
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
                             '- Detect structures fold 4: Detect structure for experimental maps with 4 fold models\n\n'
-                            '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n')
+                            '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n'
+                            'Setting 4 fold options will make the backend program call 4 fold networks and aggregate the final detection probabilities by majority vote.')
         form.addParam('inputStruct', params.PointerParam,
-                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SEC_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SEC_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
+                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
                         pointerClass='AtomStruct', allowsNull=False,
                         label="Input atom struct: ",
                         help='Select the atom struct to evaluate the model with.')
-        form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_RESIZE_NUMBA, label='Map resize: ',
+        form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_RESIZE_NUMBA, label='Map resize: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Numba', 'Scipy'],
                         help='Set this option to define the python package used to resize the maps. The options are:\n\n'
                             '- Numba: Optimized, but some map sizes are not supported.\n'
                             '- Scipy: Relatively slow but supports almost all maps.\n')
         form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.')
-        form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_FOLD4, label='Fold model: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
+        form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_FOLD3, label='Fold model: ',
+                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
+                        expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
                         help='Set this option to specify the fold model used for detecting the experimental map.')
 
     # --------------------------- STEPS functions ------------------------------
@@ -153,7 +159,7 @@ class ProtEmap2sec(EMProtocol):
         if executionIsEmap2sec:
             Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
         else:
-            Plugin.runEmap2secPlus(self, args=args, outDir=None, clean=self.cleanTmps.get())
+            Plugin.runEmap2secPlus(self, args=args, clean=self.cleanTmps.get())
 
     def createOutputStep(self):
         # Checking whether input is one volume or a set of volumes to define output type
@@ -208,7 +214,7 @@ class ProtEmap2sec(EMProtocol):
         errors = []
         # If execution type is Emap2sec+ in evaluation mode, and input is a set of volumes, show error
         if (self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and type(self.inputVolume.get()) == SetOfVolumes and
-            (self.mode.get() == EMAP2SEC_MODE_DETECT_EVALUATE_STRUCTS or self.mode.get() == EMAP2SEC_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4)):
+            (self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS or self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4)):
             errors.append('Cannot use evaluation mode for a set of volumes as input, because evaluation mode '
                             'is only designed to test the result pdb file obtained from an input volume against a reference pdb file.\n'
                             'If you want to use evaluation mode, use a single volume as input.')
@@ -320,7 +326,7 @@ class ProtEmap2sec(EMProtocol):
             # If it is not iterable, then it is a single volume
             return 'Volume'
 
-    def getOutputPath(self): # EMAP2SEC SPECIFIC? CHECK WHEN EMAP2SEC+ COMPLETED
+    def getOutputPath(self):
         """
         This method returns the absolute path to the custom output directory.
         Spaces in the folder names are scaped to avoid errors.
@@ -413,6 +419,14 @@ class ProtEmap2sec(EMProtocol):
         """
         return self.fold.get() + 1
     
+    def getContourLevel(self): # TEST IF NECESSARY, WITH 0 AND 0.0 THE RESULT MUST BE THE SAME
+        """
+        This function returns the correct contour level, which will be the input contour level if it is different from 0.0.
+        If the contour level is 0.0, the resulting level gets converted into an integer.
+        """
+        contour = self.emap2secplusContour.get()
+        return contour if contour != 0.0 else 0
+    
     def getStructRelativePath(self):
         """
         This method returns the AtomStruct path relative to current directory.
@@ -421,8 +435,6 @@ class ProtEmap2sec(EMProtocol):
             and current directory is /home/username/documents
             this will return '/test/my_atom_struct_file.pdb'
         """
-        print("INPUT STRUCT - ", self.inputStruct.get())
-        print("INPUT FILENAME - ", self.inputStruct.get().getFileName())
         return self.inputStruct.get().getFileName().replace(' ', '\ ')
     
     def getStructAbsolutePath(self):
@@ -440,10 +452,17 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.mode.get()
-            param = '-F={} --mode={} --resize={} --contour={}'\
-                .format(inputFile, executionMode, self.resize.get(), self.emap2secplusContour.get())
+            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --output_folder={}'\
+                .format(inputFile, executionMode, self.mapType.get(), self.resize.get(),
+                        self.getContourLevel(), self.gpuId.get(), self.classes.get(), self.getOutputPath())
+            
+            # If selected mode is not a fold4 mode, add fold selection
+            if executionMode == 0 or executionMode == 1:
+                param = '{} --fold={}'.format(param, self.getFoldModel())
+
+            # If execution mode is evaluate, add input atom struct
             if executionMode == 1 or executionMode == 3:
-                param = '{} --P={}'.format(param, self.getStructAbsolutePath())
+                param = '{} -P={}'.format(param, self.getStructAbsolutePath())
             params.append(param)
 
         return params
