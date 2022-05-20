@@ -111,9 +111,9 @@ class ProtEmap2sec(EMProtocol):
                             '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n')
         form.addParam('inputStruct', params.PointerParam,
                         condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SEC_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SEC_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
-                        pointerClass='AtomStruct,SetOfAtomStructs', allowsNull=False,
-                        label="Input atom structs/s: ",
-                        help='Select the atom struct/s to evaluate the model with.')
+                        pointerClass='AtomStruct', allowsNull=False,
+                        label="Input atom struct: ",
+                        help='Select the atom struct to evaluate the model with.')
         form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_RESIZE_NUMBA, label='Map resize: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Numba', 'Scipy'],
                         help='Set this option to define the python package used to resize the maps. The options are:\n\n'
@@ -200,9 +200,19 @@ class ProtEmap2sec(EMProtocol):
 
     def _warnings(self):
         """
-        This method warns about potentially problematic input values that will be used anyway.
+        This method warns about potentially problematic input values that may be used anyway.
         """
         return []
+    
+    def _validate(self):
+        errors = []
+        # If execution type is Emap2sec+ in evaluation mode, and input is a set of volumes, show error
+        if (self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and type(self.inputVolume.get()) == SetOfVolumes and
+            (self.mode.get() == EMAP2SEC_MODE_DETECT_EVALUATE_STRUCTS or self.mode.get() == EMAP2SEC_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4)):
+            errors.append('Cannot use evaluation mode for a set of volumes as input, because evaluation mode '
+                            'is only designed to test the result pdb file obtained from an input volume against a reference pdb file.\n'
+                            'If you want to use evaluation mode, use a single volume as input.')
+        return errors
 
     # --------------------------- UTILS functions -----------------------------------
     def getProtocolPrefix(self):
