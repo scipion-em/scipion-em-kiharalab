@@ -229,6 +229,15 @@ class ProtEmap2sec(EMProtocol):
         This will be <protocolId>_<inputFileName>_
         """
         return '{}{}_'.format(self.getProtocolPrefix(), os.path.splitext(self.getCleanVolumeName(filename))[0])
+    
+    def getFileAbsolutePath(self, file):
+        """
+        This method returns the absolute path of a given file, scaping any spaces a foldername in that path could have.
+        It also takes into account possible scaping already done to the filename string, which could be a relative path.
+        """
+        # os.path.baspath adds '\\' when finding a foldername with '\ ', so '\\\' needs to be replaced with ''
+        # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
+        return os.path.abspath(file).replace('\\\ ', ' ').replace(' ', '\ ')
 
     def getVolumeRelativePaths(self):
         """
@@ -255,11 +264,9 @@ class ProtEmap2sec(EMProtocol):
         This method returns a list with the absolute path for the volume files.
         Example: ['/home/username/documents/test/import_file.mrc']
         """
-        # os.path.baspath adds '\\' when finding a foldername with '\ ', so '\\\' needs to be replaced with ''
-        # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
         volumes = []
         for volume in self.getVolumeRelativePaths():
-            volumes.append(os.path.abspath(volume).replace('\\\ ', ' ').replace(' ', '\ '))
+            volumes.append(self.getFileAbsolutePath(volume))
         return volumes
     
     def getVolumeName(self, filename):
@@ -406,6 +413,25 @@ class ProtEmap2sec(EMProtocol):
         """
         return self.fold.get() + 1
     
+    def getStructRelativePath(self):
+        """
+        This method returns the AtomStruct path relative to current directory.
+        Example:
+            if a file is in /home/username/documents/test/my_atom_struct_file.pdb
+            and current directory is /home/username/documents
+            this will return '/test/my_atom_struct_file.pdb'
+        """
+        print("INPUT STRUCT - ", self.inputStruct.get())
+        print("INPUT FILENAME - ", self.inputStruct.get().getFileName())
+        return self.inputStruct.get().getFileName().replace(' ', '\ ')
+    
+    def getStructAbsolutePath(self):
+        """
+        This method returns the absolute path for the atom struc file.
+        Example: '/home/username/documents/test/my_atom_struct_file.pdb'
+        """
+        return self.getFileAbsolutePath(self.getStructRelativePath())
+    
     def getEmap2secPlusArgs(self):
         """
         This method returns the arguments necessary to execute Emap2sec+.
@@ -414,10 +440,10 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.mode.get()
-            param = '-F={} --mode={} --resize={}'.format(inputFile, executionMode, self.resize.get())
+            param = '-F={} --mode={} --resize={} --contour={}'\
+                .format(inputFile, executionMode, self.resize.get(), self.emap2secplusContour.get())
             if executionMode == 1 or executionMode == 3:
-                param = '{} --P={}'.format(param, )
-            param = '{} {}'.format(param, type(self.inputVolume.get())==SetOfVolumes)
+                param = '{} --P={}'.format(param, self.getStructAbsolutePath())
             params.append(param)
 
         return params
