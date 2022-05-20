@@ -278,8 +278,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(moveToRepoCommand, cls._emap2secplusRepo, cwd=cls._emap2secplusRepo)
 
         # Emap2sec+ execution command
-        runCommand = "{} && python3".format(envActivationCommand)
-        print(args[0])
+        runCommand = "{} && python3 main.py".format(envActivationCommand)
         for emap2secPlusArgs in args[0]:
             testCommand = "echo \'{} {}\'".format(runCommand, emap2secPlusArgs)
             protocol.runJob(testCommand, '', cwd=cls._emap2secplusRepo)
