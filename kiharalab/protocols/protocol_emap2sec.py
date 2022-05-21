@@ -167,6 +167,9 @@ class ProtEmap2sec(EMProtocol):
             Plugin.runEmap2secPlus(self, args=args, clean=self.cleanTmps.get())
 
     def createOutputStep(self):
+        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS: # TMP, Need to get output structure
+            return
+        
         # Checking whether input is one volume or a set of volumes to define output type
         isOneVolume = self.getInputType() == 'Volume'
 
