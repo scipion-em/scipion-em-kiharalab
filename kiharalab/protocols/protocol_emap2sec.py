@@ -107,12 +107,13 @@ class ProtEmap2sec(EMProtocol):
                        ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
         form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
-                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4'],
+                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4', 'Detect DNA/RNA & protein fold 4'],
                         help='Set this option to define the execution mode. The options are:\n\n'
                             '- Detect structures: Detect structures for EM Map\n\n'
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
                             '- Detect structures fold 4: Detect structure for experimental maps with 4 fold models\n\n'
                             '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n'
+                            '- Detect DNA/RNA & protein fold 4: Detect DNA/RNA and protein for experimental maps with 4 fold models\n\n'
                             'Setting 4 fold options will make the backend program call 4 fold networks and aggregate the final detection probabilities by majority vote.')
         form.addParam('inputStruct', params.PointerParam,
                         condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
