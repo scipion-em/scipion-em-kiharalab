@@ -132,7 +132,9 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to specify the fold model used for detecting the experimental map.')
         form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         expertLevel=params.LEVEL_ADVANCED,
-                        help='Set this option to specify the path to a custom model to be used by Emap2sec+.')
+                        help='Set this option to specify the path to a custom model to be used by Emap2sec+.\n'
+                            'The model needs to have the same directory structure as the models included with this protocol.\n'
+                            'You can download a sample model to check the folder structure from https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz')
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
