@@ -102,12 +102,11 @@ EMAP2SECPLUS_EXTRA_FILES = [
 
 # Extra commands needed for proper project execution
 GRANT_EXECUTION_ACCESS = "chmod -R +x *"
-COMPILE_ALL_CORES_FLAG = "-j `nproc`"
 CLEAN_ALL_OBJECTS = "rm -rf *.o"
 EMAP2SEC_EXTRA_COMMANDS = [
 	"mkdir -p results",
 	GRANT_EXECUTION_ACCESS,
-	"cd map2train_src && make {} && cd ..".format(COMPILE_ALL_CORES_FLAG),
+	"cd map2train_src && make && cd ..",
 	GRANT_EXECUTION_ACCESS
 ]
 
@@ -120,7 +119,7 @@ EMAP2SECPLUS_EXTRA_COMMANDS = [
 MAINMAST_EXTRA_COMMANDS = [
 	CLEAN_ALL_OBJECTS + " MainmastSeg",
 	GRANT_EXECUTION_ACCESS,
-	"make {}".format(COMPILE_ALL_CORES_FLAG),
+	"make",
 	CLEAN_ALL_OBJECTS,
 	GRANT_EXECUTION_ACCESS
 ]
