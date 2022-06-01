@@ -73,6 +73,12 @@ PROTOCOL_NAME_LIST = [DAQ, EMAP2SEC, MAINMAST]
 # Protocol list is defined as a dictionary with protocol name as key and protocol repo list as value.
 PROTOCOL_LIST = {DAQ: [DAQ], EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS], MAINMAST: [MAINMAST]}
 
+# Protocol dependencies. All software required to run each protocol must be defined here.
+DAQ_DEPENDENCIES = ['git', 'conda', 'pip']
+EMAP2SEC_DEPENDENCIES = ['git', 'conda', 'pip', 'wget', 'make', 'gcc']
+EMAP2SECPLUS_DEPENDENCIES = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
+MAINMAST_DEPENDENCIES = ['git', 'make', 'gcc']
+
 # Download links for extra files
 # Extra files are defined as a list of tuples with two elements
 # 	The first element will be the download link

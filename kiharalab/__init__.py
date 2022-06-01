@@ -89,11 +89,15 @@ class Plugin(pwem.Plugin):
         # Defining initial empty list of commands
         commandList = []
 
+        # Defining empty list of protocol dependencies
+        dependencies = []
+
         for repoName in PROTOCOL_LIST[protocolName]:
             # Defining repo variables
             repoVariableName = repoName.upper()
             protocolRepo = getattr(cls, "_" + repoName.lower() + "Repo")
             repoURLName = globals()[repoVariableName + "_REPO_URL_NAME"]
+            repoDependencies = globals()[repoVariableName + "_DEPENDENCIES"]
 
             # Defining checkpoint filenames
             checkpointPrefix = repoVariableName + "_"
@@ -101,6 +105,9 @@ class Plugin(pwem.Plugin):
             enviromentCreatedCheckpoint = checkpointPrefix + "ENVIROMENT_CREATED"
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
+        
+            # Adding the list of dependencies of the repo to the list of the protocol without duplicates
+            dependencies = list(set(dependencies + repoDependencies))
 
             # Cloning repo
             cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
@@ -139,7 +146,7 @@ class Plugin(pwem.Plugin):
                        version=protocolVersion,
                        tar='void.tgz',
                        commands=commandList,
-                       neededProgs=["conda", "pip"],
+                       neededProgs=dependencies,
                        default=True)
     
     # ---------------------------------- Utils functions  -----------------------
