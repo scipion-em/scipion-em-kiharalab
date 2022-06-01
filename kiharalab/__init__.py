@@ -105,9 +105,6 @@ class Plugin(pwem.Plugin):
             enviromentCreatedCheckpoint = checkpointPrefix + "ENVIROMENT_CREATED"
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
-        
-            # Adding the list of dependencies of the repo to the list of the protocol without duplicates
-            dependencies = list(set(dependencies + repoDependencies))
 
             # Cloning repo
             cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
@@ -141,6 +138,9 @@ class Plugin(pwem.Plugin):
             if (extraCommandsVariableName in globals()):
                 extraCommands = globals()[extraCommandsVariableName]
                 commandList = cls.addCommandsToList(commandList, extraCommands, extraCommandCheckpoint, protocolRepo, protocolHome)
+            
+            # Adding the list of dependencies of the repo to the list of the protocol without duplicates
+            dependencies = list(set(dependencies + repoDependencies + cls.getDetectedDependencies(repoVariableName)))
 
         env.addPackage(protocolVariableName,
                        version=protocolVersion,
@@ -196,6 +196,23 @@ class Plugin(pwem.Plugin):
         Returns the conda activation command for the given protocol.
         """
         return "conda activate " + getattr(cls, variableName + "_WITH_VERSION")
+    
+    @classmethod
+    def getDetectedDependencies(cls, variableName):
+        """
+        Returns a list with the detected dependencies of the protocol even if it is not properly defined in constants.py.
+        As of today, git is used in all protocols and downloading extra files uses wget.
+        The rest is left for the new protocol programmer to decide.
+        """
+        # Defining default dependencies
+        detectedDependencies = ['git']
+
+        # Checking if protocol downloads extra files. If so, wget is needed.
+        extraFilesVariableName = variableName + "_EXTRA_FILES"
+        if (extraFilesVariableName in globals()):
+            detectedDependencies.append('wget')
+        
+        return detectedDependencies
 
     # ---------------------------------- Protocol execution functions  ----------------------------------
 
