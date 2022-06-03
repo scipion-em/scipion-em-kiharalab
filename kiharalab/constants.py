@@ -121,7 +121,8 @@ MAINMAST_EXTRA_COMMANDS = [
 	GRANT_EXECUTION_ACCESS,
 	"make",
 	CLEAN_ALL_OBJECTS,
-	GRANT_EXECUTION_ACCESS
+	GRANT_EXECUTION_ACCESS,
+	"cd example1 && gunzip emd-0093.mrc.gz"
 ]
 
 # Emap2sec param constants
