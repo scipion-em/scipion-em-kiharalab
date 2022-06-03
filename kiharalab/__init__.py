@@ -96,7 +96,7 @@ class Plugin(pwem.Plugin):
             # Defining repo variables
             repoVariableName = repoName.upper()
             protocolRepo = getattr(cls, "_" + repoName.lower() + "Repo")
-            repoURLName = globals()[repoVariableName + "_REPO_URL_NAME"]
+            repoURLName = globals()[repoVariableName + "_REPO_URL_NAME"] if repoVariableName + "_REPO_URL_NAME" in globals() else None
             repoDependencies = globals()[repoVariableName + "_DEPENDENCIES"]
 
             # Defining checkpoint filenames
@@ -106,20 +106,17 @@ class Plugin(pwem.Plugin):
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
 
-            # Cloning repo
-            cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
-            commandList.append((cloneCmd, repoClonedCheckpoint))
+            # Cloning repo if project is downloaded from github
+            if repoURLName:
+                cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
+                commandList.append((cloneCmd, repoClonedCheckpoint))
 
             # Creating conda virtual enviroment and installing requirements if project runs on Python
-            try:
-                repoPythonVersion = globals()[repoVariableName + "_PYTHON_VERSION"]
-            except:
-                repoPythonVersion = None
-            if repoPythonVersion: 
+            if repoVariableName + "_PYTHON_VERSION" in globals():
                 envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
                     .format(cls.getCondaActivationCmd(),
                             getattr(cls, repoVariableName + "_WITH_VERSION"),
-                            repoPythonVersion,
+                            globals()[repoVariableName + "_PYTHON_VERSION"],
                             cls.getProtocolActivationCommand(repoVariableName),
                             protocolRepo,
                             enviromentCreatedCheckpoint)
