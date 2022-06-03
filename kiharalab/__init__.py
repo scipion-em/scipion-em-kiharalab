@@ -52,6 +52,7 @@ class Plugin(pwem.Plugin):
     extraFilesSuffix = "_EXTRA_FILES"
     extraCommandsSuffix = "_EXTRA_COMMANDS"
 
+    # Getting protocols whose variables will be defined
     names = [name for name in PROTOCOL_NAME_LIST]
     for name in names:
         for protocolRepoName in PROTOCOL_LIST[name]:
@@ -64,7 +65,6 @@ class Plugin(pwem.Plugin):
         # Substituting each name with the same name in uppercase
         nameIndex = names.index(name)
         names[nameIndex] = name.upper()
-
 
     @classmethod
     def _defineVariables(cls):
