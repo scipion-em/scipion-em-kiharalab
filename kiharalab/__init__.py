@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+from numpy import var
 import pwem
 from .constants import *
 import shutil, os
@@ -216,7 +217,12 @@ class Plugin(pwem.Plugin):
         The rest is left for the new protocol programmer to decide.
         """
         # Defining default dependencies
-        detectedDependencies = ['git']
+        detectedDependencies = []
+
+        # Checking if protocol downloads source from git. If so, git is needed.
+        gitVariableName = variableName + cls.repoNameSuffix
+        if (gitVariableName in globals()):
+            detectedDependencies.append('git')
 
         # Checking if protocol downloads extra files. If so, wget is needed.
         extraFilesVariableName = variableName + cls.extraFilesSuffix
