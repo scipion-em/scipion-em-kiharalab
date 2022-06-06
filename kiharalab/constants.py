@@ -77,7 +77,7 @@ PROTOCOL_LIST = {DAQ: [DAQ], EMAP2SEC: [EMAP2SEC, EMAP2SECPLUS], MAINMAST: [MAIN
 DAQ_DEPENDENCIES = ['git', 'conda', 'pip']
 EMAP2SEC_DEPENDENCIES = ['git', 'conda', 'pip', 'wget', 'make', 'gcc']
 EMAP2SECPLUS_DEPENDENCIES = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
-MAINMAST_DEPENDENCIES = ['git', 'make', 'gcc']
+MAINMAST_DEPENDENCIES = ['git', 'make', 'gcc', 'gzip']
 
 # Download links for extra files
 # Extra files are defined as a list of tuples with two elements
