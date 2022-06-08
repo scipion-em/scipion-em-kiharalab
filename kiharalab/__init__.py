@@ -123,12 +123,33 @@ class Plugin(pwem.Plugin):
             extraFileCheckpoint = checkpointPrefix + "EXTRA_FILE_"
             extraCommandCheckpoint = checkpointPrefix + "EXTRA_COMMAND_"
 
+            # Defining command string to move to project's root directory.
+            cdCmd = 'cd ' + protocolHome
+
             # Cloning repo if project is downloaded from github
             repoURLName = globals()[repoVariableName + cls.repoNameSuffix] if repoVariableName + cls.repoNameSuffix in globals() else None
             if repoURLName:
-                cloneCmd = 'cd {} && git clone {} {} && touch {}'.format(protocolHome, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
+                cloneCmd = '{} && git clone {} {} && touch {}'.format(cdCmd, cls.getGitUrl(repoURLName), repoName, repoClonedCheckpoint)
                 commandList.append((cloneCmd, repoClonedCheckpoint))
+            
+            # Defining where the next steps will take place.
+            # If a repository has been downloaded, inside its directory. Otherwise, inside the protocol's root directory.
+            processDirectory = protocolRepo if repoURLName else protocolHome
 
+            # Check if protocol repo has extra files to download
+            extraFilesVariableName = repoVariableName + cls.extraFilesSuffix
+            if (extraFilesVariableName in globals()):
+                # Add all extra files as separate commands to create one checkpoint per file
+                # Checkpoint file names will be "EXTRA_FILE_0", "EXTRA_FILE_1"...
+                downloadCommandList = cls.getProtocolExtraFiles(globals()[extraFilesVariableName])
+                commandList = cls.addCommandsToList(commandList, downloadCommandList, extraFileCheckpoint, processDirectory, protocolHome)
+            
+            # Check if protocol repo has extra commands to execute
+            extraCommandsVariableName = repoVariableName + cls.extraCommandsSuffix
+            if (extraCommandsVariableName in globals()):
+                extraCommands = globals()[extraCommandsVariableName]
+                commandList = cls.addCommandsToList(commandList, extraCommands, extraCommandCheckpoint, processDirectory, protocolHome)
+            
             # Creating conda virtual enviroment and installing requirements if project runs on Python
             if repoVariableName + cls.pythonVersionSuffix in globals():
                 envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
@@ -139,20 +160,6 @@ class Plugin(pwem.Plugin):
                             protocolRepo,
                             enviromentCreatedCheckpoint)
                 commandList.append((envCreationCmd, enviromentCreatedCheckpoint))
-            
-            # Check if protocol repo has extra files to download
-            extraFilesVariableName = repoVariableName + cls.extraFilesSuffix
-            if (extraFilesVariableName in globals()):
-                # Add all extra files as separate commands to create one checkpoint per file
-                # Checkpoint file names will be "EXTRA_FILE_0", "EXTRA_FILE_1"...
-                downloadCommandList = cls.getProtocolExtraFiles(globals()[extraFilesVariableName])
-                commandList = cls.addCommandsToList(commandList, downloadCommandList, extraFileCheckpoint, protocolRepo, protocolHome)
-            
-            # Check if protocol repo has extra commands to execute
-            extraCommandsVariableName = repoVariableName + cls.extraCommandsSuffix
-            if (extraCommandsVariableName in globals()):
-                extraCommands = globals()[extraCommandsVariableName]
-                commandList = cls.addCommandsToList(commandList, extraCommands, extraCommandCheckpoint, protocolRepo, protocolHome)
             
             # Adding the list of dependencies of the repo to the list of the protocol without duplicates
             dependencies = list(set(dependencies + repoDependencies + cls.getDetectedDependencies(repoVariableName)))
