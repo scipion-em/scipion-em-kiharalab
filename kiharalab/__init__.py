@@ -54,18 +54,19 @@ class Plugin(pwem.Plugin):
     extraCommandsSuffix = "_EXTRA_COMMANDS"
 
     # Getting protocols whose variables will be defined
-    names = [name for name in PROTOCOL_NAME_LIST]
+    names = PROTOCOL_NAME_LIST
     for name in names:
         for protocolRepoName in PROTOCOL_LIST[name]:
             nameInLowercase = protocolRepoName.lower()
             nameInUppercase = protocolRepoName.upper()
-            locals()[nameInUppercase + withVersionSuffix] = nameInUppercase + '-' + globals()[nameInUppercase + repoDefaultVersionSuffix]
-            locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[name.upper() + withVersionSuffix])
+            nameAsBinary = protocolRepoName[0].lower() + protocolRepoName[1:]
+            locals()[nameInUppercase + withVersionSuffix] = nameAsBinary + '-' + globals()[nameInUppercase + repoDefaultVersionSuffix]
+            locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[nameInUppercase + withVersionSuffix])
             locals()["_" + nameInLowercase + "Repo"] = os.path.join(locals()["_" + nameInLowercase + "Home"], globals()[nameInUppercase])
         
         # Substituting each name with the same name in uppercase
         nameIndex = names.index(name)
-        names[nameIndex] = name.upper()
+        names[nameIndex] = name[0].lower() + name[1:]
 
     @classmethod
     def _defineVariables(cls):
@@ -76,9 +77,10 @@ class Plugin(pwem.Plugin):
         <protocolNameInUppercase>_ENV will contain the name of the conda enviroment for that protocol. For example: "DAQ-1.0"
         """
         for name in cls.names:
-            protocolHomeAndEnv = name + '-' + globals()[name + cls.defaultVersionSuffix]
-            cls._defineEmVar(globals()[name + cls.homeSuffix], protocolHomeAndEnv)
-            cls._defineVar(name + cls.envSuffix, protocolHomeAndEnv)
+            nameInUppercase = name.upper()
+            protocolHomeAndEnv = name + '-' + globals()[nameInUppercase + cls.defaultVersionSuffix]
+            cls._defineEmVar(globals()[nameInUppercase + cls.homeSuffix], protocolHomeAndEnv)
+            cls._defineVar(nameInUppercase + cls.envSuffix, protocolHomeAndEnv)
 
     @classmethod
     def defineBinaries(cls, env):
@@ -86,15 +88,16 @@ class Plugin(pwem.Plugin):
         This function defines the binaries for each protocol.
         """
         for name in cls.names:
+            nameInUppercase = name.upper()
             nameInLowercase = name.lower()
             cls.addProtocolPackage(env,
-                                    globals()[name],
+                                    globals()[nameInUppercase],
                                     getattr(cls, "_" + nameInLowercase + "Home"),
-                                    name,
-                                    globals()[name + cls.defaultVersionSuffix])
+                                    nameInLowercase[0] + name[1:],
+                                    globals()[nameInUppercase + cls.defaultVersionSuffix])
 
     @classmethod
-    def addProtocolPackage(cls, env, protocolName, protocolHome, protocolVariableName, protocolVersion):
+    def addProtocolPackage(cls, env, protocolName, protocolHome, protocolBinaryName, protocolVersion):
         """
         Define and execute commands for protocol installation.
         Every command has it's own checkpoint so if, for some reason, process is interrupted, only commands that were not completed will be repeated.
@@ -154,7 +157,7 @@ class Plugin(pwem.Plugin):
             # Adding the list of dependencies of the repo to the list of the protocol without duplicates
             dependencies = list(set(dependencies + repoDependencies + cls.getDetectedDependencies(repoVariableName)))
 
-        env.addPackage(protocolVariableName,
+        env.addPackage(protocolBinaryName,
                        version=protocolVersion,
                        tar='void.tgz',
                        commands=commandList,

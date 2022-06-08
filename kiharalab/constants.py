@@ -55,7 +55,7 @@ EMAP2SECPLUS_PYTHON_VERSION = '3.6.9'
 
 # Plugin and protocol names
 KIHARALAB = 'kiharalab'
-DAQ = 'DAQ'
+DAQ = 'daq'
 EMAP2SEC = 'Emap2sec'
 EMAP2SECPLUS = 'Emap2secPlus'
 MAINMAST = 'MainMast'
