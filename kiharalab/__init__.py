@@ -61,7 +61,7 @@ class Plugin(pwem.Plugin):
             nameInUppercase = protocolRepoName.upper()
             nameAsBinary = protocolRepoName[0].lower() + protocolRepoName[1:]
             locals()[nameInUppercase + withVersionSuffix] = nameAsBinary + '-' + globals()[nameInUppercase + repoDefaultVersionSuffix]
-            locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[nameInUppercase + withVersionSuffix])
+            locals()["_" + nameInLowercase + "Home"] = os.path.join(pwem.Config.EM_ROOT, locals()[name.upper() + withVersionSuffix])
             locals()["_" + nameInLowercase + "Repo"] = os.path.join(locals()["_" + nameInLowercase + "Home"], globals()[nameInUppercase])
         
         # Substituting each name with the same name in uppercase
