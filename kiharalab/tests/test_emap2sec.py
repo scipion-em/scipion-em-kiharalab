@@ -78,7 +78,7 @@ class TestEmap2sec(BaseTest):
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
             inputVolume=inputData,
-            emap2secContour=2.75)
+            emap2secContour=5.4)
         self.launchProtocol(protEmap2sec)
 
         # Checking function output
