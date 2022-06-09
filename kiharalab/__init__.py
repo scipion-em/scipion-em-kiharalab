@@ -250,7 +250,7 @@ class Plugin(pwem.Plugin):
         Run DAQ script from a given protocol.
         """
         fullProgram = '{} {} && {}'\
-            .format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('daq'), 'python3')
+            .format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('DAQ'), 'python3')
         if not 'main.py' in args:
             args = '{}/main.py {}'.format(cls._daqRepo, args)
         protocol.runJob(fullProgram, args, cwd=cls._daqRepo)
@@ -271,7 +271,7 @@ class Plugin(pwem.Plugin):
         """
         # Building commands before actual protocol execution
         # Enviroment activation command. Needed to execute befor every other standalone command.
-        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('emap2sec'))
+        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SEC'))
         
         # If custom output directory is specified, create it if it does not exist
         if outDir:
@@ -317,7 +317,7 @@ class Plugin(pwem.Plugin):
         """
         # Building commands before actual protocol execution
         # Enviroment activation command. Needed to execute befor every other standalone command.
-        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('emap2secPlus'))
+        envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('EMAP2SECPLUS'))
         
         # Command to move to Emap2sec+'s repo's root directory.
         # Needed to be executed once before the actual workflow commands
