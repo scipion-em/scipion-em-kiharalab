@@ -60,7 +60,7 @@ class TestMainMast(BaseTest):
             ProtMainMastSegmentMap,
             inputVolume=self.protImportVolume.outputVolume,
             sym='C2',
-            threshold=0.7,
+            threshold=5.4,
             combine=mergeMasks)
         self.launchProtocol(protMainMast)
 
