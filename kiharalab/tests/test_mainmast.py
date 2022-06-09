@@ -40,9 +40,8 @@ class TestMainMast(BaseTest):
     @classmethod
     def _runImportVolumes(cls):
         # Creating arguments for import volumes protocol
-        inputPath = 'volumes/emd_6838.mrc'
         args = {
-            'filesPath': cls.ds.getFile(inputPath),
+            'filesPath': cls.ds.getFile('volumes/emd_6838.mrc'),
             'samplingRate': 1.0,
             'setOrigCoord': False
         }
