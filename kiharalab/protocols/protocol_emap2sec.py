@@ -340,8 +340,7 @@ class ProtEmap2sec(EMProtocol):
         This method returns the absolute path to the custom output directory.
         Spaces in the folder names are scaped to avoid errors.
         """
-        rawPath = os.path.abspath(self._getExtraPath('results'))
-        return self.scapePath(rawPath)
+        return self.scapePath(os.path.abspath(self._getExtraPath('results')))
 
     def getOutputFile(self, inputFile): # EMAP2SEC SPECIFIC? CHECK WHEN EMAP2SEC+ COMPLETED
         """
