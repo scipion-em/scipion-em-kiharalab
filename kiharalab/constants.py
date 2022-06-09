@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+# ------------------------------------ INSTALLATION VARIABLES ------------------------------------
 PLUGIN_NAME = 'KIHARALAB'
 KIHARALAB_GIT = 'https://github.com/kiharalab/'
 KIHARALAB_HOME = 'KIHARA_HOME'
@@ -125,6 +126,7 @@ MAINMAST_EXTRA_COMMANDS = [
 	"cd example1 && gunzip emd-0093.mrc.gz MAP_m4A.mrc.gz region0.mrc.gz region1.mrc.gz region2.mrc.gz region3.mrc.gz"
 ]
 
+# ------------------------------------ PROTOCOL FORM VARIABLES ------------------------------------
 # Emap2sec param constants
 EMAP2SEC_NORM_GLOBAL = 0
 EMAP2SEC_NORM_LOCAL = 1
