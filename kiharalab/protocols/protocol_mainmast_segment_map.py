@@ -66,15 +66,15 @@ class ProtMainMastSegmentMap(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def createSymmetryMatrixStep(self):
-        pathMap = os.path.abspath(self.inputVolume.get().getFileName())
+        pathMap = self.scapePath(os.path.abspath(self.inputVolume.get().getFileName()))
         args = '%s symmetry=%s' % (pathMap, self.sym.get())
         Phenix.runPhenixProgram(Phenix.getProgram('map_symmetry.py'), args, cwd=self._getExtraPath())
         args = '%s > sym_mat.txt' % ('symmetry_from_map.ncs_spec')
         Mainmast.convertMatrix(self, args, cwd=self._getExtraPath())
 
     def segmentStep(self):
-        pathMap = os.path.abspath(self.inputVolume.get().getFileName())
-        pathMatrix = os.path.abspath(self._getExtraPath('sym_mat.txt'))
+        pathMap = self.scapePath(os.path.abspath(self.inputVolume.get().getFileName()))
+        pathMatrix = self.scapePath(os.path.abspath(self._getExtraPath('sym_mat.txt')))
         args = '-i %s -Y %s -c %d -t %f -M -W > contour.cif' % (pathMap, pathMatrix, self.numberOfThreads.get(),
                                                                 self.threshold.get())
         Mainmast.runSegmentation(self, args, cwd=self._getExtraPath())
@@ -110,7 +110,13 @@ class ProtMainMastSegmentMap(EMProtocol):
             self._defineSourceRelation(self.inputVolume, outSet)
 
     # --------------------------- UTILS functions ------------------------------
-
+    def scapePath(self, path):
+        """
+        This function returns the given path with all the spaces in folder names scaped to avoid errors.
+        """
+        # os.path.baspath adds '\\' when finding a foldername with '\ ', so '\\\' needs to be replaced with ''
+        # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
+        return path.replace('\\\ ', ' ').replace(' ', '\ ')
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
