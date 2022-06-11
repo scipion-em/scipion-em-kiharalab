@@ -339,10 +339,16 @@ class Plugin(pwem.Plugin):
     # ---------------------------------- MainMast ----------------------------------
     @classmethod
     def runSegmentation(cls, protocol, args, cwd=None):
+        """
+        Run segmentation phase for MainMast.
+        """
         mainMastCall = os.path.join(cls._mainmastRepo, 'MainmastSeg')
         protocol.runJob(mainMastCall, args, cwd=cwd)
     
     @classmethod
     def convertMatrix(cls, protocol, args, cwd=None):
+        """
+        Run matrix conversion phase for MainMast.
+        """
         convertCall = os.path.join(cls._mainmastRepo, 'conv_ncs.pl')
         protocol.runJob(convertCall, args, cwd=cwd)
