@@ -72,27 +72,27 @@ class ProtEmap2sec(EMProtocol):
         # -------------------------------------- Emap2sec params --------------------------------------
         trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
         trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
-                       help='The level of isosurface to generate density values for.\n'
-                       'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
+                        help='The level of isosurface to generate density values for.\n'
+                            'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
-                       help='This option sets the stride size of the sliding cube used for input data generation.\n'
-                       'We recommend using a value of 4 that slides the cube by 4Å in each direction.\n'
-                       'Decreasing this value by 1 produces 8 times more data (increase by a factor of 2 in each direction)'
-                       ' and thus slows the running time down by 8 times so please be mindful lowering this value.')
+                        help='This option sets the stride size of the sliding cube used for input data generation.\n'
+                            'We recommend using a value of 4 that slides the cube by 4Å in each direction.\n'
+                            'Decreasing this value by 1 produces 8 times more data (increase by a factor of 2 in each direction)'
+                            ' and thus slows the running time down by 8 times so please be mindful lowering this value.')
         trimmapGroup.addParam('vw', params.IntParam, default='5', label='Sliding cube dimensions: ', expertLevel=params.LEVEL_ADVANCED,
-                       help='This option sets the dimensions of sliding cube used for input data generation.\n'
-                       'The size of the cube is calculated as 2vw+1.\n'
-                       'We recommend using a value of 5 for this option that generates input cube of size 11*11*11.\n'
-                       'Please be mindful while increasing this option as it increases the portion of an EM map a single cube covers.'
-                       ' Increasing this value also increases running time.')
+                        help='This option sets the dimensions of sliding cube used for input data generation.\n'
+                            'The size of the cube is calculated as 2vw+1.\n'
+                            'We recommend using a value of 5 for this option that generates input cube of size 11*11*11.\n'
+                            'Please be mindful while increasing this option as it increases the portion of an EM map a single cube covers.'
+                            ' Increasing this value also increases running time.')
         trimmapGroup.addParam('norm', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_NORM_GLOBAL, label='Normalization type: ',
                         expertLevel=params.LEVEL_ADVANCED, choices=['Global', 'Local'],
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
-                       ' by global or local maximum density value.')
+                            ' by global or local maximum density value.')
                        
         form.addParam('proteinId', params.StringParam, label='Protein id:', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
                         expertLevel=params.LEVEL_ADVANCED, help='Unique protein identifier. Either EMID or SCOPe ID can be used.'
-                        '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.\nThis field is optional.')
+                            '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.\nThis field is optional.')
         
         form.addParam('predict', params.BooleanParam, default='True', label='Show Secondary Structures predicted data: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC, expertLevel=params.LEVEL_ADVANCED,
@@ -106,9 +106,9 @@ class ProtEmap2sec(EMProtocol):
         form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         help='Select the GPU id where the process will run on.')
         form.addParam('emap2secplusContour', params.FloatParam, default='0.0', label='Contour: ',
-                       condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
-                       'You can use the author recommended contour level, which will be used by a specific model,'
-                       ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
+                            'You can use the author recommended contour level, which will be used by a specific model,'
+                            ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
         form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4', 'Detect DNA/RNA & protein fold 4'],
@@ -144,11 +144,16 @@ class ProtEmap2sec(EMProtocol):
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
-        # Insert processing steps
+        """
+        This method defines the functions that will be run during the execution of this protocol.
+        """
         self._insertFunctionStep('mainExecutionStep')
         self._insertFunctionStep('createOutputStep')
 
     def mainExecutionStep(self):
+        """
+        This method collects the necessary arguments for the execution of this protocol and calls the protocol's run function.
+        """
         # Defining which software will be run
         executionIsEmap2sec = self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
 
@@ -173,6 +178,9 @@ class ProtEmap2sec(EMProtocol):
             Plugin.runEmap2secPlus(self, args=args, clean=self.cleanTmps.get())
 
     def createOutputStep(self):
+        """
+        This method processes the output files generated by the protocol and imports them into Scipion objects.
+        """
         if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS: # TMP, Need to get output structure
             return
         
@@ -225,6 +233,9 @@ class ProtEmap2sec(EMProtocol):
         return []
     
     def _validate(self):
+        """
+        This method validates the received params and checks that they all fullfill the requirements needed to run the protocol.
+        """
         errors = []
         # If execution type is Emap2sec+ in evaluation mode, and input is a set of volumes, show error
         if (self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and type(self.inputVolume.get()) == SetOfVolumes and
