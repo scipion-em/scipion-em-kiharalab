@@ -54,9 +54,10 @@ class ProtMainMastSegmentMap(EMProtocol):
                            'except C1).')
         form.addParam('threshold', params.FloatParam, default=0.0, label='Threshold',
                       help='Threshold of density map.')
-        form.addParam('combine', params.BooleanParam, default=False, label='Combine masks?',
-                      help='If yes, all the segmented regions detected will be combine into a '
-                           'single identifier mask.')
+        form.addParam('combine', params.BooleanParam, default=False, label='Combine masks',
+                      help='If selected, all the segmented regions detected will be combine into a '
+                           'single identifier mask.\nThis means that, if combine is selected, output object'
+                            'will be Volume type, or SetOfvolumes otherwise.')
         form.addParallelSection(threads=4, mpi=0)
 
     # --------------------------- STEPS functions ------------------------------
