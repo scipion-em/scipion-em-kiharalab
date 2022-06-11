@@ -168,7 +168,6 @@ class ProtMainMastSegmentMap(EMProtocol):
         This method validates the received params and checks that they all fullfill the requirements needed to run the protocol.
         """
         errors = []
-        symmetry = self.sym.get()
 
         # If symmetry is not C* where * is an integer greater than 1, show error
         symmetry = self.sym.get()
