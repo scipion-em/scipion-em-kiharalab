@@ -58,6 +58,8 @@ class ProtMainMastSegmentMap(EMProtocol):
                         help='If selected, all the segmented regions detected will be combine into a '
                             'single identifier mask.\nThis means that, if combine is selected, output object'
                             'will be Volume type, or SetOfvolumes otherwise.')
+        form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
+                        help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
         form.addParallelSection(threads=4, mpi=0)
 
     # --------------------------- STEPS functions ------------------------------
@@ -156,7 +158,11 @@ class ProtMainMastSegmentMap(EMProtocol):
             # Defining protocol output and source relation
             self._defineOutputs(outputMasks=outSet)
             self._defineSourceRelation(self.inputVolume, outSet)
-
+        
+        # If clean is selected, clean temporary files
+        if self.cleanTmps.get():
+            Mainmast.cleanTmpfiles(self, self.getTmpFiles())
+        
     # --------------------------- UTILS functions ------------------------------
     def scapePath(self, path):
         """
@@ -172,6 +178,33 @@ class ProtMainMastSegmentMap(EMProtocol):
         Example: '/home/username/documents/test/import_file.mrc'
         """
         return self.scapePath(os.path.abspath(self.inputVolume.get().getFileName()))
+    
+    def getExtraFileAbsolutePath(self, fileName):
+        """
+        This method returns the absolute path for the given extra filename.
+        Example: '/home/username/ScipionUserData/projects/MainMast/Runs/ProtMainMastSegmentMap/extra/contour.cif'
+        """
+        return self.scapePath(os.path.abspath(self._getExtraPath(fileName)))
+    
+    def getTmpFiles(self):
+        """
+        This method returns a list with the absolute paths for the temporary files.
+        Example: ['/home/username/ScipionUserData/projects/MainMast/Runs/ProtMainMastSegmentMap/extra/contour.cif']
+        """
+        # Defining fixed tmp files
+        tmpFiles = [
+            self.getExtraFileAbsolutePath('contour.cif'),
+            self.getExtraFileAbsolutePath('sym_mat.txt'),
+            self.getExtraFileAbsolutePath('symmetry_from_map.ncs_spec')
+        ]
+
+        # if combine is selected, region files are not needed any more
+        if self.combine.get():
+            regionFiles = sorted(glob.glob(self.getExtraFileAbsolutePath("region*.mrc")))
+            for regionFile in regionFiles:
+                tmpFiles.append(regionFile)
+
+        return tmpFiles
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
