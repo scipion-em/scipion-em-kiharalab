@@ -352,3 +352,11 @@ class Plugin(pwem.Plugin):
         """
         convertCall = os.path.join(cls._mainmastRepo, 'conv_ncs.pl')
         protocol.runJob(convertCall, args, cwd=cwd)
+
+    @classmethod
+    def cleanTmpfiles(cls, protocol, tmpFiles=[]):
+        """
+        This method removes all temporary files to reduce disk usage.
+        """
+        for tmp_file in tmpFiles:
+            protocol.runJob("rm -rf", tmp_file, cwd=cls._mainmastRepo)
