@@ -35,7 +35,7 @@ import os
 # Pyworkflow imports
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
-from pwem.objects import SetOfAtomStructs, AtomStruct, SetOfVolumes
+from pwem.objects import SetOfAtomStructs, AtomStruct, SetOfVolumes, Volume
 from pyworkflow.utils import Message
 
 # Kiharalab imports
@@ -90,9 +90,9 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
                             ' by global or local maximum density value.')
                        
-        form.addParam('proteinId', params.StringParam, label='Protein id:', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
-                        expertLevel=params.LEVEL_ADVANCED, help='Unique protein identifier. Either EMID or SCOPe ID can be used.'
-                            '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.\nThis field is optional.')
+        form.addParam('proteinId', params.StringParam, label='Protein id:', condition='(executionType==%d and type(inputVolume) == Volume)' % EMAP2SEC_TYPE_EMAP2SEC,
+                        expertLevel=params.LEVEL_ADVANCED, help='Optional.\nUnique protein identifier. Either EMID or SCOPe ID can be used.'
+                            '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.')
         
         form.addParam('predict', params.BooleanParam, default='True', label='Show Secondary Structures predicted data: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC, expertLevel=params.LEVEL_ADVANCED,
@@ -386,7 +386,7 @@ class ProtEmap2sec(EMProtocol):
         args = []
         for file in self.getVolumeAbsolutePaths():
             outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(file))
-            proteinId = (' ' + self.proteinId.get()) if self.proteinId.get() else ''
+            proteinId = (' ' + self.proteinId.get()) if self.proteinId.get() and type(self.inputVolume.get()) == Volume else ''
             args.append('{}trimmap {}dataset{}'.format(outputPefix, outputPefix, proteinId))
         return args
     
