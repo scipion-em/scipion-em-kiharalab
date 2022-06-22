@@ -483,7 +483,7 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.mode.get()
-            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --output_folder={}{}'\
+            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.resize.get(), self.getContourLevel(),
                         self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
             
