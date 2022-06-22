@@ -52,6 +52,7 @@ class Plugin(pwem.Plugin):
     dependenciesSuffix = "_DEPENDENCIES"
     extraFilesSuffix = "_EXTRA_FILES"
     extraCommandsSuffix = "_EXTRA_COMMANDS"
+    extraCondaCommandsSuffix = "_EXTRA_CONDA_COMMANDS"
 
     # Getting protocols whose variables will be defined
     names = PROTOCOL_NAME_LIST
@@ -152,12 +153,13 @@ class Plugin(pwem.Plugin):
             
             # Creating conda virtual enviroment and installing requirements if project runs on Python
             if repoVariableName + cls.pythonVersionSuffix in globals():
-                envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt && cd .. && touch {}'\
+                envCreationCmd = '{} conda create -y -n {} python={} && {} && cd {} && conda install pip && $CONDA_PREFIX/bin/pip install -r requirements.txt {}&& cd .. && touch {}'\
                     .format(cls.getCondaActivationCmd(),
                             getattr(cls, repoVariableName + cls.withVersionSuffix),
                             globals()[repoVariableName + cls.pythonVersionSuffix],
                             cls.getProtocolActivationCommand(repoVariableName),
                             protocolRepo,
+                            cls.getCondaExtraCommands(repoVariableName),
                             enviromentCreatedCheckpoint)
                 commandList.append((envCreationCmd, enviromentCreatedCheckpoint))
             
@@ -204,6 +206,20 @@ class Plugin(pwem.Plugin):
                         checkpointName),
                 checkpointName))
         return commandList
+    
+    @classmethod
+    def getCondaExtraCommands(cls, repoVariableName):
+        """
+        Returns the extra conda related commands for the given repo.
+        """
+        commandsString = ''
+        # Check if protocol repo has extra conda enviroment related commands to execute
+        extraCondaCommandsVariableName = repoVariableName + cls.extraCondaCommandsSuffix
+        if (extraCondaCommandsVariableName in globals()):
+            extraCommands = globals()[extraCondaCommandsVariableName]
+            commandsString = "&& " + " && ".join(extraCommands) + " "
+
+        return commandsString
     
     @classmethod
     def getGitUrl(cls, protocolName):

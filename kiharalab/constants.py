@@ -114,7 +114,13 @@ EMAP2SEC_EXTRA_COMMANDS = [
 EMAP2SECPLUS_EXTRA_COMMANDS = [
 	"tar -xf best_model.tar.gz && rm -f best_model.tar.gz",
 	"tar -xf nocontour_best_model.tar.gz && rm -f nocontour_best_model.tar.gz",
+	"cd process_map && make",
 	GRANT_EXECUTION_ACCESS
+]
+
+# Extra conda commands will only be run when conda enviroment has been created
+EMAP2SECPLUS_EXTRA_CONDA_COMMANDS = [
+	"conda install -y pytorch==1.1.0 torchvision==0.3.0 cudatoolkit=10.0 -c pytorch"
 ]
 
 MAINMAST_EXTRA_COMMANDS = [
