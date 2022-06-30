@@ -141,6 +141,8 @@ class ProtEmap2sec(EMProtocol):
                             'The model needs to have the same directory and file structure as the models included with this protocol.\n'
                             'This means that, for each file or folder that exists within the example model, a file or folder (same type of element) with the same name must exist.\n'
                             'You can download a sample model to check the folder structure from https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz')
+        form.addParam('getConfident', params.BooleanParam, default='True', label='Get confident results: ', expertLevel=params.LEVEL_ADVANCED, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+                        help='Only accept as valid predictions the ones with a 90%+ probability.')
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
