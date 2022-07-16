@@ -194,7 +194,7 @@ class ProtEmap2sec(EMProtocol):
         inputData = self.getVolumeAbsolutePaths()[0] if isOneVolume else self.getVolumeAbsolutePaths()
 
         # Getting input volumes
-        inputVolumes = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS else self.inputVolumeEmap2secPlus.get()
+        inputVolumes = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.inputVolumeEmap2secPlus.get()
 
         if isOneVolume:
             # Creating output AtomStruct, linking volume to it, and defining protocol output
