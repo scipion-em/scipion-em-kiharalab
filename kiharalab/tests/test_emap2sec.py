@@ -117,14 +117,14 @@ class TestEmap2sec(BaseTest):
         print("Running Emap2sec with SetOfVolumes as input")
         # Running Emap2sec with SetOfVolumes as input
         self._runEmap2sec()
-        # Last test calls cleaning function so it does not count as a separate test
-        self.cleanTest()
     
     def test3Emap2secPlus(self):
         """Third test. Runs Emap2sec+ with an experimental volume type."""
         print("Running Emap2sec+ with an experimental volume type")
         # Running Emap2sec+ with with an experimental volume type
         self._runEmap2secPlus()
+        # Last test calls cleaning function so it does not count as a separate test
+        self.cleanTest()
     
     def cleanTest(self):
         """This function removes all temporary files produced during the execution."""
