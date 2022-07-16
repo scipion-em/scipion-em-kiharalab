@@ -347,7 +347,7 @@ class ProtEmap2sec(EMProtocol):
             # If it is not iterable, then it is a single volume
             return 'Volume'
 
-    def getOutputPath(self):
+    def getOutputPath(self, readMode=True):
         """
         This method returns the absolute path to the custom output directory.
         Spaces in the folder names are scaped to avoid errors.
@@ -356,7 +356,7 @@ class ProtEmap2sec(EMProtocol):
         outputPath = self.scapePath(os.path.abspath(self._getExtraPath('results')))
 
         # Adding subfolders for Emap2sec+
-        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS:
+        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and readMode:
             typePath = ('SIMU6' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A else
                 ('SIMU10' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A else
                 ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
@@ -503,7 +503,7 @@ class ProtEmap2sec(EMProtocol):
             executionMode = self.mode.get()
             param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.resize.get(), self.getContourLevel(),
-                        self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
+                        self.gpuId.get(), self.classes.get(), self.getOutputPath(readMode=False), self.getCustomModel())
             
             # If selected mode is not a fold4 mode, add fold selection
             if executionMode == 0 or executionMode == 1:
