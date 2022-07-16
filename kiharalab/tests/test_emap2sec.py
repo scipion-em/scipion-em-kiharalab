@@ -28,6 +28,7 @@ import shutil, os
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes
 from ..protocols import ProtEmap2sec
+from kiharalab.constants import *
 
 class TestEmap2sec(BaseTest):
     @classmethod
@@ -77,7 +78,8 @@ class TestEmap2sec(BaseTest):
         # Running protocol
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
-            inputVolume=inputData,
+            executionType=EMAP2SEC_TYPE_EMAP2SEC,
+            inputVolumeEmap2sec=inputData,
             emap2secContour=5.4)
         self.launchProtocol(protEmap2sec)
 
@@ -89,20 +91,40 @@ class TestEmap2sec(BaseTest):
                 self.assertIsNotNone(atomStruct.getVolume())
         else:        
             self.assertIsNotNone(pdbOut.getVolume())
+    
+    def _runEmap2secPlus(self):
+        # Running protocol
+        protEmap2sec = self.newProtocol(
+            ProtEmap2sec,
+            executionType=EMAP2SEC_TYPE_EMAP2SECPLUS,
+            inputVolumeEmap2secPlus=self.protImportVolume.outputVolume,
+            emap2secplusContour=5.4)
+        self.launchProtocol(protEmap2sec)
 
-    def testEmap2sec1(self):
+        # Checking function output
+        pdbOut = getattr(protEmap2sec, 'outputAtomStruct', None)
+        self.assertIsNotNone(pdbOut)
+        self.assertIsNotNone(pdbOut.getVolume())
+
+    def test1Emap2sec(self):
         """First test. Runs Emap2sec with Volume as input."""
         print("Running Emap2sec with Volume as input")
-        # Running Emap2se with Volume as input
+        # Running Emap2sec with Volume as input
         self._runEmap2sec(False)
     
-    def testEmap2sec2(self):
+    def test2Emap2sec(self):
         """Second test. Runs Emap2sec with SetOfVolumes as input."""
         print("Running Emap2sec with SetOfVolumes as input")
-        # Running Emap2se with SetOfVolumes as input
+        # Running Emap2sec with SetOfVolumes as input
         self._runEmap2sec()
         # Last test calls cleaning function so it does not count as a separate test
         self.cleanTest()
+    
+    def test3Emap2secPlus(self):
+        """Third test. Runs Emap2sec+ with an experimental volume type."""
+        print("Running Emap2sec+ with an experimental volume type")
+        # Running Emap2sec+ with with an experimental volume type
+        self._runEmap2secPlus()
     
     def cleanTest(self):
         """This function removes all temporary files produced during the execution."""
