@@ -199,7 +199,7 @@ class ProtEmap2sec(EMProtocol):
         if isOneVolume:
             # Creating output AtomStruct, linking volume to it, and defining protocol output
             outputAtomStruct = AtomStruct(filename=self.getOutputFile(inputData))
-            outputAtomStruct.setVolume(self.inputVolumeEmap2sec.get())
+            outputAtomStruct.setVolume(inputVolumes)
             self._defineOutputs(outputAtomStruct=outputAtomStruct)
         else:
             # Defining empty sets of AtomStruct
