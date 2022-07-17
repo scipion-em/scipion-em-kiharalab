@@ -128,11 +128,6 @@ class ProtEmap2sec(EMProtocol):
                         pointerClass='AtomStruct', allowsNull=False,
                         label="Input atom struct: ",
                         help='Select the atom struct to evaluate the model with.')
-        form.addParam('resize', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_RESIZE_NUMBA, label='Map resize: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED, choices=['Numba', 'Scipy'],
-                        help='Set this option to define the python package used to resize the maps. The options are:\n\n'
-                            '- Numba: Optimized, but some map sizes are not supported.\n'
-                            '- Scipy: Relatively slow but supports almost all maps.\n')
         form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.')
         form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_FOLD3, label='Fold model: ',
@@ -501,8 +496,8 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.mode.get()
-            param = '-F={} --mode={} --type={} --resize={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
-                .format(inputFile, executionMode, self.mapType.get(), self.resize.get(), self.getContourLevel(),
+            param = '-F={} --mode={} --type={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
+                .format(inputFile, executionMode, self.mapType.get(), self.getContourLevel(),
                         self.gpuId.get(), self.classes.get(), self.getOutputPath(readMode=False), self.getCustomModel())
             
             # If selected mode is not a fold4 mode, add fold selection
