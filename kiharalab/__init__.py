@@ -343,13 +343,14 @@ class Plugin(pwem.Plugin):
         # Emap2sec+ execution command
         runCommand = "{} && python3 main.py".format(envActivationCommand)
         for emap2secPlusArgs in args[0]:
-            #testCommand = "echo \'{} {}\'".format(runCommand, emap2secPlusArgs)
-            #protocol.runJob(testCommand, '', cwd=cls._emap2secplusRepo)
             protocol.runJob(runCommand, emap2secPlusArgs, cwd=cls._emap2secplusRepo)
-
+        
+        # Output file relocation
+        protocol.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=cls._emap2secplusRepo)
+        
         # Remove temporary files
         if clean:
-            for tmp_file in args[1]:
+            for tmp_file in args[2]:
                 protocol.runJob("rm -rf", tmp_file, cwd=cls._emap2secplusRepo)
 
     # ---------------------------------- MainMast ----------------------------------

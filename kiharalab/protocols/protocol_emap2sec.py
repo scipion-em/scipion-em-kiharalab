@@ -169,7 +169,8 @@ class ProtEmap2sec(EMProtocol):
             self.getFilesToRemove()
         ] if executionIsEmap2sec else [
             self.getEmap2secPlusArgs(),
-            []
+            self.getEmap2secPlusMoveParams(),
+            self.getFilesToRemove()
         ]
 
         # Running protocol
@@ -342,7 +343,7 @@ class ProtEmap2sec(EMProtocol):
             # If it is not iterable, then it is a single volume
             return 'Volume'
 
-    def getOutputPath(self, readMode=True):
+    def getOutputPath(self):
         """
         This method returns the absolute path to the custom output directory.
         Spaces in the folder names are scaped to avoid errors.
@@ -350,31 +351,37 @@ class ProtEmap2sec(EMProtocol):
         # Defining base output path
         outputPath = self.scapePath(os.path.abspath(self._getExtraPath('results')))
 
-        # Adding subfolders for Emap2sec+
-        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and readMode:
-            typePath = ('SIMU6' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A else
-                ('SIMU10' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A else
-                ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
-            )
-            foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
-            filePath, ext = os.path.splitext(self.getVolumeNames()[0])
-            outputPath = os.path.join(outputPath, typePath, foldPath, filePath, 'Phase2')
-        
         return outputPath
 
     def getOutputFile(self, inputFile):
         """
         This method returns the full output file with the absolute path given an input file.
         """
-        # Getting base input file name
-        basename, ext = os.path.splitext(os.path.basename(inputFile))
-
         # Generating full output file name for selected execution type
         filename = (
-            (self.getProtocolFilePrefix(inputFile) + 'visual') if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
-            else ('{}Phase2_pred{}'.format(basename, ('C' if self.getConfident.get() else '')))
-        ) + '.pdb'
+            (self.getProtocolFilePrefix(inputFile) + 'visual.pdb') if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
+            else self.getEmap2secPlusOutputFile()
+        )
         return os.path.join(self.getOutputPath(), filename)
+    
+    def getFilesToRemove(self):
+        """
+        This method returns a list of all the temporary files to be removed if the user chose to do it.
+        """
+        args = []
+        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC:
+            for file in self.getVolumeAbsolutePaths():
+                protocolPrefix = self.getProtocolPrefix()
+                filePrefix = self.getProtocolFilePrefix(file)
+                args.append('data/{}trimmap'.format(filePrefix))
+                args.append('data/{}dataset'.format(filePrefix))
+                args.append('data/{}input.txt'.format(protocolPrefix))
+                for i in range(1, 3):
+                    args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
+        else:
+            [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())]
+
+        return args
 
     # -------------------------------- Emap2sec specific functions --------------------------------
     def getTrimmapArgs(self):
@@ -433,21 +440,6 @@ class ProtEmap2sec(EMProtocol):
                     self.getOutputFile(file)))
         return args
     
-    def getFilesToRemove(self):
-        """
-        This method returns a list of all the temporary files to be removed if the user chose to do it.
-        """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            protocolPrefix = self.getProtocolPrefix()
-            filePrefix = self.getProtocolFilePrefix(file)
-            args.append('data/{}trimmap'.format(filePrefix))
-            args.append('data/{}dataset'.format(filePrefix))
-            args.append('data/{}input.txt'.format(protocolPrefix))
-            for i in range(1, 3):
-                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
-        return args
-    
     # -------------------------------- Emap2sec+ specific functions --------------------------------
     def getFoldModel(self):
         """
@@ -498,7 +490,7 @@ class ProtEmap2sec(EMProtocol):
             executionMode = self.mode.get()
             param = '-F={} --mode={} --type={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.getContourLevel(),
-                        self.gpuId.get(), self.classes.get(), self.getOutputPath(readMode=False), self.getCustomModel())
+                        self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
             
             # If selected mode is not a fold4 mode, add fold selection
             if executionMode == 0 or executionMode == 1:
@@ -510,3 +502,39 @@ class ProtEmap2sec(EMProtocol):
             params.append(param)
 
         return params
+    
+    def getEmap2secPlusTypePath(self):
+        """
+        This method returns the first folder for the output path for Emap2sec+, matching the map type.
+        """
+        return ('SIMU6' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A else
+            ('SIMU10' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A else
+            ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
+        )
+    
+    def getEmap2secPlusDefaultOutputPath(self):
+        """
+        This method returns the default output file path for Emap2sec+.
+        """
+        # Generating full path
+        foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
+        filePath, ext = os.path.splitext(self.getVolumeNames()[0])
+
+        # Returning full path
+        return os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath(), foldPath, filePath, 'Phase2')
+    
+    def getEmap2secPlusOutputFile(self, clean=True):
+        """
+        This method returns the default output file name for Emap2sec+.
+        """
+        volumeName = os.path.splitext((self.getCleanVolumeNames() if clean else self.getVolumeNames())[0])[0]
+        return '{}Phase2_pred{}.pdb'.format(volumeName, ('C' if self.getConfident.get() else ''))
+    
+    def getEmap2secPlusMoveParams(self):
+        """
+        This method returns the output file move command params for Emap2sec+.
+        """
+        return [
+            os.path.join(self.getEmap2secPlusDefaultOutputPath(), os.path.basename(self.getEmap2secPlusOutputFile(clean=False))),
+            os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile())
+        ]
