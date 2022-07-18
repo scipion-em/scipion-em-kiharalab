@@ -379,7 +379,7 @@ class ProtEmap2sec(EMProtocol):
                 for i in range(1, 3):
                     args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
         else:
-            [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())]
+            args = [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())]
 
         return args
 
