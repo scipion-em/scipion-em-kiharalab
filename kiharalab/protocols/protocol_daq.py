@@ -135,11 +135,11 @@ class ProtDAQValidation(EMProtocol):
 
     def createOutputStep(self):
         outStructFileName = self._getPath('outputStructure.cif')
-        outDQAFile = self._getTmpPath('predictions/dqa_score_w9.pdb')
+        outDAQFile = os.path.abspath(self._getTmpPath('predictions/daq_score_w9.pdb'))
 
         #Write DAQ_score in a section of the output cif file
         ASH = AtomicStructHandler()
-        daqScoresDic = self.parseDAQScores(outDQAFile)
+        daqScoresDic = self.parseDAQScores(outDAQFile)
         inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
         cifDic = ASH.readLowLevel(inpAS)
         cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
