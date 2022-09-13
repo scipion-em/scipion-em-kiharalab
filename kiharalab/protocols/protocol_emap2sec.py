@@ -115,16 +115,13 @@ class ProtEmap2sec(EMProtocol):
                             ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
         form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
-                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect structures fold 4', 'Detect-evaluate structures fold 4', 'Detect DNA/RNA & protein fold 4'],
+                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect DNA/RNA & protein'],
                         help='Set this option to define the execution mode. The options are:\n\n'
                             '- Detect structures: Detect structures for EM Map\n\n'
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
-                            '- Detect structures fold 4: Detect structure for experimental maps with 4 fold models\n\n'
-                            '- Detect-evaluate structures fold 4: Detect and evaluate structure for experimental maps with 4 fold models\n\n'
-                            '- Detect DNA/RNA & protein fold 4: Detect DNA/RNA and protein for experimental maps with 4 fold models\n\n'
-                            'Setting 4 fold options will make the backend program call 4 fold networks and aggregate the final detection probabilities by majority vote.')
+                            '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
         form.addParam('inputStruct', params.PointerParam,
-                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4),
+                        condition='(executionType==%d and mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
                         pointerClass='AtomStruct', allowsNull=False,
                         label="Input atom struct: ",
                         help='Select the atom struct to evaluate the model with.')
@@ -448,6 +445,28 @@ class ProtEmap2sec(EMProtocol):
         """
         return self.fold.get() + 1
     
+    def getMode(self):
+        """
+        This method translates mode value selected by the user in the form into the actual param needed for Emap2sec+.
+        """
+        # Real Emap2sec+ mode values that do not match plugin form values
+        EMAP2SECPLUS_MODE_DETECT_EXPERIMENTAL_FOLD4 = 2
+        EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4 = 3
+
+        # Getting form mode value
+        realMode = self.mode.get()
+
+        if realMode == EMAP2SECPLUS_MODE_DETECT_STRUCTS and self.getFoldModel() == 4:
+            return EMAP2SECPLUS_MODE_DETECT_EXPERIMENTAL_FOLD4
+        
+        if realMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS and self.getFoldModel() == 4:
+            return EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4
+        
+        if realMode == EMAP2SECPLUS_MODE_DETECT_DNA:
+            return EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
+
+        return realMode
+    
     def getContourLevel(self): # TEST IF NECESSARY, WITH 0 AND 0.0 THE RESULT MUST BE THE SAME. TMP
         """
         This function returns the correct contour level, which will be the input contour level if it is different from 0.0.
@@ -487,7 +506,7 @@ class ProtEmap2sec(EMProtocol):
         params = []
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
-            executionMode = self.mode.get()
+            executionMode = self.getMode()
             param = '-F={} --mode={} --type={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.getContourLevel(),
                         self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
@@ -518,7 +537,7 @@ class ProtEmap2sec(EMProtocol):
         """
         # Generating full path
         foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
-        filePath, ext = os.path.splitext(self.getVolumeNames()[0])
+        filePath = os.path.splitext(self.getVolumeNames()[0])[0]
 
         # Returning full path
         return os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath(), foldPath, filePath, 'Phase2')
