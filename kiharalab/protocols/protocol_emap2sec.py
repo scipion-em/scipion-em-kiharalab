@@ -122,21 +122,22 @@ class ProtEmap2sec(EMProtocol):
                             '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
         form.addParam('inputStruct', params.PointerParam,
                         condition='(executionType==%d and mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
-                        pointerClass='AtomStruct', allowsNull=False,
-                        label="Input atom struct: ",
-                        help='Select the atom struct to evaluate the model with.')
-        form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
-                        expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.')
+                        pointerClass='AtomStruct', allowsNull=False, label="Input atom struct: ", help='Select the atom struct to evaluate the model with.')
+        form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d and mode!=%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_DNA),
+                        expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.\n'
+                            'Not available for Detect DNA/RNA & protein mode.')
         form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_FOLD3, label='Fold model: ',
-                        condition='(executionType==%d and (mode==%d or mode==%d))' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
+                        condition='(executionType==%d and mode!=%d and mapType==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_DNA, EMAP2SECPLUS_TYPE_EXPERIMENTAL),
                         expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
-                        help='Set this option to specify the fold model used for detecting the experimental map.')
-        form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+                        help='Set this option to specify the fold model used for detecting the experimental map.\n'
+                            'This param is not available for DNA/RNA & protein detection.')
+        form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition='executionType==%d and (fold==%d or mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, 3, EMAP2SECPLUS_MODE_DETECT_DNA),
                         expertLevel=params.LEVEL_ADVANCED,
                         help='Set this option to specify the path to a custom model to be used by Emap2sec+.\n'
                             'The model needs to have the same directory and file structure as the models included with this protocol.\n'
                             'This means that, for each file or folder that exists within the example model, a file or folder (same type of element) with the same name must exist.\n'
-                            'You can download a sample model to check the folder structure from https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz')
+                            'You can download a sample model to check the folder structure from https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz\n'
+                            'Custom models can only be used with 4 fold networks.')
         form.addParam('getConfident', params.BooleanParam, default='True', label='Get confident results: ', expertLevel=params.LEVEL_ADVANCED, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
                         help='Only accept as valid predictions the ones with a 90%+ probability.')
 
@@ -497,7 +498,10 @@ class ProtEmap2sec(EMProtocol):
         This function returns the string for the custom model path.
         """
         customModel = self.customModel.get()
-        return (' -M=' + self.scapePath(customModel)) if customModel else ''
+        executionMode = self.getMode()
+        return ((' -M=' + self.scapePath(customModel)) if 
+            (customModel and executionMode == EMAP2SECPLUS_MODE_DETECT_STRUCTS and executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS) 
+            else '')
     
     def getEmap2secPlusArgs(self):
         """
@@ -507,16 +511,21 @@ class ProtEmap2sec(EMProtocol):
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.getMode()
-            param = '-F={} --mode={} --type={} --contour={} --gpu={} --class={} --no_compilation --output_folder={}{}'\
+            param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.getContourLevel(),
-                        self.gpuId.get(), self.classes.get(), self.getOutputPath(), self.getCustomModel())
-            
-            # If selected mode is not a fold4 mode, add fold selection
-            if executionMode == 0 or executionMode == 1:
+                        self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
+
+            # If mode is not Detect DNA/RNA & protein, add class
+            if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA:
+                param = '{} --class={}'.format(param, self.classes.get())
+
+            # If selected mode is not a fold4 mode and map type is experimental, add fold selection
+            if (self.mapType.get() == EMAP2SECPLUS_TYPE_EXPERIMENTAL and 
+                (executionMode == EMAP2SECPLUS_MODE_DETECT_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS)):
                 param = '{} --fold={}'.format(param, self.getFoldModel())
 
             # If execution mode is evaluate, add input atom struct
-            if executionMode == 1 or executionMode == 3:
+            if executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4:
                 param = '{} -P={}'.format(param, self.getStructAbsolutePath())
             params.append(param)
 
