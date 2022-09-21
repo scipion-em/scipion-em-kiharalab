@@ -516,7 +516,7 @@ class ProtEmap2sec(EMProtocol):
                         self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
             # If mode is not Detect DNA/RNA & protein, add class
-            if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA:
+            if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4:
                 param = '{} --class={}'.format(param, self.classes.get())
 
             # If selected mode is not a fold4 mode and map type is experimental, add fold selection
