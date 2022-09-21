@@ -544,19 +544,29 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the default output file path for Emap2sec+.
         """
+        # Checking if selected mode is DNA/RNA & protein prediction (causes path format changes)
+        modeIsDNA = self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
+
         # Generating full path
         foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
         filePath = os.path.splitext(self.getVolumeNames()[0])[0]
 
         # Returning full path
-        return os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath(), foldPath, filePath, 'Phase2')
+        return os.path.join(self.getOutputPath(),
+            'Binary' if modeIsDNA else '',
+            self.getEmap2secPlusTypePath(),
+            foldPath if not modeIsDNA else '',
+            filePath,
+            'Phase2' if not modeIsDNA else 'Final')
     
     def getEmap2secPlusOutputFile(self, clean=True):
         """
         This method returns the default output file name for Emap2sec+.
         """
         volumeName = os.path.splitext((self.getCleanVolumeNames() if clean else self.getVolumeNames())[0])[0]
-        return '{}Phase2_pred{}.pdb'.format(volumeName, ('C' if self.getConfident.get() else ''))
+        return '{}{}_pred{}.pdb'.format(volumeName,
+            ('Final' if self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4 else 'Phase2'),
+            ('C' if self.getConfident.get() else ''))
     
     def getEmap2secPlusMoveParams(self):
         """
