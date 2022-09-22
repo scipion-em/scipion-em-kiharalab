@@ -468,14 +468,6 @@ class ProtEmap2sec(EMProtocol):
 
         return realMode
     
-    def getContourLevel(self): # TEST IF NECESSARY, WITH 0 AND 0.0 THE RESULT MUST BE THE SAME. TMP
-        """
-        This function returns the correct contour level, which will be the input contour level if it is different from 0.0.
-        If the contour level is 0.0, the resulting level gets converted into an integer.
-        """
-        contour = self.emap2secplusContour.get()
-        return contour if contour != 0.0 else 0
-    
     def getStructRelativePath(self):
         """
         This method returns the AtomStruct path relative to current directory.
@@ -512,7 +504,7 @@ class ProtEmap2sec(EMProtocol):
         for inputFile in self.getVolumeAbsolutePaths():
             executionMode = self.getMode()
             param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
-                .format(inputFile, executionMode, self.mapType.get(), self.getContourLevel(),
+                .format(inputFile, executionMode, self.mapType.get(), self.emap2secplusContour.get(),
                         self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
             # If mode is not Detect DNA/RNA & protein, add class
