@@ -57,23 +57,20 @@ class ProtEmap2sec(EMProtocol):
         """
         Defines Emap2sec's input params.
         """
+        # -------------------------------------- Common params --------------------------------------
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('executionType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SEC_TYPE_EMAP2SEC,
                         choices=['Emap2sec', 'Emap2sec+'], label="Execution type: ",
                         help='Select the type of execution between Emap2sec and Emap2sec+.\n'
                         'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
-        form.addParam('inputVolumeEmap2sec', params.PointerParam, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
-                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
-                        label="Input volume/s: ",
-                        help='Select the electron map/s to be processed.')
-        form.addParam('inputVolumeEmap2secPlus', params.PointerParam, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
-                        pointerClass='Volume', allowsNull=False,
-                        label="Input volume: ",
-                        help='Select the electron map to be processed.')
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
         # -------------------------------------- Emap2sec params --------------------------------------
+        form.addParam('inputVolumeEmap2sec', params.PointerParam, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
+                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
+                        label="Input volume/s: ",
+                        help='Select the electron map/s to be processed.')
         trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
         trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
                         help='The level of isosurface to generate density values for.\n'
@@ -103,6 +100,21 @@ class ProtEmap2sec(EMProtocol):
                         help='Show predicted data (Predicted secondary structures).')
         
         # -------------------------------------- Emap2sec+ params --------------------------------------
+        form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
+                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
+                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect DNA/RNA & protein'],
+                        help='Set this option to define the execution mode. The options are:\n\n'
+                            '- Detect structures: Detect structures for EM Map\n\n'
+                            '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
+                            '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
+        form.addParam('inputVolumeEmap2secPlusPredict', params.PointerParam, condition='executionType==%d and mode !=%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
+                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
+                        label="Input volume/s: ",
+                        help='Select the electron map/s to be processed.')
+        form.addParam('inputVolumeEmap2secPlusEvaluate', params.PointerParam, condition='executionType==%d and mode==%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
+                        pointerClass='Volume', allowsNull=False,
+                        label="Input volume: ",
+                        help='Select the electron map to be processed.')
         form.addParam('mapType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_TYPE_EXPERIMENTAL, label='Map type: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Simulated map at 6Å', 'Simulated map at 10Å', 'Simulated map at 6-10Å', 'Experimental map'],
@@ -113,13 +125,6 @@ class ProtEmap2sec(EMProtocol):
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
                             'You can use the author recommended contour level, which will be used by a specific model,'
                             ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
-        form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
-                        choices=['Detect structures', 'Detect-evaluate structures', 'Detect DNA/RNA & protein'],
-                        help='Set this option to define the execution mode. The options are:\n\n'
-                            '- Detect structures: Detect structures for EM Map\n\n'
-                            '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
-                            '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
         form.addParam('inputStruct', params.PointerParam,
                         condition='(executionType==%d and mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
                         pointerClass='AtomStruct', allowsNull=False, label="Input atom struct: ", help='Select the atom struct to evaluate the model with.')
@@ -188,7 +193,7 @@ class ProtEmap2sec(EMProtocol):
         inputData = self.getVolumeAbsolutePaths()[0] if isOneVolume else self.getVolumeAbsolutePaths()
 
         # Getting input volumes
-        inputVolumes = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.inputVolumeEmap2secPlus.get()
+        inputVolumes = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
 
         if isOneVolume:
             # Creating output AtomStruct, linking volume to it, and defining protocol output
@@ -267,7 +272,7 @@ class ProtEmap2sec(EMProtocol):
             and current directory is /home/username/documents
             this will return ['/test/import_file.mrc']
         """
-        rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.inputVolumeEmap2secPlus.get()
+        rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
         volumes = []
         try:
             # Trying to obtain each file from the volume list
@@ -333,7 +338,7 @@ class ProtEmap2sec(EMProtocol):
         """
         try:
             # Trying to obtain each file from the volume list
-            rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.inputVolumeEmap2secPlus.get()
+            rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
             for volume in rawVolumeInput:
                 # If volumes are iterable, means it is a set
                 return 'SetOfVolumes'
@@ -439,6 +444,12 @@ class ProtEmap2sec(EMProtocol):
         return args
     
     # -------------------------------- Emap2sec+ specific functions --------------------------------
+    def getEmap2secPlusInput(self):
+        """
+        This function returns the proper Emap2sec+ input deppening on the mode selected
+        """
+        return self.inputVolumeEmap2secPlusEvaluate.get() if self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS else self.inputVolumeEmap2secPlusPredict.get()
+
     def getFoldModel(self):
         """
         This method returns the real fold value selected by the user.
