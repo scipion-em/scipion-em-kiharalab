@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-from numpy import var
 import pwem
 from .constants import *
 import shutil, os
@@ -344,10 +343,11 @@ class Plugin(pwem.Plugin):
         runCommand = "{} && python3 main.py".format(envActivationCommand)
         for emap2secPlusArgs in args[0]:
             protocol.runJob(runCommand, emap2secPlusArgs, cwd=cls._emap2secplusRepo)
-        
+
         # Output file relocation
-        protocol.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=cls._emap2secplusRepo)
-        
+        for moveArgs in args[1]:
+            protocol.runJob("mv", moveArgs[0] + ' ' + moveArgs[1], cwd=cls._emap2secplusRepo)
+
         # Remove temporary files
         if clean:
             for tmp_file in args[2]:

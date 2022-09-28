@@ -212,8 +212,8 @@ class ProtEmap2sec(EMProtocol):
                 auxAtomStruct.setVolume(volume)
                 outputAtomStructs.append(auxAtomStruct)
             
-                # Defining protocol output
-                self._defineOutputs(outputAtomStructs=outputAtomStructs)
+            # Defining protocol output
+            self._defineOutputs(outputAtomStructs=outputAtomStructs)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -363,7 +363,7 @@ class ProtEmap2sec(EMProtocol):
         # Generating full output file name for selected execution type
         filename = (
             (self.getProtocolFilePrefix(inputFile) + 'visual.pdb') if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
-            else self.getEmap2secPlusOutputFile()
+            else self.getEmap2secPlusOutputFile(inputFile)
         )
         return os.path.join(self.getOutputPath(), filename)
     
@@ -511,9 +511,9 @@ class ProtEmap2sec(EMProtocol):
         This method returns the arguments necessary to execute Emap2sec+.
         """
         params = []
+        executionMode = self.getMode()
         # Creating a param string for each input file
         for inputFile in self.getVolumeAbsolutePaths():
-            executionMode = self.getMode()
             param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
                 .format(inputFile, executionMode, self.mapType.get(), self.emap2secplusContour.get(),
                         self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
@@ -543,39 +543,46 @@ class ProtEmap2sec(EMProtocol):
             ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
         )
     
-    def getEmap2secPlusDefaultOutputPath(self):
+    def getEmap2secPlusDefaultOutputPath(self, inputFile):
         """
-        This method returns the default output file path for Emap2sec+.
+        This method returns the default output file path for a given input for Emap2sec+.
         """
         # Checking if selected mode is DNA/RNA & protein prediction (causes path format changes)
         modeIsDNA = self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
 
         # Generating full path
         foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
-        filePath = os.path.splitext(self.getVolumeNames()[0])[0]
+        filePath = os.path.splitext(self.getVolumeName(inputFile))[0]
 
-        # Returning full path
         return os.path.join(self.getOutputPath(),
-            'Binary' if modeIsDNA else '',
-            self.getEmap2secPlusTypePath(),
-            foldPath if not modeIsDNA else '',
-            filePath,
-            'Phase2' if not modeIsDNA else 'Final')
+                'Binary' if modeIsDNA else '',
+                self.getEmap2secPlusTypePath(),
+                foldPath if not modeIsDNA else '',
+                filePath,
+                'Phase2' if not modeIsDNA else 'Final'
+            )
     
-    def getEmap2secPlusOutputFile(self, clean=True):
+    def getEmap2secPlusOutputFile(self, inputFile, clean=True):
         """
-        This method returns the default output file name for Emap2sec+.
+        This method returns the default output file name given an input file for Emap2sec+.
         """
-        volumeName = os.path.splitext((self.getCleanVolumeNames() if clean else self.getVolumeNames())[0])[0]
+        volumeName = os.path.splitext(self.getCleanVolumeName(inputFile) if clean else self.getVolumeName(inputFile))[0]
         return '{}{}_pred{}.pdb'.format(volumeName,
-            ('Final' if self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4 else 'Phase2'),
-            ('C' if self.getConfident.get() else ''))
+                ('Final' if self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4 else 'Phase2'),
+                ('C' if self.getConfident.get() else '')
+            )
     
-    def getEmap2secPlusMoveParams(self):
+    def getEmap2secPlusMoveParams(self): # ADAPT MULTIPLE VOLUMES
         """
         This method returns the output file move command params for Emap2sec+.
         """
-        return [
-            os.path.join(self.getEmap2secPlusDefaultOutputPath(), os.path.basename(self.getEmap2secPlusOutputFile(clean=False))),
-            os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile())
-        ]
+        params = []
+
+        # Generating move command string for every input volume
+        for inputFile in self.getVolumeAbsolutePaths():
+            params.append([
+                os.path.join(self.getEmap2secPlusDefaultOutputPath(inputFile), os.path.basename(self.getEmap2secPlusOutputFile(inputFile, clean=False))),
+                os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile(inputFile))
+            ])
+        
+        return params
