@@ -38,7 +38,7 @@ from kiharalab import Plugin
 
 class MainMastViewer(pwviewer.Viewer):
     """
-    Wrapper to visualize different outputs of MAINMASTseg software
+    Wrapper to visualize different outputs of MAINMASTseg software.
     """
     _environments = [pwviewer.DESKTOP_TKINTER]
     _targets = [ProtMainMastSegmentMap]
@@ -62,12 +62,15 @@ class MainMastViewer(pwviewer.Viewer):
         return views
 
     def chimeraViewFile(self):
+        """
+        This function creates the chimera file needed to visualize the results.
+        """
         outPath = self.protocol._getExtraPath()
-        filePath = self.protocol._getTmpPath('viewChimera.py')
+        filePath = os.path.abspath(self.protocol._getExtraPath('chimera.cxc'))
         f = open(filePath, "w")
-        f.write('from chimera import runCommand\n')
         for idx, segmentation in enumerate(glob.glob(os.path.join(outPath, 'region*.mrc'))):
-            f.write('runCommand("open %s")\n' % os.path.abspath(segmentation))
-            f.write('runCommand("volume #%d step 1 level %f")\n' % (idx, self.protocol.threshold.get()))
+            f.write('open %s\n' % os.path.abspath(segmentation))
+            f.write('volume #%d step 1 level %f\n' % (idx + 1, self.protocol.threshold.get()))
+            f.write("cofr 0,0,0\n")
         f.close()
         return filePath
