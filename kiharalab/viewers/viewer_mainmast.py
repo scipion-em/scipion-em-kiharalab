@@ -71,6 +71,5 @@ class MainMastViewer(pwviewer.Viewer):
         for idx, segmentation in enumerate(glob.glob(os.path.join(outPath, 'region*.mrc'))):
             f.write('open %s\n' % os.path.abspath(segmentation))
             f.write('volume #%d step 1 level %f\n' % (idx + 1, self.protocol.threshold.get()))
-            f.write("cofr 0,0,0\n")
         f.close()
         return filePath
