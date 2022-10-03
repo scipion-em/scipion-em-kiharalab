@@ -204,7 +204,7 @@ class ProtEmap2sec(EMProtocol):
             # Defining empty sets of AtomStruct
             outputAtomStructs = SetOfAtomStructs().create(self._getPath())
 
-            # For each input file, one output files is produced
+            # For each input file, one output file is produced
             for file, volume in zip(inputData, inputVolumes):
                 auxAtomStruct = AtomStruct(filename=self.getOutputFile(file))
 
