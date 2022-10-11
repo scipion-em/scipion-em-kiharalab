@@ -30,7 +30,7 @@ This protocol is used to identify protein secondary structures, alpha helices, b
 others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.
 """
 # Common imports
-import os
+import os, subprocess
 
 # Pyworkflow imports
 from pyworkflow.protocol import params
@@ -238,7 +238,17 @@ class ProtEmap2sec(EMProtocol):
         """
         This method validates the received params and checks that they all fullfill the requirements needed to run the protocol.
         """
-        return []
+        errors = []
+        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS:
+            # Detecting if host machine has Nvidia drivers installed
+            try:
+                # If no Nvidia drivers are present, the following command will reuturn an error
+                subprocess.check_output(['nvidia-smi'])
+            except Exception as e:
+                errors.append('No Nvidia drivers detected in this machine.\n'
+                    'Emap2sec+ needs an Nvidia GPU to run.')
+
+        return errors
 
     # --------------------------- UTILS functions -----------------------------------
     def getProtocolPrefix(self):
