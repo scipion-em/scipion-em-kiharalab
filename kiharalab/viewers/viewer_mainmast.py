@@ -69,8 +69,8 @@ class MainMastViewer(pwviewer.Viewer):
         filePath = os.path.abspath(self.protocol._getExtraPath('chimera.cxc'))
         f = open(filePath, "w")
         for idx, segmentation in enumerate(glob.glob(os.path.join(outPath, 'region*.mrc'))):
+            volumeIdx = idx + 1
             f.write('open %s\n' % os.path.abspath(segmentation))
-            f.write('volume #%d step 1 level %f\n' % (idx + 1, self.protocol.threshold.get()))
-            f.write('volume #%d level 0.0001\n' % (idx + 1))
+            f.write('volume #%d step 1 level %f\n' % (volumeIdx, self.protocol.threshold.get()))
         f.close()
         return filePath
