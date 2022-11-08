@@ -27,14 +27,10 @@
 import os, glob
 
 import pyworkflow.viewer as pwviewer
-
 import pwem.viewers.views as vi
 from pwem.viewers.viewer_chimera import ChimeraView
 
-from chimera import Plugin as chimera
-
 from ..protocols.protocol_mainmast_segment_map import ProtMainMastSegmentMap
-from kiharalab import Plugin
 
 class MainMastViewer(pwviewer.Viewer):
     """
