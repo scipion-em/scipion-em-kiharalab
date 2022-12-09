@@ -56,11 +56,14 @@ class ProtDAQValidation(EMProtocol):
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
-        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
-                       label="Choose GPU ID",
-                       help="GPU may have several cores. Set it to zero"
-                            " if you do not know what we are talking about."
-                            " First core index is 0, second 1 and so on.")
+        form.addHidden(params.USE_GPU, params.BooleanParam, default=True,
+                       label="Use GPU for execution: ",
+                       help="This protocol has both CPU and GPU implementation.\
+                                                 Select the one you want to use.")
+
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0', label="Choose GPU IDs",
+                       help="Add a list of GPU devices that can be used")
+
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputAtomStruct', params.PointerParam,
                        pointerClass='AtomStruct', allowsNull=False,
@@ -182,7 +185,9 @@ class ProtDAQValidation(EMProtocol):
 
         args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
           format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
-        args += ' --gpu {}'.format(self.getGPUIds()[0])
+
+        if getattr(self, params.USE_GPU):
+            args += ' --gpu {}'.format(self.getGPUIds()[0])
         
         return args
 
@@ -226,7 +231,7 @@ class ProtDAQValidation(EMProtocol):
         return daqDic
     
     def getGPUIds(self):
-        return self.gpuList.get().split(',')
+        return getattr(self, params.GPU_LIST).get().split(',')
 
     def getDAQScoreFile(self):
       return self._getPath('{}.defattr'.format(self._ATTRNAME))
