@@ -54,7 +54,7 @@ class Plugin(pwem.Plugin):
         installationCmd += 'conda create -y -n daq-env python=3.8.5 && {} {} && ' \
             .format(cls.getCondaActivationCmd(), cls.getDAQEnvActivation())
         installationCmd += 'conda install -y -c conda-forge mrcfile && '
-        installationCmd += 'cd DAQ && pip install -r requirement.txt && '
+        installationCmd += 'cd DAQ && pip install -r requirements.txt && '
 
         # Creating validation file
         DAQ_INSTALLED = '%s_installed' % DAQ
