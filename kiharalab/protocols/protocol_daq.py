@@ -102,7 +102,7 @@ class ProtDAQValidation(EMProtocol):
     def convertInputStep(self):
         name, ext = os.path.splitext(self.getStructFile())
         pdbFile = self.getPdbStruct()
-        if ext != '.pdb':
+        if not ext in ['.pdb', '.ent']:
             toPdb(self.getStructFile(), pdbFile)
         else:
             shutil.copy(self.getStructFile(), pdbFile)
