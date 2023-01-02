@@ -58,22 +58,6 @@ class Plugin(pwem.Plugin):
     _mainmastHome = os.path.join(pwem.Config.EM_ROOT, 'mainMast-' + mainmastDefaultVersion)
     _mainmastRepo = os.path.join(_mainmastHome, 'MainMast')
 
-    # Defining some variable suffixes
-    """
-    gitSuffix = "_GIT"
-    homeSuffix = "_HOME"
-    envSuffix = "_ENV"
-    repoNameSuffix = "_REPO_URL_NAME"
-    repoDefaultVersionSuffix = "_REPO_DEFAULT_VERSION"
-    defaultVersionSuffix = "_DEFAULT_VERSION"
-    pythonVersionSuffix = "_PYTHON_VERSION"
-    withVersionSuffix = "_WITH_VERSION"
-    dependenciesSuffix = "_DEPENDENCIES"
-    extraFilesSuffix = "_EXTRA_FILES"
-    extraCommandsSuffix = "_EXTRA_COMMANDS"
-    extraCondaCommandsSuffix = "_EXTRA_CONDA_COMMANDS"
-    """
-
     @classmethod
     def _defineVariables(cls):
         """
