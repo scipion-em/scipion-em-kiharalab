@@ -6,3 +6,4 @@
 
 from .viewer_daq import DAQViewer
 from .viewer_mainmast import MainMastViewer
+from .viewer_emap2sec import Emap2secViewer
