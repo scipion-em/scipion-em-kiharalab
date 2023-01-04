@@ -35,7 +35,7 @@ import os, subprocess
 # Pyworkflow imports
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
-from pwem.objects import SetOfAtomStructs, AtomStruct, Volume
+from pwem.objects import AtomStruct
 from pyworkflow.utils import Message
 
 # Kiharalab imports
@@ -50,7 +50,7 @@ class ProtEmap2sec(EMProtocol):
     "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
     "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
     _label = 'Emap2sec'
-    _possibleOutputs = {'outputAtomStruct': AtomStruct, 'outputAtomStructs': SetOfAtomStructs}
+    _possibleOutputs = {'outputAtomStruct': AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -63,14 +63,12 @@ class ProtEmap2sec(EMProtocol):
                         choices=['Emap2sec', 'Emap2sec+'], label="Execution type: ",
                         help='Select the type of execution between Emap2sec and Emap2sec+.\n'
                         'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
+        form.addParam('inputVolume', params.PointerParam, pointerClass='Volume', allowsNull=False,
+                        label="Input volume: ", help='Select the electron map to be processed.')
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
         # -------------------------------------- Emap2sec params --------------------------------------
-        form.addParam('inputVolumeEmap2sec', params.PointerParam, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
-                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
-                        label="Input volume/s: ",
-                        help='Select the electron map/s to be processed.')
         trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
         trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
                         help='The level of isosurface to generate density values for.\n'
@@ -91,7 +89,7 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
                             ' by global or local maximum density value.')
                        
-        form.addParam('proteinId', params.StringParam, label='Protein id:', condition='(executionType==%d and type(inputVolumeEmap2sec) == Volume)' % EMAP2SEC_TYPE_EMAP2SEC,
+        form.addParam('proteinId', params.StringParam, label='Protein id:', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
                         expertLevel=params.LEVEL_ADVANCED, help='Optional.\nUnique protein identifier. Either EMID or SCOPe ID can be used.'
                             '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.')
         
@@ -107,14 +105,6 @@ class ProtEmap2sec(EMProtocol):
                             '- Detect structures: Detect structures for EM Map\n\n'
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
                             '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
-        form.addParam('inputVolumeEmap2secPlusPredict', params.PointerParam, condition='executionType==%d and mode !=%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
-                        pointerClass='Volume,SetOfVolumes', allowsNull=False,
-                        label="Input volume/s: ",
-                        help='Select the electron map/s to be processed.')
-        form.addParam('inputVolumeEmap2secPlusEvaluate', params.PointerParam, condition='executionType==%d and mode==%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
-                        pointerClass='Volume', allowsNull=False,
-                        label="Input volume: ",
-                        help='Select the electron map to be processed.')
         form.addParam('mapType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_TYPE_EXPERIMENTAL, label='Map type: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Simulated map at 6Å', 'Simulated map at 10Å', 'Simulated map at 6-10Å', 'Experimental map'],
@@ -186,34 +176,12 @@ class ProtEmap2sec(EMProtocol):
         """
         This method processes the output files generated by the protocol and imports them into Scipion objects.
         """
-        # Checking whether input is one volume or a set of volumes to define output type
-        isOneVolume = self.getInputType() == 'Volume'
+        # Creating output AtomStruct and linking volume to it
+        outputAtomStruct = AtomStruct(filename=self.getOutputFile(self.getVolumeAbsolutePath()))
+        outputAtomStruct.setVolume(self.inputVolume.get())
 
-        # Getting input files deppending on type
-        inputData = self.getVolumeAbsolutePaths()[0] if isOneVolume else self.getVolumeAbsolutePaths()
-
-        # Getting input volumes
-        inputVolumes = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
-
-        if isOneVolume:
-            # Creating output AtomStruct, linking volume to it, and defining protocol output
-            outputAtomStruct = AtomStruct(filename=self.getOutputFile(inputData))
-            outputAtomStruct.setVolume(inputVolumes)
-            self._defineOutputs(outputAtomStruct=outputAtomStruct)
-        else:
-            # Defining empty sets of AtomStruct
-            outputAtomStructs = SetOfAtomStructs().create(self._getPath())
-
-            # For each input file, one output file is produced
-            for file, volume in zip(inputData, inputVolumes):
-                auxAtomStruct = AtomStruct(filename=self.getOutputFile(file))
-
-                # Linking volume file to AtomStruct and adding to set
-                auxAtomStruct.setVolume(volume)
-                outputAtomStructs.append(auxAtomStruct)
-            
-            # Defining protocol output
-            self._defineOutputs(outputAtomStructs=outputAtomStructs)
+        # Defining protocol output
+        self._defineOutputs(outputAtomStruct=outputAtomStruct)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -274,35 +242,24 @@ class ProtEmap2sec(EMProtocol):
         # Then, '\' is inserted before every space again, to include now possible folders with spaces in the absolute path
         return path.replace('\\\ ', ' ').replace(' ', '\ ')
     
-    def getVolumeRelativePaths(self):
+    def getVolumeRelativePath(self):
         """
-        This method returns a list with the volume paths relative to current directory.
+        This method returns a the volume path relative to current directory.
+        Path is scaped to support spaces.
         Example:
             if a file is in /home/username/documents/test/import_file.mrc
             and current directory is /home/username/documents
-            this will return ['/test/import_file.mrc']
+            this will return '/test/import_file.mrc'
         """
-        rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
-        volumes = []
-        try:
-            # Trying to obtain each file from the volume list
-            for volume in rawVolumeInput:
-                # Adding '\' to folders with spaces to scape the spaces
-                volumes.append(self.scapePath(volume.getFileName()))
-        except:
-            # If we get an exception, it means it si a single volume
-            volumes = [self.scapePath(rawVolumeInput.getFileName())]
-        return volumes
+        return self.scapePath(self.inputVolume.get().getFileName())
 
-    def getVolumeAbsolutePaths(self):
+    def getVolumeAbsolutePath(self):
         """
-        This method returns a list with the absolute path for the volume files.
-        Example: ['/home/username/documents/test/import_file.mrc']
+        This method returns a the absolute path for the volume file.
+        Path is scaped to support spaces.
+        Example: '/home/username/documents/test/import_file.mrc'
         """
-        volumes = []
-        for volume in self.getVolumeRelativePaths():
-            volumes.append(self.scapePath(os.path.abspath(volume)))
-        return volumes
+        return self.scapePath(os.path.abspath(self.getVolumeRelativePath()))
     
     def getVolumeName(self, filename):
         """
@@ -311,16 +268,6 @@ class ProtEmap2sec(EMProtocol):
         """
         return os.path.basename(filename)
 
-    def getVolumeNames(self):
-        """
-        This method returns a list with the full name of the volume files.
-        Example: ['import_file.mrc']
-        """
-        volumes = []
-        for volume in self.getVolumeRelativePaths():
-            volumes.append(self.getVolumeName(volume))
-        return volumes
-    
     def getCleanVolumeName(self, filename):
         """
         This method returns the full name of the given volume file without the 'import_' prefix.
@@ -330,41 +277,12 @@ class ProtEmap2sec(EMProtocol):
         """
         return self.getVolumeName(filename).replace('import_', '')
 
-    def getCleanVolumeNames(self):
-        """
-        This method returns a list with the full name of every volume file without the 'import_' prefix.
-        Example:
-            if a filename is 'import_file.mrc'
-            this will return ['file.mrc']
-        """
-        volumes = []
-        for volume in self.getVolumeNames():
-            volumes.append(self.getCleanVolumeName(volume))
-        return volumes
-
-    def getInputType(self):
-        """
-        This method returns the type of input received by the protocol.
-        """
-        try:
-            # Trying to obtain each file from the volume list
-            rawVolumeInput = self.inputVolumeEmap2sec.get() if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC else self.getEmap2secPlusInput()
-            for volume in rawVolumeInput:
-                # If volumes are iterable, means it is a set
-                return 'SetOfVolumes'
-        except:
-            # If it is not iterable, then it is a single volume
-            return 'Volume'
-
     def getOutputPath(self):
         """
         This method returns the absolute path to the custom output directory.
         Spaces in the folder names are scaped to avoid errors.
         """
-        # Defining base output path
-        outputPath = self.scapePath(os.path.abspath(self._getExtraPath('results')))
-
-        return outputPath
+        return self.scapePath(os.path.abspath(self._getExtraPath('results')))
 
     def getOutputFile(self, inputFile):
         """
@@ -383,14 +301,13 @@ class ProtEmap2sec(EMProtocol):
         """
         args = []
         if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC:
-            for file in self.getVolumeAbsolutePaths():
-                protocolPrefix = self.getProtocolPrefix()
-                filePrefix = self.getProtocolFilePrefix(file)
-                args.append('data/{}trimmap'.format(filePrefix))
-                args.append('data/{}dataset'.format(filePrefix))
-                args.append('data/{}input.txt'.format(protocolPrefix))
-                for i in range(1, 3):
-                    args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
+            protocolPrefix = self.getProtocolPrefix()
+            filePrefix = self.getProtocolFilePrefix(self.getVolumeAbsolutePath())
+            args.append('data/{}trimmap'.format(filePrefix))
+            args.append('data/{}dataset'.format(filePrefix))
+            args.append('data/{}input.txt'.format(protocolPrefix))
+            for i in range(1, 3):
+                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
         else:
             args = [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())]
 
@@ -399,40 +316,32 @@ class ProtEmap2sec(EMProtocol):
     # -------------------------------- Emap2sec specific functions --------------------------------
     def getTrimmapArgs(self):
         """
-        This method returns a list with the arguments neccessary for the trimmap generation for each volume file.
+        This method returns a list with the arguments neccessary for the trimmap generation for the volume.
         """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            args.append('{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
-            .format(file,
-                self.emap2secContour.get(),
-                self.sstep.get(),
-                self.vw.get(),
-                '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
-                self.getProtocolFilePrefix(file)))
-        return args
+        file = self.getVolumeAbsolutePath()
+        return '{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
+        .format(file,
+            self.emap2secContour.get(),
+            self.sstep.get(),
+            self.vw.get(),
+            '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
+            self.getProtocolFilePrefix(file))
     
     def getDatasetArgs(self):
         """
         This method returns the arguments neccessary for the dataset generation.
         """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(file))
-            proteinId = (' ' + self.proteinId.get()) if self.proteinId.get() and type(self.inputVolumeEmap2sec.get()) == Volume else ''
-            args.append('{}trimmap {}dataset{}'.format(outputPefix, outputPefix, proteinId))
-        return args
+        outputPefix = 'data/{}'.format(self.getProtocolFilePrefix(self.getVolumeAbsolutePath()))
+        proteinId = (' ' + self.proteinId.get()) if self.proteinId.get() else ''
+        return '{}trimmap {}dataset{}'.format(outputPefix, outputPefix, proteinId)
     
     def getInputLocationFileArgs(self):
         """
-        This method returns the arguments neccessary for input location file generation,
+        This method returns the arguments neccessary for input location file generation
         used for Emap2sec.py.
         """
-        inputFileLocations = '\''
-        for file in self.getVolumeAbsolutePaths():
-            inputFileLocations = inputFileLocations + 'data/{}dataset\n'.format(self.getProtocolFilePrefix(file))
-        inputFileLocations = inputFileLocations[:-1]
-        return inputFileLocations + '\' > data/{}input.txt'.format(self.getProtocolPrefix())
+        return '\'data/{}dataset\' > data/{}input.txt'\
+            .format(self.getProtocolFilePrefix(self.getVolumeAbsolutePath()), self.getProtocolPrefix())
     
     def getEmap2secArgs(self):
         """
@@ -444,22 +353,14 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments neccessary for the Secondary Structure visualization.
         """
-        args = []
-        for file in self.getVolumeAbsolutePaths():
-            args.append('data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
+        file = self.getVolumeAbsolutePath()
+        return 'data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
                 .format(self.getProtocolFilePrefix(file),
                     self.getProtocolPrefix(),
                     self.getProtocolFilePrefix(file),
-                    self.getOutputFile(file)))
-        return args
+                    self.getOutputFile(file))
     
     # -------------------------------- Emap2sec+ specific functions --------------------------------
-    def getEmap2secPlusInput(self):
-        """
-        This function returns the proper Emap2sec+ input deppening on the mode selected
-        """
-        return self.inputVolumeEmap2secPlusEvaluate.get() if self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS else self.inputVolumeEmap2secPlusPredict.get()
-
     def getFoldModel(self):
         """
         This method returns the real fold value selected by the user.
@@ -492,6 +393,7 @@ class ProtEmap2sec(EMProtocol):
     def getStructRelativePath(self):
         """
         This method returns the AtomStruct path relative to current directory.
+        Path is scaped to support spaces.
         Example:
             if a file is in /home/username/documents/test/my_atom_struct_file.pdb
             and current directory is /home/username/documents
@@ -520,29 +422,27 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments necessary to execute Emap2sec+.
         """
-        params = []
         executionMode = self.getMode()
-        # Creating a param string for each input file
-        for inputFile in self.getVolumeAbsolutePaths():
-            param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
-                .format(inputFile, executionMode, self.mapType.get(), self.emap2secplusContour.get(),
-                        self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
-            # If mode is not Detect DNA/RNA & protein, add class
-            if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4:
-                param = '{} --class={}'.format(param, self.classes.get())
+        # Initial param string
+        param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
+            .format(self.getVolumeAbsolutePath(), executionMode, self.mapType.get(), self.emap2secplusContour.get(),
+                    self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
-            # If selected mode is not a fold4 mode and map type is experimental, add fold selection
-            if (self.mapType.get() == EMAP2SECPLUS_TYPE_EXPERIMENTAL and 
-                (executionMode == EMAP2SECPLUS_MODE_DETECT_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS)):
-                param = '{} --fold={}'.format(param, self.getFoldModel())
+        # If mode is not Detect DNA/RNA & protein, add class
+        if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4:
+            param += ' --class={}'.format(self.classes.get())
 
-            # If execution mode is evaluate, add input atom struct
-            if executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4:
-                param = '{} -P={}'.format(param, self.getStructAbsolutePath())
-            params.append(param)
+        # If selected mode is not a fold4 mode and map type is experimental, add fold selection
+        if (self.mapType.get() == EMAP2SECPLUS_TYPE_EXPERIMENTAL and 
+            (executionMode == EMAP2SECPLUS_MODE_DETECT_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS)):
+            param += ' --fold={}'.format(self.getFoldModel())
 
-        return params
+        # If execution mode is evaluate, add input atom struct
+        if executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS or executionMode == EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4:
+            param += ' -P={}'.format(self.getStructAbsolutePath())
+
+        return param
     
     def getEmap2secPlusTypePath(self):
         """
@@ -553,16 +453,16 @@ class ProtEmap2sec(EMProtocol):
             ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
         )
     
-    def getEmap2secPlusDefaultOutputPath(self, inputFile):
+    def getEmap2secPlusDefaultOutputPath(self):
         """
-        This method returns the default output file path for a given input for Emap2sec+.
+        This method returns the default output file path for Emap2sec+.
         """
         # Checking if selected mode is DNA/RNA & protein prediction (causes path format changes)
         modeIsDNA = self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
 
         # Generating full path
         foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
-        filePath = os.path.splitext(self.getVolumeName(inputFile))[0]
+        filePath = os.path.splitext(self.getVolumeName(self.getVolumeAbsolutePath()))[0]
 
         return os.path.join(self.getOutputPath(),
                 'Binary' if modeIsDNA else '',
@@ -572,27 +472,24 @@ class ProtEmap2sec(EMProtocol):
                 'Phase2' if not modeIsDNA else 'Final'
             )
     
-    def getEmap2secPlusOutputFile(self, inputFile, clean=True):
+    def getEmap2secPlusOutputFile(self, clean=True):
         """
-        This method returns the default output file name given an input file for Emap2sec+.
+        This method returns the default output file name for Emap2sec+.
         """
+        inputFile = self.getVolumeAbsolutePath()
         volumeName = os.path.splitext(self.getCleanVolumeName(inputFile) if clean else self.getVolumeName(inputFile))[0]
         return '{}{}_pred{}.pdb'.format(volumeName,
                 ('Final' if self.getMode() == EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4 else 'Phase2'),
                 ('C' if self.getConfident.get() else '')
             )
     
-    def getEmap2secPlusMoveParams(self): # ADAPT MULTIPLE VOLUMES
+    def getEmap2secPlusMoveParams(self):
         """
         This method returns the output file move command params for Emap2sec+.
         """
-        params = []
-
-        # Generating move command string for every input volume
-        for inputFile in self.getVolumeAbsolutePaths():
-            params.append([
-                os.path.join(self.getEmap2secPlusDefaultOutputPath(inputFile), os.path.basename(self.getEmap2secPlusOutputFile(inputFile, clean=False))),
-                os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile(inputFile))
-            ])
-        
+        inputFile = self.getVolumeAbsolutePath()
+        params = [
+            os.path.join(self.getEmap2secPlusDefaultOutputPath(inputFile), os.path.basename(self.getEmap2secPlusOutputFile(inputFile, clean=False))),
+            os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile(inputFile))
+        ]
         return params

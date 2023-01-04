@@ -37,67 +37,45 @@ class TestEmap2sec(BaseTest):
         cls.tmpFiles = []
         cls.ds = DataSet.getDataSet('model_building_tutorial')
 
-        # Running test with volume as input
-        cls._runImportVolumes(False)
-
-        # Running test with set of volumes as input
+        # Running test
         cls._runImportVolumes()
 
     @classmethod
-    def _runImportVolumes(cls, isSet=True):
+    def _runImportVolumes(cls):
         # Creating arguments for import volumes protocol
-        inputPrefix = 'volumes/emd_6838'
-        inputPath = inputPrefix + ('*' if isSet else '') + '.mrc'
         args = {
-            'filesPath': cls.ds.getFile(inputPath),
-            'samplingRate': 1.0,
+            'filesPath': cls.ds.getFile('volumes/emd_6838.mrc'),
+            'samplingRate': 1.4,
             'setOrigCoord': False
         }
-
-        # If is set of volumes, duplicate mrc file to have at least two valid volume files
-        if isSet:
-            shutil.copyfile(cls.ds.getFile(inputPrefix + '.mrc'), cls.ds.getFile(inputPrefix + '_2.mrc'))
-            # Set duplicated file in a variable for later removal
-            cls.tmpFiles.append(cls.ds.getFile(inputPrefix + '_2.mrc'))
 
         # Creating and launching import volumes protocol
         protImportVolumes = cls.newProtocol(ProtImportVolumes, **args)
         cls.launchProtocol(protImportVolumes)
 
-        # Storing results in different variable if input is Volume or SetOfVolumes
-        if isSet:
-            cls.protImportVolumes = protImportVolumes
-        else:
-            cls.protImportVolume = protImportVolumes
+        # Storing results
+        cls.protImportVolume = protImportVolumes
     
-    def _runEmap2sec(self, isSet=True):
-        # Getting input volumes and defining output variable string
-        inputData = self.protImportVolumes.outputVolumes if isSet else self.protImportVolume.outputVolume
-        outputVariable = 'outputAtomStruct' + ('s' if isSet else '')
-
+    def _runEmap2sec(self):
         # Running protocol
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
             executionType=EMAP2SEC_TYPE_EMAP2SEC,
-            inputVolumeEmap2sec=inputData,
+            inputVolume=self.protImportVolume.outputVolume,
             emap2secContour=5.4)
         self.launchProtocol(protEmap2sec)
 
         # Checking function output
-        pdbOut = getattr(protEmap2sec, outputVariable, None)
+        pdbOut = getattr(protEmap2sec, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
-        if isSet:
-            for atomStruct in pdbOut:
-                self.assertIsNotNone(atomStruct.getVolume())
-        else:        
-            self.assertIsNotNone(pdbOut.getVolume())
+        self.assertIsNotNone(pdbOut.getVolume())
     
     def _runEmap2secPlus(self):
         # Running protocol
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
             executionType=EMAP2SEC_TYPE_EMAP2SECPLUS,
-            inputVolumeEmap2secPlus=self.protImportVolume.outputVolume,
+            inputVolume=self.protImportVolume.outputVolume,
             emap2secplusContour=5.4)
         self.launchProtocol(protEmap2sec)
 
@@ -107,18 +85,12 @@ class TestEmap2sec(BaseTest):
         self.assertIsNotNone(pdbOut.getVolume())
 
     def test1Emap2sec(self):
-        """First test. Runs Emap2sec with Volume as input."""
-        print("Running Emap2sec with Volume as input")
-        # Running Emap2sec with Volume as input
-        self._runEmap2sec(False)
-    
-    def test2Emap2sec(self):
-        """Second test. Runs Emap2sec with SetOfVolumes as input."""
-        print("Running Emap2sec with SetOfVolumes as input")
-        # Running Emap2sec with SetOfVolumes as input
+        """First test. Runs Emap2sec."""
+        print("Running Emap2sec")
+        # Running Emap2sec
         self._runEmap2sec()
     
-    def test3Emap2secPlus(self):
+    def test2Emap2secPlus(self):
         """Third test. Runs Emap2sec+ with an experimental volume type."""
         print("Running Emap2sec+ with an experimental volume type")
         # Running Emap2sec+ with with an experimental volume type

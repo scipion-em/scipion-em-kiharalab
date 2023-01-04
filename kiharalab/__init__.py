@@ -377,7 +377,7 @@ class Plugin(pwem.Plugin):
         Run Emap2sec script from a given protocol.
         """
         # Building commands before actual protocol execution
-        # Enviroment activation command. Needed to execute befor every other standalone command.
+        # Enviroment activation command. Needed to execute before every other standalone command.
         envActivationCommand = "{} {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand('emap2sec'))
         
         # If custom output directory is specified, create it if it does not exist
@@ -385,33 +385,28 @@ class Plugin(pwem.Plugin):
             protocol.runJob("mkdir -p", outDir, cwd=cls._emap2secRepo)
 
         # Command to move to Emap2sec's repo's root directory.
-        # Needed to be executed once before the actual workflow commands
+        # Needed to be executed before the actual workflow commands
         moveToRepoCommand = "cd"
         protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
 
-        protocol.runJob('cp', '/home/martin/Documentos/344_EMD-2876_visual.pdb /home/martin/ScipionUserData/projects/Emap2sec_test/Runs/000344_ProtEmap2sec/extra/results/', cwd=cls._emap2secRepo)
-
         # Trimapp generation command
         trimappCommand = "map2train_src/bin/map2train"
-        #for trimappArg in args[0]:
-        #    protocol.runJob(trimappCommand, trimappArg, cwd=cls._emap2secRepo)
+        protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
 
         # Dataset generation command
         datasetCommand = "{} && python data_generate/dataset_wo_stride.py".format(envActivationCommand)
-        #for datasetArg in args[1]:
-        #    protocol.runJob(datasetCommand, datasetArg, cwd=cls._emap2secRepo)
+        protocol.runJob(datasetCommand, args[1], cwd=cls._emap2secRepo)
 
         # Input file for Emap2sec.py
-        #protocol.runJob("echo", args[2], cwd=cls._emap2secRepo)
+        protocol.runJob("echo", args[2], cwd=cls._emap2secRepo)
 
         # Emap2sec execution command
         emap2secCommand = "{} && python emap2sec/Emap2sec.py".format(envActivationCommand)
-        #protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
+        protocol.runJob(emap2secCommand, args[3], cwd=cls._emap2secRepo)
         
         # Secondary structures visualization command
         visualCommand = "Visual/Visual.pl"
-        #for visualArg in args[4]:
-        #    protocol.runJob(visualCommand, visualArg, cwd=cls._emap2secRepo)
+        protocol.runJob(visualCommand, args[4], cwd=cls._emap2secRepo)
 
         # Remove temporary files
         if clean:
@@ -435,12 +430,10 @@ class Plugin(pwem.Plugin):
 
         # Emap2sec+ execution command
         runCommand = "{} && python3 main.py".format(envActivationCommand)
-        for emap2secPlusArgs in args[0]:
-            protocol.runJob(runCommand, emap2secPlusArgs, cwd=cls._emap2secplusRepo)
+        protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
 
         # Output file relocation
-        for moveArgs in args[1]:
-            protocol.runJob("mv", moveArgs[0] + ' ' + moveArgs[1], cwd=cls._emap2secplusRepo)
+        protocol.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=cls._emap2secplusRepo)
 
         # Remove temporary files
         if clean:
