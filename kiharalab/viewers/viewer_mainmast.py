@@ -27,6 +27,8 @@
 import os, glob
 
 import pyworkflow.viewer as pwviewer
+
+import pwem.viewers as viewers
 import pwem.viewers.views as vi
 from pwem.viewers.viewer_chimera import ChimeraView
 
@@ -57,16 +59,30 @@ class MainMastViewer(pwviewer.Viewer):
 
         return views
 
-    def chimeraViewFile(self):
+    def chimeraViewFile(self, axis=False):
         """
         This function creates the chimera file needed to visualize the results.
         """
         outPath = self.protocol._getExtraPath()
         filePath = os.path.abspath(self.protocol._getExtraPath('chimera.cxc'))
         f = open(filePath, "w")
+
+        # Adding all result volumes
         for idx, segmentation in enumerate(glob.glob(os.path.join(outPath, 'region*.mrc'))):
             volumeIdx = idx + 1
             f.write('open %s\n' % os.path.abspath(segmentation))
             f.write('volume #%d step 1 level %f\n' % (volumeIdx, self.protocol.threshold.get()))
+
+        # Adding axis to file if requested
+        if axis:
+            builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
+            viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
+                bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
+                sampling=self.protocol.inputVolume.get().getSamplingRate())
+            f.write('open %s\n' % builFileName)
+
+            # Setting center of coordinates for the axis
+            f.write('cofr 0,0,0\n')
+            
         f.close()
         return filePath

@@ -62,7 +62,7 @@ class Emap2secViewer(pwviewer.Viewer):
             errors.append("Chimera is not available. Please install it to visualize.")
         return errors
     
-    def chimeraViewFile(self):
+    def chimeraViewFile(self, axis=False):
         """
         This function creates the Chimera file needed to visualize the results.
         """
@@ -71,15 +71,16 @@ class Emap2secViewer(pwviewer.Viewer):
         inputVolume = self.protocol.getVolumeAbsolutePath()
 
         f = open(filePath, "w")
-        # Adding axis to file
-        builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
-        viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
-            bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
-            sampling=self.protocol.inputVolume.get().getSamplingRate())
-        f.write('open %s\n' % builFileName)
-        
-        # Setting center of coordinates for the axis
-        f.write('cofr 0,0,0\n')
+        # Adding axis to file if requested
+        if axis:
+            builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
+            viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
+                bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
+                sampling=self.protocol.inputVolume.get().getSamplingRate())
+            f.write('open %s\n' % builFileName)
+            
+            # Setting center of coordinates for the axis
+            f.write('cofr 0,0,0\n')
 
         # Adding input Volume
         f.write('open %s\n' % inputVolume)
