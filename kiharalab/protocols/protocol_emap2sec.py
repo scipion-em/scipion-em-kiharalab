@@ -291,7 +291,7 @@ class ProtEmap2sec(EMProtocol):
         # Generating full output file name for selected execution type
         filename = (
             (self.getProtocolFilePrefix(inputFile) + 'visual.pdb') if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC
-            else self.getEmap2secPlusOutputFile(inputFile)
+            else self.getEmap2secPlusOutputFile()
         )
         return os.path.join(self.getOutputPath(), filename)
     
@@ -489,7 +489,7 @@ class ProtEmap2sec(EMProtocol):
         """
         inputFile = self.getVolumeAbsolutePath()
         params = [
-            os.path.join(self.getEmap2secPlusDefaultOutputPath(inputFile), os.path.basename(self.getEmap2secPlusOutputFile(inputFile, clean=False))),
-            os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile(inputFile))
+            os.path.join(self.getEmap2secPlusDefaultOutputPath(), os.path.basename(self.getEmap2secPlusOutputFile(clean=False))),
+            os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile())
         ]
         return params
