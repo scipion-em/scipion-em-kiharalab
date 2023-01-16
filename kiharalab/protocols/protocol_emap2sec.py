@@ -487,7 +487,6 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the output file move command params for Emap2sec+.
         """
-        inputFile = self.getVolumeAbsolutePath()
         params = [
             os.path.join(self.getEmap2secPlusDefaultOutputPath(), os.path.basename(self.getEmap2secPlusOutputFile(clean=False))),
             os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile())
