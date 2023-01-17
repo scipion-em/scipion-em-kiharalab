@@ -196,7 +196,7 @@ class ProtEmap2sec(EMProtocol):
             metricsFilename = os.path.join(self.getOutputPath(), self.getEmap2secPlusMetricsFile())
             try:
                 metricsFile = open(metricsFilename, 'r')
-                summary.append('Metric results:')
+                summary.append('Model evaluation results:')
                 for line in metricsFile:
                     summary.append(line)
                 metricsFile.close()
