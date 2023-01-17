@@ -104,7 +104,8 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to define the execution mode. The options are:\n\n'
                             '- Detect structures: Detect structures for EM Map\n\n'
                             '- Detect-evaluate structures: Detect and evaluate structures for EM map with pdb structure\n\n'
-                            '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models')
+                            '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models\n\n'
+                            'For detect-evaluate mode, evaluation results will show up in summary box.')
         form.addParam('mapType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_TYPE_EXPERIMENTAL, label='Map type: ',
                         condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
                         choices=['Simulated map at 6Å', 'Simulated map at 10Å', 'Simulated map at 6-10Å', 'Experimental map'],
@@ -186,9 +187,23 @@ class ProtEmap2sec(EMProtocol):
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
         """
-        This method returns a summary of the text provided by '_methods'.
+        This method usually returns a summary of the text provided by '_methods'.
         """
-        return []
+        summary = []
+
+        # In evaluation mode in Emap2sec+, displays the model results
+        if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS:
+            metricsFilename = os.path.join(self.getOutputPath(), self.getEmap2secPlusMetricsFile())
+            try:
+                metricsFile = open(metricsFilename, 'r')
+                summary.append('Metric results:')
+                for line in metricsFile:
+                    summary.append(line)
+                metricsFile.close()
+            except:
+                summary.append('Metric results not ready yet.')
+        
+        return summary
 
     def _methods(self):
         """
@@ -372,10 +387,6 @@ class ProtEmap2sec(EMProtocol):
         """
         This method translates mode value selected by the user in the form into the actual param needed for Emap2sec+.
         """
-        # Real Emap2sec+ mode values that do not match plugin form values
-        EMAP2SECPLUS_MODE_DETECT_EXPERIMENTAL_FOLD4 = 2
-        EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4 = 3
-
         # Getting form mode value
         realMode = self.mode.get()
 
@@ -453,7 +464,7 @@ class ProtEmap2sec(EMProtocol):
             ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
         )
     
-    def getEmap2secPlusDefaultOutputPath(self):
+    def getEmap2secPlusDefaultOutputPath(self, base=False):
         """
         This method returns the default output file path for Emap2sec+.
         """
@@ -463,14 +474,14 @@ class ProtEmap2sec(EMProtocol):
         # Generating full path
         foldPath = 'Fold{}_Model_Result'.format(self.getFoldModel())
         filePath = os.path.splitext(self.getVolumeName(self.getVolumeAbsolutePath()))[0]
-
-        return os.path.join(self.getOutputPath(),
+        basePath = os.path.join(self.getOutputPath(),
                 'Binary' if modeIsDNA else '',
                 self.getEmap2secPlusTypePath(),
                 foldPath if not modeIsDNA else '',
-                filePath,
-                'Phase2' if not modeIsDNA else 'Final'
+                filePath
             )
+
+        return basePath if base else os.path.join(basePath, 'Phase2' if not modeIsDNA else 'Final')
     
     def getEmap2secPlusOutputFile(self, clean=True):
         """
@@ -483,6 +494,14 @@ class ProtEmap2sec(EMProtocol):
                 ('C' if self.getConfident.get() else '')
             )
     
+    def getEmap2secPlusMetricsFile(self, clean=True):
+        """
+        This method returns the default metric report file name for Emap2sec+.
+        """
+        inputFile = self.getVolumeAbsolutePath()
+        volumeName = os.path.splitext(self.getCleanVolumeName(inputFile) if clean else self.getVolumeName(inputFile))[0]
+        return '{}Phase2_report.txt'.format(volumeName)
+    
     def getEmap2secPlusMoveParams(self):
         """
         This method returns the output file move command params for Emap2sec+.
@@ -491,4 +510,10 @@ class ProtEmap2sec(EMProtocol):
             os.path.join(self.getEmap2secPlusDefaultOutputPath(), os.path.basename(self.getEmap2secPlusOutputFile(clean=False))),
             os.path.join(self.getOutputPath(), self.getEmap2secPlusOutputFile())
         ]
+
+        # If evaluation mode, also move metrics report file
+        if self.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS:
+            params.append(os.path.join(self.getEmap2secPlusDefaultOutputPath(base=True), self.getEmap2secPlusMetricsFile(clean=False)))
+            params.append(os.path.join(self.getOutputPath(), self.getEmap2secPlusMetricsFile()))
+
         return params

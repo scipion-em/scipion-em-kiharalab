@@ -86,6 +86,9 @@ class Emap2secViewer(pwviewer.Viewer):
         f.write('open %s\n' % inputVolume)
         # Adding output Atom Struct
         f.write('open %s\n' % self.protocol.getOutputFile(inputVolume))
+        # If evaluation mode on Emap2sec+, add reference pdb
+        if self.protocol.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and self.protocol.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS:
+            f.write('open %s\n' % self.protocol.getStructAbsolutePath())
         f.close()
 
         # Returning written file 

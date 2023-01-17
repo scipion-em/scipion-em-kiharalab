@@ -445,8 +445,10 @@ class Plugin(pwem.Plugin):
         runCommand = "{} && python3 main.py".format(envActivationCommand)
         protocol.runJob(runCommand, args[0], cwd=cls._emap2secplusRepo)
 
-        # Output file relocation
+        # Output file/s relocation
         protocol.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=cls._emap2secplusRepo)
+        if len(args[1]) == 4:
+            protocol.runJob("mv", args[1][2] + ' ' + args[1][3], cwd=cls._emap2secplusRepo)
 
         # Remove temporary files
         if clean:
