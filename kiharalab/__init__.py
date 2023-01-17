@@ -141,13 +141,16 @@ class Plugin(pwem.Plugin):
         cloneCmd = cls.getCommandWithChechpoint(cls.getGithubCloneCommand(cls._emap2secHome, 'emap2secplus', 'Emap2secPlus'), cloneCheckpoint)
         commandList.append((cloneCmd, cloneCheckpoint.upper()))
 
-        # Creating conda enviroment and installing required python packages
+        # Creating conda enviroment and installing required python and conda packages
         envCreationCheckpoint = protocolName + "_ENV_CREATED"
         envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, protocolName, cls._emap2secRepo, pythonVersion='3.6'), envCreationCheckpoint)
         commandList.append((envCreationCmd, envCreationCheckpoint.upper()))
         envCreationCheckpoint = 'EMAP2SECPLUS_ENV_CREATED'
         envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, 'emap2secPlus', cls._emap2secplusRepo, pythonVersion='3.6.9'), envCreationCheckpoint)
         commandList.append((envCreationCmd, envCreationCheckpoint))
+        condaPackagesCheckpoint = "EMAP2SECPLUS_PACKAGES_INSTALLED"
+        condaPackagesCmd = cls.getCommandWithChechpoint(cls.addCondaPackages('pytorch==1.1.0 torchvision==0.3.0 cudatoolkit=10.0', protocolName, repoName='emap2secPlus', channel='pytorch'), condaPackagesCheckpoint)
+        commandList.append((condaPackagesCmd, condaPackagesCheckpoint))
 
         # Extra files
         downloadedFilePrefix = "_DOWNLOADED_FILE_"
@@ -314,6 +317,16 @@ class Plugin(pwem.Plugin):
             repoPath,
             finalInstallCmd,
             " && ".join(extraCommands))
+    
+    @classmethod
+    def addCondaPackages(cls, packets, protocolName, repoName=None, channel=None):
+        """
+        This function returns the command used for installing extra packages in a conda enviroment.
+        """
+        command = "{} {} && conda install -y {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand(protocolName, repoName), packets)
+        if channel:
+            command += " -c {}".format(channel)
+        return command
     
     @classmethod
     def getExtraFile(cls, url, location="."):
