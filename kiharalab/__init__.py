@@ -149,7 +149,7 @@ class Plugin(pwem.Plugin):
         envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, 'emap2secPlus', cls._emap2secplusRepo, pythonVersion='3.6.9'), envCreationCheckpoint)
         commandList.append((envCreationCmd, envCreationCheckpoint))
         condaPackagesCheckpoint = "EMAP2SECPLUS_PACKAGES_INSTALLED"
-        condaPackagesCmd = cls.getCommandWithChechpoint(cls.addCondaPackages('pytorch==1.1.0 torchvision==0.3.0 cudatoolkit=10.0', protocolName, repoName='emap2secPlus', channel='pytorch'), condaPackagesCheckpoint)
+        condaPackagesCmd = cls.getCommandWithChechpoint(cls.addCondaPackages('pytorch==1.1.0 cudatoolkit=10.0', protocolName, repoName='emap2secPlus', channel='pytorch'), condaPackagesCheckpoint)
         commandList.append((condaPackagesCmd, condaPackagesCheckpoint))
 
         # Extra files
