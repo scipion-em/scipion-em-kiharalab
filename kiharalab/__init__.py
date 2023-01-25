@@ -403,7 +403,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(moveToRepoCommand, cls._emap2secRepo, cwd=cls._emap2secRepo)
 
         # Trimapp generation command
-        trimappCommand = "map2train_src/bin/map2train"
+        trimappCommand = "data_generate/map2train"
         protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
 
         # Dataset generation command
