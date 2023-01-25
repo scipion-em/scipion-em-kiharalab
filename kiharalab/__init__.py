@@ -407,7 +407,7 @@ class Plugin(pwem.Plugin):
         protocol.runJob(trimappCommand, args[0], cwd=cls._emap2secRepo)
 
         # Dataset generation command
-        datasetCommand = "{} && python data_generate/dataset_wo_stride.py".format(envActivationCommand)
+        datasetCommand = "{} && python data_generate/dataset.py".format(envActivationCommand)
         protocol.runJob(datasetCommand, args[1], cwd=cls._emap2secRepo)
 
         # Input file for Emap2sec.py
