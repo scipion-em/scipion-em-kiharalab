@@ -18,7 +18,9 @@ You will need to use `Scipion3 <https://scipion-em.github.io/docs/docs/scipion
 
 1. **Install the plugin in Scipion**
 
-DAQ is installed automatically by scipion.
+DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
+
+**Note:** Emap2sec+ needs an Nvidia GPU to run.
 
 - **Install the stable version (Not available yet)**
 
