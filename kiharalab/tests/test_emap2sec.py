@@ -24,10 +24,11 @@
 # *
 # **************************************************************************
 
-import shutil, os
+import os
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pwem.protocols import ProtImportVolumes
+from pwem.protocols import ProtImportVolumes, ProtImportPdb
 from ..protocols import ProtEmap2sec
+from kiharalab import Plugin
 from kiharalab.constants import *
 
 class TestEmap2sec(BaseTest):
@@ -39,10 +40,11 @@ class TestEmap2sec(BaseTest):
 
         # Running test
         cls._runImportVolumes()
+        cls._runImportPDB()
 
     @classmethod
     def _runImportVolumes(cls):
-        # Creating arguments for import volumes protocol
+        # Creating arguments for import volumes protocol for prediction purposes
         args = {
             'filesPath': cls.ds.getFile('volumes/emd_6838.mrc'),
             'samplingRate': 1.4,
@@ -54,14 +56,44 @@ class TestEmap2sec(BaseTest):
         cls.launchProtocol(protImportVolumes)
 
         # Storing results
-        cls.protImportVolume = protImportVolumes
+        cls.protImportVolumePredict = protImportVolumes
+
+        # Creating arguments for import volumes protocol for evaluation purposes
+        args = {
+            'filesPath': os.path.join(Plugin._emap2secRepo, 'data', '1733.mrc'),
+            'samplingRate': 1.36825,
+            'setOrigCoord': False
+        }
+
+        # Creating and launching import volumes protocol
+        protImportVolumes = cls.newProtocol(ProtImportVolumes, **args)
+        cls.launchProtocol(protImportVolumes)
+
+        # Storing results
+        cls.protImportVolumeEvaluate = protImportVolumes
     
+    @classmethod
+    def _runImportPDB(cls):
+        # Creating arguments for import pdb protocol
+        args = {
+            'inputPdbData': 1,
+            'pdbFile': os.path.join(Plugin._emap2secRepo, 'data', '3c91.pdb'),
+            'inputVolume': cls.protImportVolumeEvaluate.outputVolume
+        }
+
+        # Creating and launching import pdb protocol
+        protImportPDB = cls.newProtocol(ProtImportPdb, **args)
+        cls.launchProtocol(protImportPDB)
+
+        # Storing results
+        cls.protImportPDB = protImportPDB
+
     def _runEmap2sec(self):
         # Running protocol
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
             executionType=EMAP2SEC_TYPE_EMAP2SEC,
-            inputVolume=self.protImportVolume.outputVolume,
+            inputVolume=self.protImportVolumePredict.outputVolume,
             emap2secContour=5.4)
         self.launchProtocol(protEmap2sec)
 
@@ -70,13 +102,15 @@ class TestEmap2sec(BaseTest):
         self.assertIsNotNone(pdbOut)
         self.assertIsNotNone(pdbOut.getVolume())
     
-    def _runEmap2secPlus(self):
+    def _runEmap2secPlus(self, predictMode=True):
         # Running protocol
         protEmap2sec = self.newProtocol(
             ProtEmap2sec,
             executionType=EMAP2SEC_TYPE_EMAP2SECPLUS,
-            inputVolume=self.protImportVolume.outputVolume,
-            emap2secplusContour=5.4)
+            inputVolume=self.protImportVolumePredict.outputVolume if predictMode else self.protImportVolumeEvaluate.outputVolume,
+            mode=EMAP2SECPLUS_MODE_DETECT_STRUCTS if predictMode else EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS,
+            inputStruct=None if predictMode else self.protImportPDB.outputPdb,
+            emap2secplusContour=5.4 if predictMode else 2.5)
         self.launchProtocol(protEmap2sec)
 
         # Checking function output
@@ -91,10 +125,16 @@ class TestEmap2sec(BaseTest):
         self._runEmap2sec()
     
     def test2Emap2secPlus(self):
-        """Third test. Runs Emap2sec+ with an experimental volume type."""
-        print("Running Emap2sec+ with an experimental volume type")
+        """Second test. Runs Emap2sec+ in prediction mode with an experimental volume type."""
+        print("Running Emap2sec+ in prediction mode with an experimental volume type")
         # Running Emap2sec+ with with an experimental volume type
         self._runEmap2secPlus()
+    
+    def test3Emap2secPlus(self):
+        """Third test. Runs Emap2sec+ in evaluation mode with an experimental volume type."""
+        print("Running Emap2sec+ in evaluation mode with an experimental volume type")
+        # Running Emap2sec+ with with an experimental volume type
+        self._runEmap2secPlus(predictMode=False)
         # Last test calls cleaning function so it does not count as a separate test
         self.cleanTest()
     
