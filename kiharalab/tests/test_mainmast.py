@@ -65,10 +65,10 @@ class TestMainMast(BaseTest):
 
         # Checking function output
         volumesOut = getattr(protMainMast, outputVariable, None)
-        self.assertIsNotNone(volumesOut)
+        self.assertIsNotNone(volumesOut, "No output volume has been found.")
         if not mergeMasks:
             for volumeOut in volumesOut:
-                self.assertIsNotNone(volumeOut)
+                self.assertIsNotNone(volumeOut, "At least one of masks has not been found.")
 
     def testMainMast1(self):
         """First test. Runs MainMast without merging output masks."""

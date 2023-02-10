@@ -99,8 +99,8 @@ class TestEmap2sec(BaseTest):
 
         # Checking function output
         pdbOut = getattr(protEmap2sec, 'outputAtomStruct', None)
-        self.assertIsNotNone(pdbOut)
-        self.assertIsNotNone(pdbOut.getVolume())
+        self.assertIsNotNone(pdbOut, "No output pdb has been found.")
+        self.assertIsNotNone(pdbOut.getVolume(), "Output Atom Struct has no linked volume.")
     
     def _runEmap2secPlus(self, predictMode=True):
         # Running protocol
@@ -115,8 +115,8 @@ class TestEmap2sec(BaseTest):
 
         # Checking function output
         pdbOut = getattr(protEmap2sec, 'outputAtomStruct', None)
-        self.assertIsNotNone(pdbOut)
-        self.assertIsNotNone(pdbOut.getVolume())
+        self.assertIsNotNone(pdbOut, "No output pdb has been found.")
+        self.assertIsNotNone(pdbOut.getVolume(), "Output Atom Struct has no linked volume.")
 
     def test1Emap2sec(self):
         """First test. Runs Emap2sec."""
