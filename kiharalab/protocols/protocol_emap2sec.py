@@ -353,13 +353,17 @@ class ProtEmap2sec(EMProtocol):
         if self.executionType.get() == EMAP2SEC_TYPE_EMAP2SEC:
             protocolPrefix = self.getProtocolPrefix()
             filePrefix = self.getProtocolFilePrefix(self.getVolumeAbsolutePath())
-            args.append('data/{}trimmap'.format(filePrefix))
-            args.append('data/{}dataset'.format(filePrefix))
-            args.append('data/{}input.txt'.format(protocolPrefix))
+            args.append('data/{}trimmap'.format(filePrefix)) # Trimmap file
+            args.append('data/{}dataset'.format(filePrefix)) # Dataset file
+            args.append('data/{}input.txt'.format(protocolPrefix)) # Input location file
             for i in range(1, 3):
-                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix))
+                args.append('results/{}outputP{}_{}dataset'.format(protocolPrefix, i, filePrefix)) # Result prediction files
         else:
-            args = [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())]
+            args = [os.path.join(self.getOutputPath(), self.getEmap2secPlusTypePath())] # Whole result folder (key result file is moved out before deletion)
+        
+        fileExtension = os.path.splitext(self.getVolumeAbsolutePath())[1] # If file extension is not directly supported, add temporary converted input file
+        if fileExtension != '.mrc' and fileExtension != '.map':
+            args.append(self.getConvertedVolumeAbsolutePath())
 
         return args
 
