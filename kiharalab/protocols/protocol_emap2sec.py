@@ -34,9 +34,10 @@ import os, subprocess
 
 # Pyworkflow imports
 from pyworkflow.protocol import params
+from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct
-from pyworkflow.utils import Message
+from pwem.emlib.image import ImageHandler
 
 # Kiharalab imports
 from kiharalab import Plugin
@@ -142,8 +143,19 @@ class ProtEmap2sec(EMProtocol):
         """
         This method defines the functions that will be run during the execution of this protocol.
         """
+        self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('mainExecutionStep')
         self._insertFunctionStep('createOutputStep')
+    
+    def convertInputStep(self):
+        """
+        This method converts the received input volume to a mrc file that can be used by both Emap2sec and Emap2sec+.
+        """
+        fileExtension = os.path.splitext(self.getVolumeAbsolutePath())[1]
+        # If file extension is not map or mrc (therefore not directly supported), convert to mrc format
+        if fileExtension != '.mrc' and fileExtension != '.map':
+            img = ImageHandler()
+            img.convert(self.getVolumeAbsolutePath(), self.getConvertedVolumeAbsolutePath())
 
     def mainExecutionStep(self):
         """
@@ -259,7 +271,7 @@ class ProtEmap2sec(EMProtocol):
     
     def getVolumeRelativePath(self):
         """
-        This method returns a the volume path relative to current directory.
+        This method returns the volume path relative to current directory.
         Path is scaped to support spaces.
         Example:
             if a file is in /home/username/documents/test/import_file.mrc
@@ -270,7 +282,7 @@ class ProtEmap2sec(EMProtocol):
 
     def getVolumeAbsolutePath(self):
         """
-        This method returns a the absolute path for the volume file.
+        This method returns the absolute path for the volume file.
         Path is scaped to support spaces.
         Example: '/home/username/documents/test/import_file.mrc'
         """
@@ -291,6 +303,29 @@ class ProtEmap2sec(EMProtocol):
             this will return 'file.mrc'
         """
         return self.getVolumeName(filename).replace('import_', '')
+
+    def getConvertedVolumeRelativePath(self):
+        """
+        This method returns the converted volume path relative to current directory if the input volume file is not directly supported.
+        Path is scaped to support spaces.
+        Example:
+            if a file is in /home/username/documents/test/import_file.mrc
+            and current directory is /home/username/documents
+            this will return '/test/import_file.mrc'
+        """
+        fileExtension = os.path.splitext(self.getVolumeAbsolutePath())[1]
+        if fileExtension != '.mrc' and fileExtension != '.map':
+            return self.scapePath(self._getTmpPath(self.getVolumeName(os.path.splitext(self.getVolumeAbsolutePath())[0] + '.mrc')))
+        else:
+            return self.getVolumeRelativePath()
+
+    def getConvertedVolumeAbsolutePath(self):
+        """
+        This method returns the absolute path for the converted volume file.
+        Path is scaped to support spaces.
+        Example: '/home/username/documents/test/import_file.mrc'
+        """
+        return self.scapePath(os.path.abspath(self.getConvertedVolumeRelativePath()))
 
     def getOutputPath(self):
         """
@@ -333,7 +368,7 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns a list with the arguments neccessary for the trimmap generation for the volume.
         """
-        file = self.getVolumeAbsolutePath()
+        file = self.getConvertedVolumeAbsolutePath()
         return '{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
         .format(file,
             self.emap2secContour.get(),
@@ -437,7 +472,7 @@ class ProtEmap2sec(EMProtocol):
 
         # Initial param string
         param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
-            .format(self.getVolumeAbsolutePath(), executionMode, self.mapType.get(), self.emap2secplusContour.get(),
+            .format(self.getConvertedVolumeAbsolutePath(), executionMode, self.mapType.get(), self.emap2secplusContour.get(),
                     self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
         # If mode is not Detect DNA/RNA & protein, add class
