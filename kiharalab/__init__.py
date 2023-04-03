@@ -130,7 +130,7 @@ class InstallHelper():
         binaryName = binaryName if binaryName else protocolName
 
         # Defining default target name preffix
-        defaultTargetPreffix = '{}_EXTRA_COMMAND_'.format(binaryName)
+        defaultTargetPreffix = '{}_EXTRA_COMMAND_'.format(binaryName.upper())
 
         # Executing commands
         for idx in range(len(commandList)):
