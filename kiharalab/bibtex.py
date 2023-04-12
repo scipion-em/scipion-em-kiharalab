@@ -32,5 +32,28 @@
   journal={(Submitted)},
   year={2021}
 }
+"""
 
+"""
+@article{wang2021emap2secplus,   
+  title={Detecting Protein and DNA/RNA Structures in Cryo-EM Maps of Intermediate Resolution Using Deep Learning},   
+  author={Xiao Wang, Eman Alnabati, Tunde W Aderinwale, Sai Raghavendra Maddhuri Venkata Subramaniya, Genki Terashi, and Daisuke Kihara},    
+  journal={Nature Communications},    
+  year={2021}    
+}   
+"""
+
+"""
+@article{MAINMAST,
+  title={MAINMASTseg: Automated Map Segmentation Method for Cryo-EM Density Maps with Symmetry},
+  journal={Journal of Chemical Information and Modeling},
+  volume={60},
+  number={5},
+  pages={2634-2643},
+  year={2020},
+  issn={.},
+  doi={10.1021/acs.jcim.9b01110},
+  url={https://doi.org/10.1021/acs.jcim.9b01110},
+  author={Terashi, Genki and Kagaya, Yuki and Kihara, Daisuke},
+}
 """
