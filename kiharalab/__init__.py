@@ -25,9 +25,9 @@
 # *
 # **************************************************************************
 from typing import List, Tuple
-import pwem
+import pwem, shutil, os
 from .constants import *
-import shutil, os
+from .install_helper import InstallHelper
 
 _version_ = KIHARALAB_DEFAULT_VERSION
 _logo = "kiharalab_logo.png"
