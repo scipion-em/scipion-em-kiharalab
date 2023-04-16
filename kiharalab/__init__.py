@@ -24,7 +24,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from typing import List, Tuple
 import pwem, shutil, os
 from .constants import *
 from .install_helper import InstallHelper
