@@ -129,7 +129,7 @@ class InstallHelper():
 
         return self
     
-    def getCondaEnvCommand(self, protocolName: str, binaryPath: str, binaryName: str=None, binaryVersion: str=DEFAULT_VERSION, pythonVersion: str=None, requirementsFile: bool=True,
+    def getCondaEnvCommand(self, protocolName: str, binaryPath: str=None, binaryName: str=None, binaryVersion: str=DEFAULT_VERSION, pythonVersion: str=None, requirementsFile: bool=True,
                            requirementFileName: str='requirements.txt', requirementList: List[str]=[], extraCommands: List[str]=[], targetName: str=None):
         """
         This function creates the command string for creating a Conda enviroment and installing required dependencies for a given binary inside a protocol.
@@ -167,13 +167,14 @@ class InstallHelper():
         targetName = targetName if targetName else '{}_CONDA_ENV_CREATED'.format(binaryName.upper())
         
         # Adding conda commands
-        self.addCommand('{} {} && {} && cd {}{}{} && cd ..'\
+        self.addCommand('{} {} && {}{}{}{}{}'\
             .format(pwem.Plugin.getCondaActivationCmd(),
             createEnvCmd,
             self.__getEnvActivationCommand(protocolName, binaryName, binaryVersion),
-            binaryPath,
+            ' && cd {}'.format(binaryPath) if binaryPath else '',
             finalInstallCmd,
-            " && ".join(extraCommands)),
+            " && ".join(extraCommands),
+            ' && cd ..' if binaryPath else ''),
             targetName)
 
         return self
@@ -234,14 +235,11 @@ class InstallHelper():
 
         Parameters:
         protocolName (str): Name of the protocol.
-        fileList (list[tuple[str, str]]): List containing files to be downloaded.
+        fileList (list[tuple[str, str]]): List containing files to be downloaded. Example: [(url1, path1), (url2, path2)]
         binaryName (str): Optional. Name of the binary.
         Each file is a list contaning url and location to download it. Paths can be an empty string for default location.
         workDir (str): Optional. Directory where the files will be downloaded from.
         targetNames (list[str]): Optional. List containing the name of the target files for this commands.
-
-        Example fileLst:
-        [(url1, path1), (url2, path2)]
         """
         # Defining binary name
         binaryName = binaryName if binaryName else protocolName
@@ -259,7 +257,7 @@ class InstallHelper():
     def addProtocolPackage(self, env, protocolName: str, protocolVersion: str=DEFAULT_VERSION, dependencies: List[str]=[], default: bool=True):
         """
         This function adds the given protocol to scipion installation with some provided parameters.
-
+        
         Parameters:
         env: Scipion enviroment.
         protocolName (str): Name of the protocol.
