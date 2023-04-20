@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:  Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
-# *           Martín Salinas  (ssalinasmartin@gmail.com)
+# *           Martín Salinas  (martin.salinas@cnb.csic.es)
 # *
 # * Biocomputing Unit, CNB-CSIC
 # *
