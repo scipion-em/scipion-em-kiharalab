@@ -1,2 +1,4 @@
 scipion-pyworkflow
 scipion-em
+scipion-em-phenix
+mrcfile
