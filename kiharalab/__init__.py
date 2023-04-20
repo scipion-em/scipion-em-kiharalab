@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:  Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# *           Martín Salinas  (martin.salinas@cnb.csic.es)
 # *
 # * Biocomputing Unit, CNB-CSIC
 # *
@@ -23,10 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import pwem
+import pwem, shutil, os
 from .constants import *
-import shutil, os
+from .install_helper import InstallHelper
 
 _version_ = KIHARALAB_DEFAULT_VERSION
 _logo = "kiharalab_logo.png"
@@ -86,14 +86,7 @@ class Plugin(pwem.Plugin):
         """
         cls.addDAQ(env)
         cls.addEmap2sec(env)
-        cls.addMainMast(env)
-    
-    @classmethod
-    def addProtocolPackage(cls, env, protocolBinaryName, protocolVersion, commandList, dependencies=[], default=True):
-        """
-        This function adds the given protocol to scipion installation with some provided parameters.
-        """
-        env.addPackage(protocolBinaryName, version=protocolVersion, tar='void.tgz', commands=commandList, neededProgs=dependencies, default=default)
+        #cls.addMainMast(env)
     
     @classmethod    
     def addDAQ(cls, env):
@@ -103,24 +96,13 @@ class Plugin(pwem.Plugin):
         # Defining protocol variables
         protocolName = 'daq'
 
-        # Creating command strings
-        commandList = []
+        # Instanciating installer
+        installer = InstallHelper()
 
-        # Cloning command (cd to home folder, clone, and create checkpoint)
-        cloneCheckpoint = protocolName + "_CLONED"
-        cloneCmd = cls.getCommandWithChechpoint(cls.getGithubCloneCommand(cls._daqHome, protocolName, protocolName), cloneCheckpoint)
-        commandList.append((cloneCmd, cloneCheckpoint.upper()))
-
-        # Creating conda enviroment and installing required python packages
-        envCreationCheckpoint = protocolName + "_ENV_CREATED"
-        envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, protocolName, cls._daqRepo, pythonVersion='3.8.5'), envCreationCheckpoint)
-        commandList.append((envCreationCmd, envCreationCheckpoint.upper()))
-
-        # Getting dependencies
-        dependencies = ['git', 'conda', 'pip']
-
-        # Default DAQ version
-        cls.addProtocolPackage(env, cls.getProtocolBinaryName(protocolName), cls.daqDefaultVersion, commandList, dependencies)
+        # Installing protocol
+        installer.getCloneCommand(protocolName, cls._daqHome, 'https://github.com/kiharalab/DAQ', protocolName)\
+            .getCondaEnvCommand(protocolName, cls._daqRepo, pythonVersion='3.8.5')\
+            .addProtocolPackage(env, protocolName, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
     def addEmap2sec(cls, env):
@@ -129,92 +111,58 @@ class Plugin(pwem.Plugin):
         """
         # Defining protocol variables
         protocolName = 'emap2sec'
+        emap2secFolderName = 'Emap2sec'
+        emap2secPlusFolderName = 'Emap2secPlus'
 
-        # Creating command strings
-        commandList = []
+        # Instanciating installer
+        installer = InstallHelper()
 
-        # Cloning command (cd to home folder, clone, and create checkpoint)
-        cloneCheckpoint = protocolName + "_CLONED"
-        cloneCmd = cls.getCommandWithChechpoint(cls.getGithubCloneCommand(cls._emap2secHome, protocolName, 'Emap2sec'), cloneCheckpoint)
-        commandList.append((cloneCmd, cloneCheckpoint.upper()))
-        cloneCheckpoint = 'EMAP2SECPLUS_CLONED'
-        cloneCmd = cls.getCommandWithChechpoint(cls.getGithubCloneCommand(cls._emap2secHome, 'emap2secplus', 'Emap2secPlus'), cloneCheckpoint)
-        commandList.append((cloneCmd, cloneCheckpoint.upper()))
-
-        # Creating conda enviroment and installing required python and conda packages
-        envCreationCheckpoint = protocolName + "_ENV_CREATED"
-        envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, protocolName, cls._emap2secRepo, pythonVersion='3.6'), envCreationCheckpoint)
-        commandList.append((envCreationCmd, envCreationCheckpoint.upper()))
-        envCreationCheckpoint = 'EMAP2SECPLUS_ENV_CREATED'
-        envCreationCmd = cls.getCommandWithChechpoint(cls.getCondaEnvCommand(protocolName, 'emap2secPlus', cls._emap2secplusRepo, pythonVersion='3.6.9'), envCreationCheckpoint)
-        commandList.append((envCreationCmd, envCreationCheckpoint))
-        condaPackagesCheckpoint = "EMAP2SECPLUS_PACKAGES_INSTALLED"
-        condaPackagesCmd = cls.getCommandWithChechpoint(cls.addCondaPackages('pytorch==1.1.0 cudatoolkit=10.0', protocolName, repoName='emap2secPlus', channel='pytorch'), condaPackagesCheckpoint)
-        commandList.append((condaPackagesCmd, condaPackagesCheckpoint))
-
-        # Extra files
-        downloadedFilePrefix = "_DOWNLOADED_FILE_"
-        goBackCmd = " && cd " + cls._emap2secHome
-
-        # Emap2sec
-        extraFiles = [
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", "models/emap2sec_models_exp1"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", "models/emap2sec_models_exp1"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", "models/emap2sec_models_exp1"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", "models/emap2sec_models_exp1"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", "models/emap2sec_models_exp2"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"],
-            ["https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2"]
+        # Defining extra files to download
+        emap2secExtraFiles = [
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", "models/emap2sec_models_exp1"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", "models/emap2sec_models_exp1"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", "models/emap2sec_models_exp1"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", "models/emap2sec_models_exp1"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", "models/emap2sec_models_exp2"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"),
+            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")
         ]
-        for i in range(len(extraFiles)):
-            downloadedCheckpoint = "EMAP2SEC" + downloadedFilePrefix + str(i)
-            downloadedFileCmd = cls.getCommandWithChechpoint(cls.getExtraFile(extraFiles[i][0], extraFiles[i][1]) + goBackCmd, downloadedCheckpoint)
-            commandList.append(("cd " + cls._emap2secRepo + " && " + downloadedFileCmd, downloadedCheckpoint))
-        
-        # Emap2secPlus
-        extraFiles = [
-            "https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz",
-            "https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz"
-        ]
-        for i in range(len(extraFiles)):
-            downloadedCheckpoint = "EMAP2SECPLUS" + downloadedFilePrefix + str(i)
-            downloadedFileCmd = cls.getCommandWithChechpoint(cls.getExtraFile(extraFiles[i]) + goBackCmd, downloadedCheckpoint)
-            commandList.append(("cd " + cls._emap2secplusRepo + " && " + downloadedFileCmd, downloadedCheckpoint))
 
-        # Extra commands
-        extraCommandPrefix = "_EXTRA_COMMAND_"
+        emap2secPlusExtraFiles = [
+            ("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz", ''),
+            ("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz", '')
+        ]
+
+        # Defininig extra commands to run
         grantExecPermission = "chmod -R +x *"
-
-        # Emap2sec
-        extraCommands = [
+        emap2secExtraCommands = [
             "mkdir -p results",
             grantExecPermission,
-            "cd map2train_src && make && cd ..",
+            "cd map2train_src && make",
             grantExecPermission
         ]
-        for i in range(len(extraCommands)):
-            extraCmdCheckpoint = "EMAP2SEC" + extraCommandPrefix + str(i)
-            extraCmd = cls.getCommandWithChechpoint(extraCommands[i] + goBackCmd, extraCmdCheckpoint)
-            commandList.append(("cd " + cls._emap2secRepo + " && " + extraCmd, extraCmdCheckpoint))
 
-        # Emap2secPlus
-        extraCommands = [
+        emap2secPlusExtraCommands = [
             "tar -xf best_model.tar.gz && rm -f best_model.tar.gz",
             "tar -xf nocontour_best_model.tar.gz && rm -f nocontour_best_model.tar.gz",
             "cd process_map && make",
             grantExecPermission
         ]
-        for i in range(len(extraCommands)):
-            extraCmdCheckpoint = "EMAP2SECPLUS" + extraCommandPrefix + str(i)
-            extraCmd = cls.getCommandWithChechpoint(extraCommands[i] + goBackCmd, extraCmdCheckpoint)
-            commandList.append(("cd " + cls._emap2secplusRepo + " && " + extraCmd, extraCmdCheckpoint))
 
         # Getting dependencies
         dependencies = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
 
-        # Default Emap2sec version
-        cls.addProtocolPackage(env, cls.getProtocolBinaryName(protocolName), cls.emap2secDefaultVersion, commandList, dependencies)
+        # Installing protocol
+        installer.getCloneCommand(protocolName, cls._emap2secHome, 'https://github.com/kiharalab/emap2sec', emap2secFolderName)\
+            .getCloneCommand(protocolName, cls._emap2secHome, 'https://github.com/kiharalab/emap2secPlus', emap2secPlusFolderName)\
+            .getCondaEnvCommand(protocolName, cls._emap2secRepo, pythonVersion='3.6')\
+            .getCondaEnvCommand(protocolName, cls._emap2secplusRepo, 'emap2secPlus', pythonVersion='3.6.9')\
+            .addCondaPackages(protocolName, ['pytorch==1.1.0', 'cudatoolkit=10.0'], 'emap2secPlus', channel='pytorch')\
+            .getExtraFiles(protocolName, emap2secExtraFiles, workDir=cls._emap2secRepo).getExtraFiles(protocolName, emap2secPlusExtraFiles, 'emap2secPlus', workDir=cls._emap2secplusRepo)\
+            .addCommands(protocolName, emap2secExtraCommands, workDir=cls._emap2secRepo, protocolPath=cls._emap2secHome)\
+            .addCommands(protocolName, emap2secPlusExtraCommands, 'emap2secPlus', workDir=cls._emap2secplusRepo, protocolPath=cls._emap2secHome)\
+            .addProtocolPackage(env, protocolName, dependencies=dependencies)
 
     @classmethod    
     def addMainMast(cls, env):
@@ -224,19 +172,12 @@ class Plugin(pwem.Plugin):
         # Defining protocol variables
         protocolName = 'mainMast'
 
-        # Creating command strings
-        commandList = []
-        
-        # Cloning command (cd to home folder, clone, and create checkpoint)
-        cloneCheckpoint = protocolName + "_CLONED"
-        cloneCmd = cls.getCommandWithChechpoint(cls.getGithubCloneCommand(cls._mainmastHome, 'MainmastSeg', 'MainMast'), cloneCheckpoint)
-        commandList.append((cloneCmd, cloneCheckpoint.upper()))
+        # Instanciating installer
+        installer = InstallHelper()
 
         # Extra commands
-        extraCommandPrefix = "EXTRA_COMMAND_"
         grantExecPermission = "chmod -R +x *"
         cleanObjs = "rm -rf *.o"
-        goBackCmd = " && cd " + cls._mainmastHome
         extraCommands = [
             cleanObjs + " MainmastSeg",
             grantExecPermission,
@@ -245,108 +186,16 @@ class Plugin(pwem.Plugin):
             grantExecPermission,
             "cd example1 && gunzip emd-0093.mrc.gz MAP_m4A.mrc.gz region0.mrc.gz region1.mrc.gz region2.mrc.gz region3.mrc.gz"
         ]
-        for i in range(len(extraCommands)):
-            extraCmdCheckpoint = extraCommandPrefix + str(i)
-            extraCmd = cls.getCommandWithChechpoint(extraCommands[i] + goBackCmd, extraCmdCheckpoint)
-            commandList.append(("cd " + cls._mainmastRepo + " && " + extraCmd, extraCmdCheckpoint))
 
         # Getting dependencies
         dependencies = ['git', 'make', 'gcc', 'gzip']
 
-        # Default MainMast version
-        cls.addProtocolPackage(env, cls.getProtocolBinaryName(protocolName), cls.mainmastDefaultVersion, commandList, dependencies)
+        # Installing protocol
+        installer.getCloneCommand(protocolName, cls._mainmastHome, 'https://github.com/kiharalab/MAINMASTseg', 'MainMast')\
+            .addCommands(protocolName, extraCommands, workDir=cls._mainmastRepo, protocolPath=cls._mainmastHome)\
+            .addProtocolPackage(env, protocolName, dependencies=dependencies)
 
     # ---------------------------------- Utils functions  -----------------------
-
-    @classmethod
-    def getProtocolBinaryName(cls, protocolName):
-        """
-        This function returns the name the binary of a given protocol should have.
-        The name should be the name of the protocol with the first letter in lowercase.
-        """
-        return protocolName[0].lower() + protocolName[1:]
-    
-    @classmethod
-    def getCheckpoint(cls, checkpointName):
-        """
-        This function returns the neccessary command to create a checkpoint file given its name.
-        Checkpoints are always in uppercase and underscore format.
-        """
-        return 'touch {}'.format(checkpointName.upper())
-    
-    @classmethod
-    def getCommandWithChechpoint(cls, command, checkpointName):
-        """
-        This function adds the creation of a checkpoint with a given name to the provided command.
-        """
-        return command + " && {}".format(cls.getCheckpoint(checkpointName))
-    
-    @classmethod
-    def getGithubCloneCommand(cls, protocolHome, repoURLName, repoName):
-        """
-        This function returns the neccessary command to clone a repository from Github.
-        """
-        # Defining command string to move to project's root directory.
-        cdCmd = 'cd ' + protocolHome
-
-        return '{} && git clone {} {}'.format(cdCmd, cls.getGitUrl(repoURLName), repoName)
-    
-    @classmethod
-    def getCondaEnvCommand(cls, protocolName, repoName, repoPath, pythonVersion=None, requirementsFile=True, requirementFileName='requirements.txt', requirementList=[], extraCommands=[]):
-        """
-        This function returns the command string for creating a Conda enviroment and installing required dependencies.
-        """
-        # Conda env creation
-        createEnvCmd = 'conda create -y -n {}'.format(('{} python={}'.format(cls.getProtocolEnvName(protocolName, repoName), pythonVersion)) if pythonVersion else cls.getProtocolEnvName(protocolName, repoName))
-
-        # Requirement installation
-        pipInstallCmd = 'conda install pip'
-        requirementPrefixCmd = '$CONDA_PREFIX/bin/pip install'
-        installWithFile = requirementPrefixCmd + ' -r ' + requirementFileName if requirementsFile else ''
-        installManual = ' '.join(requirementList)
-        installManual = (requirementPrefixCmd + " " + installManual) if installManual else ''
-        finalInstallCmd = (' && ' + pipInstallCmd) if (installWithFile or installManual) else ''
-        if finalInstallCmd:
-            finalInstallCmd += ' && {}'.format(installWithFile) if installWithFile else ''
-            finalInstallCmd += ' && {}'.format(installManual) if installManual else ''
-
-        return '{} {} && {} && cd {}{}{} && cd ..'\
-            .format(cls.getCondaActivationCmd(),
-            createEnvCmd,
-            cls.getProtocolActivationCommand(protocolName, repoName),
-            repoPath,
-            finalInstallCmd,
-            " && ".join(extraCommands))
-    
-    @classmethod
-    def addCondaPackages(cls, packets, protocolName, repoName=None, channel=None):
-        """
-        This function returns the command used for installing extra packages in a conda enviroment.
-        """
-        command = "{} {} && conda install -y {}".format(cls.getCondaActivationCmd(), cls.getProtocolActivationCommand(protocolName, repoName), packets)
-        if channel:
-            command += " -c {}".format(channel)
-        return command
-    
-    @classmethod
-    def getExtraFile(cls, url, location="."):
-        """
-        This function creates the command to download with wget the file in the given link into the given path.
-        O flag for wget is used to overwrite the downloaded file if one with the same name exists.
-        This is done to overwrite potential corrupt files whose download was not fully completed.
-        """
-        # Getting filename for wget
-        fileName = os.path.basename(url)
-
-        return "mkdir -p " + location + " && wget -O " + location + "/" + fileName + " " + url
-
-    @classmethod
-    def getGitUrl(cls, repoURLName):
-        """
-        Returns the GitHub url for the given repo.
-        """
-        return KIHARALAB_GIT + repoURLName
-    
     @classmethod
     def getProtocolEnvName(cls, protocolName, repoName=None):
         """
@@ -362,7 +211,6 @@ class Plugin(pwem.Plugin):
         return "conda activate " + cls.getProtocolEnvName(protocolName, repoName)
     
     # ---------------------------------- Protocol execution functions  ----------------------------------
-
     # ---------------------------------- DAQ ----------------------------------
     @classmethod
     def runDAQ(cls, protocol, args, outDir=None, clean=True):
