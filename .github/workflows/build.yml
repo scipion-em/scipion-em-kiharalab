@@ -63,6 +63,5 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |
         # Install the repository from the pull request
-        sudo apt-get install -y tree && \
-        tree ${{ github.workspace }}/.. && \
+        pwd && \
         ${{ github.workspace }}/../scipion/scipion3 installp -p . --devel
