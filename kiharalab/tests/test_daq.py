@@ -71,7 +71,7 @@ class TestDAQ(BaseTest):
         pdbOut = getattr(protDAQ, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
 
-    def testFpocket(self):
+    def testDAQ(self):
         self._runDAQ()
 
 

@@ -21,22 +21,24 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'you@yourinstitution.email'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 
 """
 This protocol is used to perform a pocket search on a protein structure using the FPocket software
-
 """
-import os, shutil
+import os, shutil, time
 
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct, Volume
-from pwem.convert.atom_struct import toPdb
-from pyworkflow.utils import Message
+from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
+from pwem.convert import Ccp4Header
+from pyworkflow.utils import Message, weakImport
+from pwem.viewers.viewer_chimera import Chimera
+from pwem.emlib.image import ImageHandler
 
 from kiharalab import Plugin
 
@@ -46,10 +48,21 @@ class ProtDAQValidation(EMProtocol):
     Executes the DAQ software to validate a structure model
     """
     _label = 'DAQ model validation'
+    _ATTRNAME = 'DAQ_score'
+    _OUTNAME = 'outputAtomStruct'
+    _possibleOutputs = {_OUTNAME: AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
+        form.addHidden(params.USE_GPU, params.BooleanParam, default=True,
+                       label="Use GPU for execution: ",
+                       help="This protocol has both CPU and GPU implementation.\
+                                                 Select the one you want to use.")
+
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0', label="Choose GPU IDs",
+                       help="Add a list of GPU devices that can be used")
+
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputAtomStruct', params.PointerParam,
                        pointerClass='AtomStruct', allowsNull=False,
@@ -57,9 +70,12 @@ class ProtDAQValidation(EMProtocol):
                        help='Select the atom structure to be validated')
 
         form.addParam('inputVolume', params.PointerParam,
-                      pointerClass='Volume', allowsNull=False,
+                      pointerClass='Volume', allowsNull=True,
                       label="Input volume: ",
                       help='Select the electron map of the structure')
+        form.addParam('chimeraResampling', params.BooleanParam,
+                      label="Resample using ChimeraX: ", default=True,
+                      help='Resample volume to 1.0 using ChimeraX software')
 
         group = form.addGroup('Network parameters')
         group.addParam('window', params.IntParam, default='9', label='Half window size: ',
@@ -88,32 +104,58 @@ class ProtDAQValidation(EMProtocol):
     def convertInputStep(self):
         name, ext = os.path.splitext(self.getStructFile())
         pdbFile = self.getPdbStruct()
-        if ext != '.pdb':
+        if not ext in ['.pdb', '.ent']:
             toPdb(self.getStructFile(), pdbFile)
         else:
             shutil.copy(self.getStructFile(), pdbFile)
 
-        #Renaming volume to add protocol ID (results saved in different directory in DAQ repo)
-        localVolumeFile = self.getLocalVolumeFile()
-        shutil.copy(self.getVolumeFile(), localVolumeFile)
+        inVol = self._getInputVolume()
+        inVolFile, inVolSR = inVol.getFileName(), inVol.getSamplingRate()
 
+        #Convert volume to mrc
+        mrcFile = self._getTmpPath('inpVolume.mrc')
+        ImageHandler().convert(inVolFile, mrcFile)
+        Ccp4Header.fixFile(mrcFile, mrcFile, inVol.getOrigin(force=True).getShifts(),
+                           inVolSR, Ccp4Header.START)
+
+        #Resample volume to 1A/px with ChimeraX if present
+        daqSR = 1.0
+        if self.chimeraResampling and inVol.getSamplingRate() != daqSR:
+            if chimeraInstalled():
+                resampledFile = os.path.abspath(self._getTmpPath('resampled.mrc'))
+                mrcFile = self.chimeraResample(mrcFile, daqSR, resampledFile)
+                inVolSR = daqSR
+            else:
+                print('ChimeraX not found, resampling with DAQ (slower than ChimeraX)')
+
+        # Volume header fixed to have correct origin
+        Ccp4Header.fixFile(mrcFile, self.getLocalVolumeFile(), inVol.getOrigin(force=True).getShifts(),
+                           inVolSR, Ccp4Header.ORIGIN)
 
     def DAQStep(self):
         args = self.getDAQArgs()
-        Plugin.runDAQ(self, args=args, outDir=self._getExtraPath('predictions'))
+        Plugin.runDAQ(self, args=args, outDir=self._getTmpPath('predictions'))
 
     def createOutputStep(self):
-        outDir = self._getExtraPath('predictions')
-        outStruct = self._getPath(self.getStructName() + '_dqa.pdb')
-        #outVolume = self._getPath(self.getStructName() + '_dqa.mrc')
+        outStructFileName = self._getPath('outputStructure.cif')
+        outDAQFile = os.path.abspath(self._getTmpPath('predictions/daq_score_w9.pdb'))
 
-        shutil.copy(os.path.join(outDir, 'dqa_score_w9.pdb'), outStruct)
-        #shutil.copy(os.path.join(outDir, '{}_new.mrc'.format(self.getVolumeName())), outVolume)
+        #Write DAQ_score in a section of the output cif file
+        ASH = AtomicStructHandler()
+        daqScoresDic = self.parseDAQScores(outDAQFile)
+        inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
+        cifDic = ASH.readLowLevel(inpAS)
+        cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
+        ASH._writeLowLevel(outStructFileName, cifDic)
 
-        outAS = AtomStruct(filename=outStruct)
-        outAS.setVolume(self.inputVolume.get())
+        AS = AtomStruct(filename=outStructFileName)
+        outVol = self._getInputVolume().clone()
+        outVol.setLocation(self.getLocalVolumeFile())
+        if self.chimeraResampling and self._getInputVolume().getSamplingRate() != 1.0 and chimeraInstalled():
+            outVol.setSamplingRate(1.0)
+        AS.setVolume(outVol)
 
-        self._defineOutputs(outputAtomStruct=outAS)
+        self._defineOutputs(**{self._OUTNAME: AS})
 
 
     # --------------------------- INFO functions -----------------------------------
@@ -128,6 +170,10 @@ class ProtDAQValidation(EMProtocol):
     def _warnings(self):
         """ Try to find warnings on define params. """
         warnings=[]
+        if self.chimeraResampling and not chimeraInstalled():
+            warnings.append('Chimera program is not found were it was expected: \n\n{}\n\n' \
+                            'Either install ChimeraX in this path or install our ' \
+                            'scipion-em-chimera plugin'.format(Chimera.getProgram()))
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
@@ -138,13 +184,24 @@ class ProtDAQValidation(EMProtocol):
 
         args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
           format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
+
+        if getattr(self, params.USE_GPU):
+            args += ' --gpu {}'.format(self.getGPUIds()[0])
+        
         return args
+
+    def _getInputVolume(self):
+      if self.inputVolume.get() is None:
+        fnVol = self.inputAtomStruct.get().getVolume()
+      else:
+        fnVol = self.inputVolume.get()
+      return fnVol
 
     def getStructFile(self):
         return os.path.abspath(self.inputAtomStruct.get().getFileName())
 
     def getVolumeFile(self):
-        return os.path.abspath(self.inputVolume.get().getFileName())
+        return os.path.abspath(self._getInputVolume().getFileName())
 
     def getStructName(self):
         return os.path.basename(os.path.splitext(self.getStructFile())[0])
@@ -153,10 +210,51 @@ class ProtDAQValidation(EMProtocol):
         return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
     def getPdbStruct(self):
-        return self._getExtraPath(self.getStructName()) + '.pdb'
+        return self._getTmpPath(self.getStructName()) + '.pdb'
 
     def getLocalVolumeFile(self):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
         return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
 
+    def parseDAQScores(self, pdbFile):
+        '''Return a dictionary with {spec: value}
+        "spec" should be a chimera specifier. In this case:  chainId:residueIdx'''
+        daqDic = {}
+        with open(pdbFile) as f:
+            for line in f:
+                if line.startswith('ATOM') or line.startswith('HETATM'):
+                    resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
+                    if not resId in daqDic:
+                      daqScore = line[60:66].strip()
+                      daqDic[resId] = daqScore
+        return daqDic
+    
+    def getGPUIds(self):
+        return getattr(self, params.GPU_LIST).get().split(',')
 
+    def getDAQScoreFile(self):
+      return self._getPath('{}.defattr'.format(self._ATTRNAME))
+
+    def chimeraResampleScript(self, inVolFile, newSampling, outFile):
+        scriptFn = self._getExtraPath('resampleVolume.cxc')
+        with open(scriptFn, 'w') as f:
+            f.write('cd %s\n' % os.getcwd())
+            f.write("open %s\n" % inVolFile)
+            f.write('vol resample #1 spacing {}\n'.format(newSampling))
+            f.write('save {} model #2\n'.format(outFile))
+            f.write('exit\n')
+        return scriptFn
+
+    def chimeraResample(self, inVolFile, newSR, outFile):
+        with weakImport("chimera"):
+            from chimera import Plugin as chimeraPlugin
+            resampleScript = self.chimeraResampleScript(inVolFile, newSampling=newSR, outFile=outFile)
+            chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
+                                            resampleScript, cwd=os.getcwd())
+            while not os.path.exists(outFile):
+              time.sleep(1)
+        return outFile
+
+
+def chimeraInstalled():
+  return Chimera.getHome() and os.path.exists(Chimera.getProgram())

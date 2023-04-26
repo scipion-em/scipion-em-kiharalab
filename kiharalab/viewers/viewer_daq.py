@@ -2,11 +2,11 @@
 # *
 # * Authors:     Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # *
-# * [1] Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -24,9 +24,22 @@
 # *
 # **************************************************************************
 
-from pwem.wizards import ColorScaleWizardBase
-from .viewers import DAQViewer
+from ..protocols import ProtDAQValidation
+from pwem.viewers import ChimeraAttributeViewer
 
+class DAQViewer(ChimeraAttributeViewer):
+  """ Viewer for attribute DAQ score of an AtomStruct.
+    Includes visualization in chimera and in histograms"""
+  _targets = [ProtDAQValidation]
+  _label = 'Atomic structure attributes viewer'
 
-class ColorScaleWizardDAQ(ColorScaleWizardBase):
-    _targets = ColorScaleWizardBase.defineTargets(DAQViewer)
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
+
+  def _defineParams(self, form):
+      super()._defineParams(form)
+      # Overwrite defaults
+      from pwem.wizards.wizard import ColorScaleWizardBase
+      group = form.addGroup('Color settings')
+      ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=-1, defaultHighest=1, defaultIntervals=21,
+                                                  defaultColorMap='RdBu_r')
