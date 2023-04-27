@@ -9,6 +9,7 @@ https://github.com/pypa/sampleproject
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
+from kiharalab import __version__
 
 here = path.abspath(path.dirname(__file__))
 
@@ -24,7 +25,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em-kiharalab',  # Required
-    version='0.1',  # Required
+    version=__version__,  # Required
     description='Scipion plugin in order to use ther kiharalab software',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-kiharalab',  # Optional
