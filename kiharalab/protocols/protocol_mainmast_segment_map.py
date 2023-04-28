@@ -35,7 +35,6 @@ from pwem.objects import Volume, SetOfVolumes
 from kiharalab import Plugin as Mainmast
 from phenix import Plugin as Phenix
 
-
 class ProtMainMastSegmentMap(EMProtocol):
     """Protcol to perform the segmentation of maps into different regions by using
     mainmast software.
@@ -86,7 +85,7 @@ class ProtMainMastSegmentMap(EMProtocol):
 
         # Generating args  and running last matrix conversion phase
         args = '%s > sym_mat.txt' % ('symmetry_from_map.ncs_spec')
-        Mainmast.convertMatrix(self, args, cwd=self._getExtraPath())
+        self.convertMatrix(args, cwd=self._getExtraPath())
 
     def segmentStep(self):
         """
@@ -101,7 +100,7 @@ class ProtMainMastSegmentMap(EMProtocol):
         # Generating args and running MainMast
         args = '-i %s -Y %s -c %d -t %f -M -W > contour.cif' % (pathMap, pathMatrix, self.numberOfThreads.get(),
                                                                 self.threshold.get())
-        Mainmast.runSegmentation(self, args, cwd=self._getExtraPath())
+        self.runSegmentation(args, cwd=self._getExtraPath())
 
     def createOutputStep(self):
         """
@@ -161,8 +160,30 @@ class ProtMainMastSegmentMap(EMProtocol):
         
         # If clean is selected, clean temporary files
         if self.cleanTmps.get():
-            Mainmast.cleanTmpfiles(self, self.getTmpFiles())
-        
+            self.cleanTmpfiles(self.getTmpFiles())
+    
+    # --------------------------- EXECUTION functions -----------------------------------
+    def runSegmentation(self, args, cwd=None):
+        """
+        Run segmentation phase for MainMast.
+        """
+        mainMastCall = os.path.join(Mainmast._mainmastRepo, 'MainmastSeg')
+        self.runJob(mainMastCall, args, cwd=cwd)
+    
+    def convertMatrix(self, args, cwd=None):
+        """
+        Run matrix conversion phase for MainMast.
+        """
+        convertCall = os.path.join(Mainmast._mainmastRepo, 'conv_ncs.pl')
+        self.runJob(convertCall, args, cwd=cwd)
+
+    def cleanTmpfiles(self, tmpFiles=[]):
+        """
+        This method removes all temporary files to reduce disk usage.
+        """
+        for tmp_file in tmpFiles:
+            self.runJob("rm -rf", tmp_file, cwd=Mainmast._mainmastRepo)
+
     # --------------------------- UTILS functions ------------------------------
     def scapePath(self, path):
         """

@@ -133,9 +133,25 @@ class ProtDAQValidation(EMProtocol):
                            inVolSR, Ccp4Header.ORIGIN)
 
     def DAQStep(self):
+        """
+        Run DAQ script.
+        """
+        outDir = self._getTmpPath('predictions')
         args = self.getDAQArgs()
-        Plugin.runDAQ(self, args=args, outDir=self._getTmpPath('predictions'))
 
+        fullProgram = '{} {} && {}'\
+            .format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('daq'), 'python3')
+        if not 'main.py' in args:
+            args = '{}/main.py {}'.format(Plugin._daqRepo, args)
+        self.runJob(fullProgram, args, cwd=Plugin._daqRepo)
+
+        if outDir is None:
+            outDir = self._getExtraPath('predictions')
+
+        daqDir = os.path.join(Plugin._daqRepo, 'Predict_Result', self.getVolumeName())
+        shutil.copytree(daqDir, outDir)
+        shutil.rmtree(daqDir)
+    
     def createOutputStep(self):
         outStructFileName = self._getPath('outputStructure.cif')
         outDAQFile = os.path.abspath(self._getTmpPath('predictions/daq_score_w9.pdb'))
