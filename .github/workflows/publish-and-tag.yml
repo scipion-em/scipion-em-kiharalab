@@ -11,14 +11,16 @@ on:
 
 env:
   FOLDER_WITH_VERSION: kiharalab
+  SCIPION_CANCEL_XMIPP_BINDING_WARNING: True
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
-    # Checkout repository
     steps:
-    - uses: actions/checkout@v3
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
     
     # Install MPI
     - name: Set up MPI
@@ -27,6 +29,8 @@ jobs:
     # Install Python
     - name: Set up Python
       uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
     
     # Install Python packages
     - name: Install dependencies
@@ -42,7 +46,7 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload dist/* -c "${{ secrets.PYPI_COMMENT }}"
+        twine upload dist/* -c "{{ secrets.PYPI_COMMENT }}"
     
     # Get package version and tag
     - name: Get version and tag
