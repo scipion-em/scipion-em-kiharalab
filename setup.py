@@ -9,7 +9,7 @@ https://github.com/pypa/sampleproject
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from kiharalab import __version__
+from kiharalab import __version__, _logo
 
 here = path.abspath(path.dirname(__file__))
 
@@ -36,6 +36,6 @@ setup(
     install_requires=[requirements],
     entry_points={'pyworkflow.plugin': 'kiharalab = kiharalab'},
     package_data={  # Optional
-       'kiharalab': ['kiharalab_logo.png', 'protocols.conf'],
+       'kiharalab': [_logo, 'protocols.conf'],
     }
 )
