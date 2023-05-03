@@ -28,7 +28,7 @@ import pwem, shutil, os
 from .constants import *
 from .install_helper import InstallHelper
 
-_version_ = KIHARALAB_DEFAULT_VERSION
+__version__ = KIHARALAB_DEFAULT_VERSION
 _logo = "kiharalab_logo.png"
 _references = ['genki2021DAQ']
 
