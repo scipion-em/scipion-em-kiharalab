@@ -86,7 +86,7 @@ class Plugin(pwem.Plugin):
         """
         cls.addDAQ(env)
         cls.addEmap2sec(env)
-        #cls.addMainMast(env)
+        cls.addMainMast(env)
     
     @classmethod    
     def addDAQ(cls, env):
@@ -100,8 +100,8 @@ class Plugin(pwem.Plugin):
         installer = InstallHelper()
 
         # Installing protocol
-        installer.getCloneCommand(protocolName, cls._daqHome, 'https://github.com/kiharalab/DAQ', protocolName)\
-            .getCondaEnvCommand(protocolName, cls._daqRepo, pythonVersion='3.8.5')\
+        installer.getCloneCommand(cls._daqHome, 'https://github.com/kiharalab/DAQ.git', binaryFolderName=protocolName)\
+            .getCondaEnvCommand(protocolName, cls._daqHome, cls._daqRepo, pythonVersion='3.8.5')\
             .addProtocolPackage(env, protocolName, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
@@ -154,14 +154,15 @@ class Plugin(pwem.Plugin):
         dependencies = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
 
         # Installing protocol
-        installer.getCloneCommand(protocolName, cls._emap2secHome, 'https://github.com/kiharalab/emap2sec', emap2secFolderName)\
-            .getCloneCommand(protocolName, cls._emap2secHome, 'https://github.com/kiharalab/emap2secPlus', emap2secPlusFolderName)\
-            .getCondaEnvCommand(protocolName, cls._emap2secRepo, pythonVersion='3.6')\
-            .getCondaEnvCommand(protocolName, cls._emap2secplusRepo, 'emap2secPlus', pythonVersion='3.6.9')\
-            .addCondaPackages(protocolName, ['pytorch==1.1.0', 'cudatoolkit=10.0'], 'emap2secPlus', channel='pytorch')\
-            .getExtraFiles(protocolName, emap2secExtraFiles, workDir=cls._emap2secRepo).getExtraFiles(protocolName, emap2secPlusExtraFiles, 'emap2secPlus', workDir=cls._emap2secplusRepo)\
-            .addCommands(protocolName, emap2secExtraCommands, workDir=cls._emap2secRepo, protocolPath=cls._emap2secHome)\
-            .addCommands(protocolName, emap2secPlusExtraCommands, 'emap2secPlus', workDir=cls._emap2secplusRepo, protocolPath=cls._emap2secHome)\
+        installer.getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
+            .getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
+            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secRepo, pythonVersion='3.6')\
+            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secplusRepo, binaryName='emap2secPlus', pythonVersion='3.6.9')\
+            .addCondaPackages(protocolName, packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
+            .getExtraFiles(protocolName, cls._emap2secHome, emap2secExtraFiles, workDir=cls._emap2secRepo)\
+            .getExtraFiles(protocolName, cls._emap2secHome, emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
+            .addCommands(protocolName, emap2secExtraCommands, workDir=cls._emap2secRepo, protocolHome=cls._emap2secHome)\
+            .addCommands(protocolName, emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo, protocolHome=cls._emap2secHome)\
             .addProtocolPackage(env, protocolName, dependencies=dependencies)
 
     @classmethod    
@@ -191,8 +192,8 @@ class Plugin(pwem.Plugin):
         dependencies = ['git', 'make', 'gcc', 'gzip']
 
         # Installing protocol
-        installer.getCloneCommand(protocolName, cls._mainmastHome, 'https://github.com/kiharalab/MAINMASTseg', 'MainMast')\
-            .addCommands(protocolName, extraCommands, workDir=cls._mainmastRepo, protocolPath=cls._mainmastHome)\
+        installer.getCloneCommand(cls._mainmastHome, 'https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
+            .addCommands(protocolName, extraCommands, workDir=cls._mainmastRepo, protocolHome=cls._mainmastHome)\
             .addProtocolPackage(env, protocolName, dependencies=dependencies)
 
     # ---------------------------------- Utils functions  -----------------------
