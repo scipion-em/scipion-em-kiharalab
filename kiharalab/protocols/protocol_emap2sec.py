@@ -181,9 +181,9 @@ class ProtEmap2sec(EMProtocol):
 
         # Running protocol
         if executionIsEmap2sec:
-            Plugin.runEmap2sec(self, args=args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
+            self.runEmap2sec(args, outDir=self.getOutputPath(), clean=self.cleanTmps.get())
         else:
-            Plugin.runEmap2secPlus(self, args=args, clean=self.cleanTmps.get())
+            self.runEmap2secPlus(args, clean=self.cleanTmps.get())
 
     def createOutputStep(self):
         """
@@ -195,7 +195,77 @@ class ProtEmap2sec(EMProtocol):
 
         # Defining protocol output
         self._defineOutputs(outputAtomStruct=outputAtomStruct)
+    
+    # --------------------------- EXECUTION functions -----------------------------------
+    # ---------------------------------- Emap2sec ----------------------------------
+    def runEmap2sec(self, args, outDir=None, clean=True):
+        """
+        Run Emap2sec script from a given protocol.
+        """
+        # Building commands before actual protocol execution
+        # Enviroment activation command. Needed to execute before every other standalone command.
+        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('emap2sec'))
+        
+        # If custom output directory is specified, create it if it does not exist
+        if outDir:
+            self.runJob("mkdir -p", outDir, cwd=Plugin._emap2secRepo)
 
+        # Command to move to Emap2sec's repo's root directory.
+        # Needed to be executed before the actual workflow commands
+        moveToRepoCommand = "cd"
+        self.runJob(moveToRepoCommand, Plugin._emap2secRepo, cwd=Plugin._emap2secRepo)
+
+        # Trimapp generation command
+        trimappCommand = "data_generate/map2train"
+        self.runJob(trimappCommand, args[0], cwd=Plugin._emap2secRepo)
+
+        # Dataset generation command
+        datasetCommand = "{} && python data_generate/dataset.py".format(envActivationCommand)
+        self.runJob(datasetCommand, args[1], cwd=Plugin._emap2secRepo)
+
+        # Input file for Emap2sec.py
+        self.runJob("echo", args[2], cwd=Plugin._emap2secRepo)
+
+        # Emap2sec execution command
+        emap2secCommand = "{} && python emap2sec/Emap2sec.py".format(envActivationCommand)
+        self.runJob(emap2secCommand, args[3], cwd=Plugin._emap2secRepo)
+        
+        # Secondary structures visualization command
+        visualCommand = "Visual/Visual.pl"
+        self.runJob(visualCommand, args[4], cwd=Plugin._emap2secRepo)
+
+        # Remove temporary files
+        if clean:
+            for tmp_file in args[5]:
+                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secRepo)
+    
+    # ---------------------------------- Emap2sec+ ----------------------------------
+    def runEmap2secPlus(self, args, clean=True):
+        """
+        Run Emap2secPlus script from a given protocol.
+        """
+        # Building commands before actual protocol execution
+        # Enviroment activation command. Needed to execute befor every other standalone command.
+        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('emap2sec', 'emap2secPlus'))
+        
+        # Command to move to Emap2sec+'s repo's root directory.
+        # Needed to be executed once before the actual workflow commands
+        moveToRepoCommand = "cd"
+        self.runJob(moveToRepoCommand, Plugin._emap2secplusRepo, cwd=Plugin._emap2secplusRepo)
+
+        # Emap2sec+ execution command
+        runCommand = "{} && python3 main.py".format(envActivationCommand)
+        self.runJob(runCommand, args[0], cwd=Plugin._emap2secplusRepo)
+
+        # Output file/s relocation
+        self.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=Plugin._emap2secplusRepo)
+        if len(args[1]) == 4:
+            self.runJob("mv", args[1][2] + ' ' + args[1][3], cwd=Plugin._emap2secplusRepo)
+
+        # Remove temporary files
+        if clean:
+            for tmp_file in args[2]:
+                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secplusRepo)
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
         """
