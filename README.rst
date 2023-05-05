@@ -23,7 +23,7 @@ DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 
 **Note:** Emap2sec+ needs an Nvidia GPU to run.
 
-- **Install the stable version (Not available yet)**
+- **Install the stable version**
 
     Through the plugin manager GUI by launching Scipion and following **Configuration** >> **Plugins**
 
