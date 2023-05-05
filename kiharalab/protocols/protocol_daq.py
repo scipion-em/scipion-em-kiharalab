@@ -33,7 +33,7 @@ import os, shutil, time
 
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
-from pwem.objects import AtomStruct, Volume
+from pwem.objects import AtomStruct
 from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.convert import Ccp4Header
 from pyworkflow.utils import Message, weakImport
@@ -41,7 +41,6 @@ from pwem.viewers.viewer_chimera import Chimera
 from pwem.emlib.image import ImageHandler
 
 from kiharalab import Plugin
-
 
 class ProtDAQValidation(EMProtocol):
     """
@@ -102,7 +101,7 @@ class ProtDAQValidation(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def convertInputStep(self):
-        name, ext = os.path.splitext(self.getStructFile())
+        ext = os.path.splitext(self.getStructFile())[1]
         pdbFile = self.getPdbStruct()
         if not ext in ['.pdb', '.ent']:
             toPdb(self.getStructFile(), pdbFile)
