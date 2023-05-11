@@ -1,6 +1,5 @@
-====
-Release: v1.0
-====
+**v1.0**:
+
 - Fixed and standardized installation process
 - Added new protocols Emap2sec and MainMastSeg
 - Added tests
