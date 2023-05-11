@@ -44,8 +44,8 @@ from kiharalab import Plugin
 from kiharalab.constants import *
 
 class ProtEmap2sec(EMProtocol):
-    ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n"
-    "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus")
+    ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n\n"
+    "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus\n")
     _label = 'Emap2sec'
     _possibleOutputs = {'outputAtomStruct': AtomStruct}
 
