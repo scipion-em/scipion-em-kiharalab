@@ -72,3 +72,8 @@ Also, the following conda enviroments will be created:
 - emap2secPlus-``version``
 
 As of today, Scipion does not automatically uninstall the conda enviroments created in the installation process when uninstalling a plugin, so keep this list in mind if you want to clean up some disk space if you need to uninstall scipion-em-kiharalab.
+
+====
+Changelog
+====
+All the recent version changes can be found `here <https://github.com/scipion-em/scipion-em-kiharalab/blob/devel/CHANGES.rst>`_.
