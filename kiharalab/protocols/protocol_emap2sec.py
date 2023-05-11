@@ -44,12 +44,8 @@ from kiharalab import Plugin
 from kiharalab.constants import *
 
 class ProtEmap2sec(EMProtocol):
-    ("Emap2sec is a computational tool using deep learning that can accurately identify protein secondary structures,"
-    " alpha helices, beta sheets, others (coils/turns), in cryo-Electron Microscopy (EM) maps of medium to low resolution.\n"
-    "Emap2sec+ also covers DNA/RNA.\n"
-    "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus\n\n"
-    "Output files can be visualized outside scipion with pymol, running 'pymol <output_pdb_file>' once pymol is installed.\n"
-    "Pymol can be installed from https://pymol.org/2/ or an open source version can be found in https://github.com/schrodinger/pymol-open-source\n")
+    ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n\n"
+    "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus\n")
     _label = 'Emap2sec'
     _possibleOutputs = {'outputAtomStruct': AtomStruct}
 

@@ -1,7 +1,6 @@
-=======================
+====
 Kihara Lab plugin
-=======================
-
+====
 This is a **Scipion** plugin that offers different **Kihara Lab tools** (https://kiharalab.org/).
 These tools will make it possible to carry out different functions for working with electron density maps.
 The code involving these functionalities can be found at https://github.com/kiharalab.
@@ -9,15 +8,11 @@ The code involving these functionalities can be found at https://github.com/kiha
 Therefore, this plugin allows to use programs from the DAQ software suite
 within the Scipion framework.
 
-==========================
+====
 Install this plugin
-==========================
-
+====
 You will need to use `Scipion3 <https://scipion-em.github.io/docs/docs/scipion
 -modes/how-to-install.html>`_ to run these protocols.
-
-
-1. **Install the plugin in Scipion**
 
 DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 
@@ -25,7 +20,7 @@ DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 
 - **Install the stable version**
 
-    Through the plugin manager GUI by launching Scipion and following **Configuration** >> **Plugins**
+    Through the plugin manager GUI by launching Scipion and following **Others** >> **Plugin Manager**
 
     or
 
@@ -48,4 +43,32 @@ DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 
         scipion3 installp -p path_to_scipion-em-kiharalab --devel
 
+====
+Protocols
+====
+scipion-em-kiharalab contains the following protocols:
 
+- **DAQ model validation**: Executes the DAQ software to validate a structure model
+- **Emap2sec**: Identifies protein secondary structures
+- **segment map**: performs the segmentation of maps into different regions by using mainmast software
+
+====
+Packages & enviroments
+====
+Packages installed by this plugin can be located in ``/path/to/scipion/software/em/``.
+
+The following packages will be created:
+
+- daq-``version``
+- emap2sec-``version``
+- mainMast-``version``
+
+Where ``version`` is the current version of that specific package.
+
+Also, the following conda enviroments will be created:
+
+- daq-``version``
+- emap2sec-``version``
+- emap2secPlus-``version``
+
+As of today, Scipion does not automatically uninstall the conda enviroments created in the installation process when uninstalling a plugin, so keep this list in mind if you want to clean up some disk space if you need to uninstall scipion-em-kiharalab.
