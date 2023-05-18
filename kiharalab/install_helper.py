@@ -359,10 +359,10 @@ class InstallHelper():
                 kwargs['name'] = fileList[idx]['name']
             if 'path' in fileList[idx]:
                 kwargs['path'] = fileList[idx]['path']
-            file = fileList[idx] if ('path' in fileList[idx] and 'name' in fileList[idx]) else self.getFileDict(fileList[idx]['url'], **kwargs)
+            downloadable = fileList[idx] if ('path' in fileList[idx] and 'name' in fileList[idx]) else self.getFileDict(fileList[idx]['url'], **kwargs)
 
             targetName = targetNames[idx] if targetNames else (defaultTargetPreffix + str(idx))
-            self.getExtraFile(file['url'], targetName, location=file['path'], workDir=workDir, fileName=file['name'])
+            self.getExtraFile(downloadable['url'], targetName, location=downloadable['path'], workDir=workDir, fileName=downloadable['name'])
     
         return self
     
