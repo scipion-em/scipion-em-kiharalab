@@ -204,7 +204,7 @@ class InstallHelper():
         # Binary name definition
         binaryName = binaryName if binaryName else self.__packageName
 
-        # Vinary version
+        # Binary version
         binaryVersion = binaryVersion if binaryVersion else self.__packageVersion 
 
         # Conda env creation
