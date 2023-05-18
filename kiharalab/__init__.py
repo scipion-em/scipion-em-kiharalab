@@ -94,15 +94,15 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing DAQ.
         """
         # Defining protocol variables
-        protocolName = 'daq'
+        packageName = 'daq'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.daqDefaultVersion)
 
         # Installing protocol
-        installer.getCloneCommand(cls._daqHome, 'https://github.com/kiharalab/DAQ.git', binaryFolderName=protocolName)\
-            .getCondaEnvCommand(protocolName, cls._daqHome, cls._daqRepo, pythonVersion='3.8.5')\
-            .addProtocolPackage(env, protocolName, dependencies=['git', 'conda', 'pip'])
+        installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
+            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqRepo)\
+            .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
     def addEmap2sec(cls, env):
@@ -110,28 +110,28 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing Emap2sec.
         """
         # Defining protocol variables
-        protocolName = 'emap2sec'
+        packageName = 'emap2sec'
         emap2secFolderName = 'Emap2sec'
         emap2secPlusFolderName = 'Emap2secPlus'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.emap2secDefaultVersion)
 
         # Defining extra files to download
         emap2secExtraFiles = [
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", path="models/emap2sec_models_exp1"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", path="models/emap2sec_models_exp1"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", path="models/emap2sec_models_exp1"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", path="models/emap2sec_models_exp1"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", path="models/emap2sec_models_exp2"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", path="models/emap2sec_models_exp2"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", path="models/emap2sec_models_exp2"),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", path="models/emap2sec_models_exp2")
         ]
 
         emap2secPlusExtraFiles = [
-            ("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz", ''),
-            ("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz", '')
+            installer.getFileDict("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz"),
+            installer.getFileDict("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz")
         ]
 
         # Defininig extra commands to run
@@ -150,20 +150,17 @@ class Plugin(pwem.Plugin):
             grantExecPermission
         ]
 
-        # Getting dependencies
-        dependencies = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
-
         # Installing protocol
-        installer.getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
-            .getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
-            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secRepo, pythonVersion='3.6')\
-            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secplusRepo, binaryName='emap2secPlus', pythonVersion='3.6.9')\
-            .addCondaPackages(protocolName, packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
-            .getExtraFiles(protocolName, cls._emap2secHome, emap2secExtraFiles, workDir=cls._emap2secRepo)\
-            .getExtraFiles(protocolName, cls._emap2secHome, emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
-            .addCommands(protocolName, emap2secExtraCommands, workDir=cls._emap2secRepo, protocolHome=cls._emap2secHome)\
-            .addCommands(protocolName, emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo, protocolHome=cls._emap2secHome)\
-            .addProtocolPackage(env, protocolName, dependencies=dependencies)
+        installer.getCloneCommand('https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
+            .getCloneCommand('https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
+            .getCondaEnvCommand(binaryPath=cls._emap2secRepo, pythonVersion='3.6')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secplusRepo, binaryName='emap2secPlus', pythonVersion='3.6.9')\
+            .addCondaPackages(packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
+            .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secRepo)\
+            .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
+            .addCommands(emap2secExtraCommands, workDir=cls._emap2secRepo)\
+            .addCommands(emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
+            .addPackage(env, dependencies=['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar'])
 
     @classmethod    
     def addMainMast(cls, env):
@@ -171,10 +168,10 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing MainMast.
         """
         # Defining protocol variables
-        protocolName = 'mainMast'
+        packageName = 'mainMast'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.mainmastDefaultVersion)
 
         # Extra commands
         grantExecPermission = "chmod -R +x *"
@@ -188,13 +185,10 @@ class Plugin(pwem.Plugin):
             "cd example1 && gunzip emd-0093.mrc.gz MAP_m4A.mrc.gz region0.mrc.gz region1.mrc.gz region2.mrc.gz region3.mrc.gz"
         ]
 
-        # Getting dependencies
-        dependencies = ['git', 'make', 'gcc', 'gzip']
-
         # Installing protocol
-        installer.getCloneCommand(cls._mainmastHome, 'https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
-            .addCommands(protocolName, extraCommands, workDir=cls._mainmastRepo, protocolHome=cls._mainmastHome)\
-            .addProtocolPackage(env, protocolName, dependencies=dependencies)
+        installer.getCloneCommand('https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
+            .addCommands(extraCommands, workDir=cls._mainmastRepo)\
+            .addPackage(env, dependencies=['git', 'make', 'gcc', 'gzip'])
 
     # ---------------------------------- Utils functions  -----------------------
     @classmethod
