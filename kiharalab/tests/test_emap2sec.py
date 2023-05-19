@@ -60,7 +60,7 @@ class TestEmap2sec(BaseTest):
 
         # Creating arguments for import volumes protocol for evaluation purposes
         args = {
-            'filesPath': os.path.join(Plugin._emap2secRepo, 'data', '1733.mrc'),
+            'filesPath': os.path.join(Plugin._emap2secBinary, 'data', '1733.mrc'),
             'samplingRate': 1.36825,
             'setOrigCoord': False
         }
@@ -77,7 +77,7 @@ class TestEmap2sec(BaseTest):
         # Creating arguments for import pdb protocol
         args = {
             'inputPdbData': 1,
-            'pdbFile': os.path.join(Plugin._emap2secRepo, 'data', '3c91.pdb'),
+            'pdbFile': os.path.join(Plugin._emap2secBinary, 'data', '3c91.pdb'),
             'inputVolume': cls.protImportVolumeEvaluate.outputVolume
         }
 

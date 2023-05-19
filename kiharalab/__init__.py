@@ -34,37 +34,37 @@ _references = ['genki2021DAQ']
 
 class Plugin(pwem.Plugin):
     """
-    Definition of class variables. For each protocol, a variable will be created.
-    _<protocolNameInLowercase>Home will contain the full path of the protocol, ending with a folder whose name will be <protocolNameFirstLetterLowercase>-<defaultProtocolVersion> variable.
+    Definition of class variables. For each package, a variable will be created.
+    _<packageNameInLowercase>Home will contain the full path of the package, ending with a folder whose name will be <packageNameFirstLetterLowercase>-<defaultPackageVersion> variable.
         For example: _emap2secHome = "~/Documents/scipion/software/em/emap2sec-1.0"
     
-    Inside that protocol, for each repo, there will also be another variable.
-    _<repoNameInLowercase>Repo will be a folder inside _<protocolNameInLowercase>Home and its name will be <repoName>.
-        For example: _emap2secplusRepo = "~/Documents/scipion/software/em/emap2sec-1.0/Emap2secPlus"
+    Inside that package, for each binary, there will also be another variable.
+    _<binaryNameInLowercase>Binary will be a folder inside _<packageNameInLowercase>Home and its name will be <binaryName>.
+        For example: _emap2secplusBinary = "~/Documents/scipion/software/em/emap2sec-1.0/Emap2secPlus"
     """
     # DAQ
     daqDefaultVersion = DAQ_DEFAULT_VERSION
     _daqHome = os.path.join(pwem.Config.EM_ROOT, 'daq-' + daqDefaultVersion)
-    _daqRepo = os.path.join(_daqHome, 'daq')
+    _daqBinary = os.path.join(_daqHome, 'daq')
 
     # Emap2sec
     emap2secDefaultVersion = EMAP2SEC_DEFAULT_VERSION
     _emap2secHome = os.path.join(pwem.Config.EM_ROOT, 'emap2sec-' + emap2secDefaultVersion)
-    _emap2secRepo = os.path.join(_emap2secHome, 'Emap2sec')
-    _emap2secplusRepo = os.path.join(_emap2secHome, 'Emap2secPlus')
+    _emap2secBinary = os.path.join(_emap2secHome, 'Emap2sec')
+    _emap2secplusBinary = os.path.join(_emap2secHome, 'Emap2secPlus')
 
     # MainMast
     mainmastDefaultVersion = MAINMAST_DEFAULT_VERSION
     _mainmastHome = os.path.join(pwem.Config.EM_ROOT, 'mainMast-' + mainmastDefaultVersion)
-    _mainmastRepo = os.path.join(_mainmastHome, 'MainMast')
+    _mainmastBinary = os.path.join(_mainmastHome, 'MainMast')
 
     @classmethod
     def _defineVariables(cls):
         """
         Return and write a home and conda enviroment variable in the config file.
-        Each protocol will have a variable called <protocolNameInUppercase>_HOME, and another called <protocolNameInUppercase>_ENV
-        <protocolNameInUppercase>_HOME will contain the path to the protocol installation. For example: "~/Documents/scipion/software/em/daq-1.0"
-        <protocolNameInUppercase>_ENV will contain the name of the conda enviroment for that protocol. For example: "daq-1.0"
+        Each package will have a variable called <packageNameInUppercase>_HOME, and another called <packageNameInUppercase>_ENV
+        <packageNameInUppercase>_HOME will contain the path to the package installation. For example: "~/Documents/scipion/software/em/daq-1.0"
+        <packageNameInUppercase>_ENV will contain the name of the conda enviroment for that package. For example: "daq-1.0"
         """
         # DAQ
         cls._defineEmVar(DAQ_HOME, cls._daqHome)
@@ -101,7 +101,7 @@ class Plugin(pwem.Plugin):
 
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
-            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqRepo)\
+            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqBinary)\
             .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
@@ -153,13 +153,13 @@ class Plugin(pwem.Plugin):
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
             .getCloneCommand('https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
-            .getCondaEnvCommand(binaryPath=cls._emap2secRepo, pythonVersion='3.6')\
-            .getCondaEnvCommand(binaryPath=cls._emap2secplusRepo, binaryName='emap2secPlus', pythonVersion='3.6.9')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secBinary, pythonVersion='3.6')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9')\
             .addCondaPackages(packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
-            .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secRepo)\
-            .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
-            .addCommands(emap2secExtraCommands, workDir=cls._emap2secRepo)\
-            .addCommands(emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
+            .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secBinary)\
+            .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
+            .addCommands(emap2secExtraCommands, workDir=cls._emap2secBinary)\
+            .addCommands(emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
             .addPackage(env, dependencies=['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar'])
 
     @classmethod    
@@ -187,7 +187,7 @@ class Plugin(pwem.Plugin):
 
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
-            .addCommands(extraCommands, workDir=cls._mainmastRepo)\
+            .addCommands(extraCommands, workDir=cls._mainmastBinary)\
             .addPackage(env, dependencies=['git', 'make', 'gcc', 'gzip'])
 
     # ---------------------------------- Utils functions  -----------------------
