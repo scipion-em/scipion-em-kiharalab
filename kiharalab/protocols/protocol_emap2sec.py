@@ -304,8 +304,8 @@ class ProtEmap2sec(EMProtocol):
             # Detecting if host machine has Nvidia drivers installed
             try:
                 # If no Nvidia drivers are present, the following command will reuturn an error
-                subprocess.check_output(['nvidia-smi'])
-            except subprocess.CalledProcessError:
+                subprocess.run(['nvidia-smi'])
+            except Exception:
                 errors.append('No Nvidia drivers detected on this machine.\n'
                     'Emap2sec+ needs an Nvidia GPU to run.')
 
