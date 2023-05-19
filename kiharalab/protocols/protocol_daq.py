@@ -141,13 +141,13 @@ class ProtDAQValidation(EMProtocol):
         fullProgram = '{} {} && {}'\
             .format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('daq'), 'python3')
         if not 'main.py' in args:
-            args = '{}/main.py {}'.format(Plugin._daqRepo, args)
-        self.runJob(fullProgram, args, cwd=Plugin._daqRepo)
+            args = '{}/main.py {}'.format(Plugin._daqBinary, args)
+        self.runJob(fullProgram, args, cwd=Plugin._daqBinary)
 
         if outDir is None:
             outDir = self._getExtraPath('predictions')
 
-        daqDir = os.path.join(Plugin._daqRepo, 'Predict_Result', self.getVolumeName())
+        daqDir = os.path.join(Plugin._daqBinary, 'Predict_Result', self.getVolumeName())
         shutil.copytree(daqDir, outDir)
         shutil.rmtree(daqDir)
     

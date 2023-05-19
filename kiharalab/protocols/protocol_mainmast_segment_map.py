@@ -167,14 +167,14 @@ class ProtMainMastSegmentMap(EMProtocol):
         """
         Run segmentation phase for MainMast.
         """
-        mainMastCall = os.path.join(Mainmast._mainmastRepo, 'MainmastSeg')
+        mainMastCall = os.path.join(Mainmast._mainmastBinary, 'MainmastSeg')
         self.runJob(mainMastCall, args, cwd=cwd)
     
     def convertMatrix(self, args, cwd=None):
         """
         Run matrix conversion phase for MainMast.
         """
-        convertCall = os.path.join(Mainmast._mainmastRepo, 'conv_ncs.pl')
+        convertCall = os.path.join(Mainmast._mainmastBinary, 'conv_ncs.pl')
         self.runJob(convertCall, args, cwd=cwd)
 
     def cleanTmpfiles(self, tmpFiles=[]):
@@ -182,7 +182,7 @@ class ProtMainMastSegmentMap(EMProtocol):
         This method removes all temporary files to reduce disk usage.
         """
         for tmp_file in tmpFiles:
-            self.runJob("rm -rf", tmp_file, cwd=Mainmast._mainmastRepo)
+            self.runJob("rm -rf", tmp_file, cwd=Mainmast._mainmastBinary)
 
     # --------------------------- UTILS functions ------------------------------
     def scapePath(self, path):

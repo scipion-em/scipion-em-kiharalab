@@ -204,36 +204,36 @@ class ProtEmap2sec(EMProtocol):
         
         # If custom output directory is specified, create it if it does not exist
         if outDir:
-            self.runJob("mkdir -p", outDir, cwd=Plugin._emap2secRepo)
+            self.runJob("mkdir -p", outDir, cwd=Plugin._emap2secBinary)
 
         # Command to move to Emap2sec's repo's root directory.
         # Needed to be executed before the actual workflow commands
         moveToRepoCommand = "cd"
-        self.runJob(moveToRepoCommand, Plugin._emap2secRepo, cwd=Plugin._emap2secRepo)
+        self.runJob(moveToRepoCommand, Plugin._emap2secBinary, cwd=Plugin._emap2secBinary)
 
         # Trimapp generation command
         trimappCommand = "data_generate/map2train"
-        self.runJob(trimappCommand, args[0], cwd=Plugin._emap2secRepo)
+        self.runJob(trimappCommand, args[0], cwd=Plugin._emap2secBinary)
 
         # Dataset generation command
         datasetCommand = "{} && python data_generate/dataset.py".format(envActivationCommand)
-        self.runJob(datasetCommand, args[1], cwd=Plugin._emap2secRepo)
+        self.runJob(datasetCommand, args[1], cwd=Plugin._emap2secBinary)
 
         # Input file for Emap2sec.py
-        self.runJob("echo", args[2], cwd=Plugin._emap2secRepo)
+        self.runJob("echo", args[2], cwd=Plugin._emap2secBinary)
 
         # Emap2sec execution command
         emap2secCommand = "{} && python emap2sec/Emap2sec.py".format(envActivationCommand)
-        self.runJob(emap2secCommand, args[3], cwd=Plugin._emap2secRepo)
+        self.runJob(emap2secCommand, args[3], cwd=Plugin._emap2secBinary)
         
         # Secondary structures visualization command
         visualCommand = "Visual/Visual.pl"
-        self.runJob(visualCommand, args[4], cwd=Plugin._emap2secRepo)
+        self.runJob(visualCommand, args[4], cwd=Plugin._emap2secBinary)
 
         # Remove temporary files
         if clean:
             for tmp_file in args[5]:
-                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secRepo)
+                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secBinary)
     
     # ---------------------------------- Emap2sec+ ----------------------------------
     def runEmap2secPlus(self, args, clean=True):
@@ -247,21 +247,21 @@ class ProtEmap2sec(EMProtocol):
         # Command to move to Emap2sec+'s repo's root directory.
         # Needed to be executed once before the actual workflow commands
         moveToRepoCommand = "cd"
-        self.runJob(moveToRepoCommand, Plugin._emap2secplusRepo, cwd=Plugin._emap2secplusRepo)
+        self.runJob(moveToRepoCommand, Plugin._emap2secplusBinary, cwd=Plugin._emap2secplusBinary)
 
         # Emap2sec+ execution command
         runCommand = "{} && python3 main.py".format(envActivationCommand)
-        self.runJob(runCommand, args[0], cwd=Plugin._emap2secplusRepo)
+        self.runJob(runCommand, args[0], cwd=Plugin._emap2secplusBinary)
 
         # Output file/s relocation
-        self.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=Plugin._emap2secplusRepo)
+        self.runJob("mv", args[1][0] + ' ' + args[1][1], cwd=Plugin._emap2secplusBinary)
         if len(args[1]) == 4:
-            self.runJob("mv", args[1][2] + ' ' + args[1][3], cwd=Plugin._emap2secplusRepo)
+            self.runJob("mv", args[1][2] + ' ' + args[1][3], cwd=Plugin._emap2secplusBinary)
 
         # Remove temporary files
         if clean:
             for tmp_file in args[2]:
-                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secplusRepo)
+                self.runJob("rm -rf", tmp_file, cwd=Plugin._emap2secplusBinary)
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
         """
