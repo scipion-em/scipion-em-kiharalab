@@ -41,7 +41,10 @@ from pwem.emlib.image import ImageHandler
 
 # Kiharalab imports
 from kiharalab import Plugin
-from kiharalab.constants import *
+from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SEC, EMAP2SEC_NORM_GLOBAL, EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SEC_TYPE_EMAP2SECPLUS
+from kiharalab.constants import EMAP2SECPLUS_TYPE_EXPERIMENTAL, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SECPLUS_MODE_DETECT_DNA
+from kiharalab.constants import EMAP2SECPLUS_FOLD3, EMAP2SECPLUS_MODE_DETECT_EXPERIMENTAL_FOLD4, EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
+from kiharalab.constants import EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4, EMAP2SECPLUS_TYPE_SIMUL6A, EMAP2SECPLUS_TYPE_SIMUL10A, EMAP2SECPLUS_TYPE_SIMUL6_10A
 
 class ProtEmap2sec(EMProtocol):
     ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n\n"
