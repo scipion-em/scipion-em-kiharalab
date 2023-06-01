@@ -41,7 +41,10 @@ from pwem.emlib.image import ImageHandler
 
 # Kiharalab imports
 from kiharalab import Plugin
-from kiharalab.constants import *
+from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SEC, EMAP2SEC_NORM_GLOBAL, EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SEC_TYPE_EMAP2SECPLUS
+from kiharalab.constants import EMAP2SECPLUS_TYPE_EXPERIMENTAL, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS, EMAP2SECPLUS_MODE_DETECT_DNA
+from kiharalab.constants import EMAP2SECPLUS_FOLD3, EMAP2SECPLUS_MODE_DETECT_EXPERIMENTAL_FOLD4, EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4
+from kiharalab.constants import EMAP2SECPLUS_MODE_DETECT_EVALUATE_EXPERIMENTAL_FOLD4, EMAP2SECPLUS_TYPE_SIMUL6A, EMAP2SECPLUS_TYPE_SIMUL10A, EMAP2SECPLUS_TYPE_SIMUL6_10A
 
 class ProtEmap2sec(EMProtocol):
     ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n\n"
@@ -65,9 +68,11 @@ class ProtEmap2sec(EMProtocol):
         form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
                         help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
+        # Execution type variable
+        executionType = 'executionType=='
         # -------------------------------------- Emap2sec params --------------------------------------
-        trimmapGroup = form.addGroup('Trimmap generation', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC)
-        trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
+        trimmapGroup = form.addGroup('Trimmap generation', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}')
+        trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}',
                         help='The level of isosurface to generate density values for.\n'
                             'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
         trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
@@ -86,17 +91,17 @@ class ProtEmap2sec(EMProtocol):
                         help='Set this option to normalize density values of the sliding cube, used for input data generation,'
                             ' by global or local maximum density value.')
                        
-        form.addParam('proteinId', params.StringParam, label='Protein id:', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC,
+        form.addParam('proteinId', params.StringParam, label='Protein id:', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}',
                         expertLevel=params.LEVEL_ADVANCED, help='Optional.\nUnique protein identifier. Either EMID or SCOPe ID can be used.'
                             '\nFor example, protein EMD-1733 in EMDB has the identifier 1733.')
         
         form.addParam('predict', params.BooleanParam, default='True', label='Show Secondary Structures predicted data: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SEC, expertLevel=params.LEVEL_ADVANCED,
+                        condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}', expertLevel=params.LEVEL_ADVANCED,
                         help='Show predicted data (Predicted secondary structures).')
         
         # -------------------------------------- Emap2sec+ params --------------------------------------
         form.addParam('mode', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_MODE_DETECT_STRUCTS, label='Mode: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
+                        condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}', expertLevel=params.LEVEL_ADVANCED,
                         choices=['Detect structures', 'Detect-evaluate structures', 'Detect DNA/RNA & protein'],
                         help='Set this option to define the execution mode. The options are:\n\n'
                             '- Detect structures: Detect structures for EM Map\n\n'
@@ -104,34 +109,34 @@ class ProtEmap2sec(EMProtocol):
                             '- Detect DNA/RNA & protein: Detect DNA/RNA and protein for experimental maps. Only available with 4 fold models\n\n'
                             'For detect-evaluate mode, evaluation results will show up in summary box.')
         form.addParam('mapType', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_TYPE_EXPERIMENTAL, label='Map type: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, expertLevel=params.LEVEL_ADVANCED,
+                        condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}', expertLevel=params.LEVEL_ADVANCED,
                         choices=['Simulated map at 6Å', 'Simulated map at 10Å', 'Simulated map at 6-10Å', 'Experimental map'],
                         help='Set this option to define the type of input map.')
-        form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+        form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}',
                         help='Select the GPU id where the process will run on.')
         form.addParam('emap2secplusContour', params.FloatParam, default='0.0', label='Contour: ',
-                        condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS, help='Contour level for real map.\n'
+                        condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}', help='Contour level for real map.\n'
                             'You can use the author recommended contour level, which will be used by a specific model,'
                             ' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
         form.addParam('inputStruct', params.PointerParam,
-                        condition='(executionType==%d and mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS),
+                        condition=f'({executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS} and mode=={EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS})',
                         pointerClass='AtomStruct', allowsNull=False, label="Input atom struct: ", help='Select the atom struct to evaluate the model with.')
-        form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition='executionType==%d and mode!=%d' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_DNA),
+        form.addParam('classes', params.IntParam, default='4', label='Number of classes: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS} and mode!={EMAP2SECPLUS_MODE_DETECT_DNA}',
                         expertLevel=params.LEVEL_ADVANCED, help='Select number of classes to differentiate between.\n'
                             'Not available for Detect DNA/RNA & protein mode.')
         form.addParam('fold', params.EnumParam, display=params.EnumParam.DISPLAY_COMBO, default=EMAP2SECPLUS_FOLD3, label='Fold model: ',
-                        condition='(executionType==%d and mode!=%d and mapType==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_DNA, EMAP2SECPLUS_TYPE_EXPERIMENTAL),
+                        condition=f'({executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS} and mode!={EMAP2SECPLUS_MODE_DETECT_DNA} and mapType=={EMAP2SECPLUS_TYPE_EXPERIMENTAL})',
                         expertLevel=params.LEVEL_ADVANCED, choices=['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4'],
                         help='Set this option to specify the fold model used for detecting the experimental map.\n'
                             'This param is not available for DNA/RNA & protein detection.')
-        form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition='executionType==%d and (fold==%d or mode==%d)' % (EMAP2SEC_TYPE_EMAP2SECPLUS, 3, EMAP2SECPLUS_MODE_DETECT_DNA),
+        form.addParam('customModel', params.FolderParam, label='Custom model path: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS} and (fold=={3} or mode=={EMAP2SECPLUS_MODE_DETECT_DNA})',
                         expertLevel=params.LEVEL_ADVANCED,
                         help='Set this option to specify the path to a custom model to be used by Emap2sec+.\n'
                             'The model needs to have the same directory and file structure as the models included with this protocol.\n'
                             'This means that, for each file or folder that exists within the example model, a file or folder (same type of element) with the same name must exist.\n'
                             'You can download a sample model to check the folder structure from https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz\n'
                             'Custom models can only be used with 4 fold networks.')
-        form.addParam('getConfident', params.BooleanParam, default='True', label='Get confident results: ', expertLevel=params.LEVEL_ADVANCED, condition='executionType==%d' % EMAP2SEC_TYPE_EMAP2SECPLUS,
+        form.addParam('getConfident', params.BooleanParam, default='True', label='Get confident results: ', expertLevel=params.LEVEL_ADVANCED, condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}',
                         help='Only accept as valid predictions the ones with a 90%+ probability.')
 
     # --------------------------- STEPS functions ------------------------------
@@ -278,7 +283,7 @@ class ProtEmap2sec(EMProtocol):
                 for line in metricsFile:
                     summary.append(line)
                 metricsFile.close()
-            except:
+            except FileNotFoundError:
                 summary.append('Metric results not ready yet.')
         
         return summary
@@ -438,14 +443,14 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns a list with the arguments neccessary for the trimmap generation for the volume.
         """
-        file = self.getConvertedVolumeAbsolutePath()
+        inputfFile = self.getConvertedVolumeAbsolutePath()
         return '{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
-        .format(file,
+        .format(inputfFile,
             self.emap2secContour.get(),
             self.sstep.get(),
             self.vw.get(),
             '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
-            self.getProtocolFilePrefix(file))
+            self.getProtocolFilePrefix(inputfFile))
     
     def getDatasetArgs(self):
         """
@@ -473,12 +478,12 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments neccessary for the Secondary Structure visualization.
         """
-        file = self.getVolumeAbsolutePath()
+        inputFile = self.getVolumeAbsolutePath()
         return 'data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
-                .format(self.getProtocolFilePrefix(file),
+                .format(self.getProtocolFilePrefix(inputFile),
                     self.getProtocolPrefix(),
-                    self.getProtocolFilePrefix(file),
-                    self.getOutputFile(file))
+                    self.getProtocolFilePrefix(inputFile),
+                    self.getOutputFile(inputFile))
     
     # -------------------------------- Emap2sec+ specific functions --------------------------------
     def getFoldModel(self):
@@ -564,10 +569,18 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the first folder for the output path for Emap2sec+, matching the map type.
         """
-        return ('SIMU6' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A else
-            ('SIMU10' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A else
-            ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
-        )
+        # Obtaining map type
+        if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A:
+            mapType = 'SIMU6'
+        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A:
+            mapType = 'SIMU10'
+        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A:
+            mapType = 'SIMU_MIX'
+        else:
+            mapType = 'REAL'
+
+        # Returning resulting type
+        return mapType
     
     def getEmap2secPlusDefaultOutputPath(self, base=False):
         """
@@ -585,8 +598,9 @@ class ProtEmap2sec(EMProtocol):
                 foldPath if not modeIsDNA else '',
                 filePath
             )
+        finalPath = 'Phase2' if not modeIsDNA else 'Final'
 
-        return basePath if base else os.path.join(basePath, 'Phase2' if not modeIsDNA else 'Final')
+        return basePath if base else os.path.join(basePath, finalPath)
     
     def getEmap2secPlusOutputFile(self, clean=True):
         """
