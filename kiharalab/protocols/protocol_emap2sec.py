@@ -283,7 +283,7 @@ class ProtEmap2sec(EMProtocol):
                 for line in metricsFile:
                     summary.append(line)
                 metricsFile.close()
-            except:
+            except FileNotFoundError:
                 summary.append('Metric results not ready yet.')
         
         return summary
