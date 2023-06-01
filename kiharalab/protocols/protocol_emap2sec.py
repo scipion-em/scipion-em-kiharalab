@@ -574,7 +574,7 @@ class ProtEmap2sec(EMProtocol):
             mapType = 'SIMU6'
         elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A:
             mapType = 'SIMU10'
-        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A:
+        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A:
             mapType = 'SIMU_MIX'
         else:
             mapType = 'REAL'
