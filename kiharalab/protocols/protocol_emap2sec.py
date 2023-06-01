@@ -443,14 +443,14 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns a list with the arguments neccessary for the trimmap generation for the volume.
         """
-        file = self.getConvertedVolumeAbsolutePath()
+        inputfFile = self.getConvertedVolumeAbsolutePath()
         return '{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
-        .format(file,
+        .format(inputfFile,
             self.emap2secContour.get(),
             self.sstep.get(),
             self.vw.get(),
             '-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
-            self.getProtocolFilePrefix(file))
+            self.getProtocolFilePrefix(inputfFile))
     
     def getDatasetArgs(self):
         """
@@ -478,12 +478,12 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the arguments neccessary for the Secondary Structure visualization.
         """
-        file = self.getVolumeAbsolutePath()
+        inputFile = self.getVolumeAbsolutePath()
         return 'data/{}trimmap results/{}outputP2_{}dataset -p > {}'\
-                .format(self.getProtocolFilePrefix(file),
+                .format(self.getProtocolFilePrefix(inputFile),
                     self.getProtocolPrefix(),
-                    self.getProtocolFilePrefix(file),
-                    self.getOutputFile(file))
+                    self.getProtocolFilePrefix(inputFile),
+                    self.getOutputFile(inputFile))
     
     # -------------------------------- Emap2sec+ specific functions --------------------------------
     def getFoldModel(self):
@@ -569,10 +569,18 @@ class ProtEmap2sec(EMProtocol):
         """
         This method returns the first folder for the output path for Emap2sec+, matching the map type.
         """
-        return ('SIMU6' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A else
-            ('SIMU10' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A else
-            ('SIMU_MIX' if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6_10A else 'REAL'))
-        )
+        # Obtaining map type
+        if self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL6A:
+            mapType = 'SIMU6'
+        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A:
+            mapType = 'SIMU10'
+        elif self.mapType.get() == EMAP2SECPLUS_TYPE_SIMUL10A:
+            mapType = 'SIMU_MIX'
+        else:
+            mapType = 'REAL'
+
+        # Returning resulting type
+        return mapType
     
     def getEmap2secPlusDefaultOutputPath(self, base=False):
         """
@@ -590,8 +598,9 @@ class ProtEmap2sec(EMProtocol):
                 foldPath if not modeIsDNA else '',
                 filePath
             )
+        finalPath = 'Phase2' if not modeIsDNA else 'Final'
 
-        return basePath if base else os.path.join(basePath, 'Phase2' if not modeIsDNA else 'Final')
+        return basePath if base else os.path.join(basePath, finalPath)
     
     def getEmap2secPlusOutputFile(self, clean=True):
         """

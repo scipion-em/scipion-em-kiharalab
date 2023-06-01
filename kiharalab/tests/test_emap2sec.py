@@ -29,7 +29,8 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes, ProtImportPdb
 from ..protocols import ProtEmap2sec
 from kiharalab import Plugin
-from kiharalab.constants import *
+from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SEC, EMAP2SEC_TYPE_EMAP2SECPLUS
+from kiharalab.constants import EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS
 
 class TestEmap2sec(BaseTest):
     @classmethod
