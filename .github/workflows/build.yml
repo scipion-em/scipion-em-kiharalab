@@ -20,12 +20,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y wget gcc-10 g++-10 libopenmpi-dev make
         
-    # Installing Python 3.8 for external package compatibility reasons
-    - name: Setup Python 3.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-        
     # Installing Miniconda
     - name: Install Miniconda
       working-directory: ${{ github.workspace }}/../
@@ -33,7 +27,7 @@ jobs:
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
         bash Miniconda3-latest-Linux-x86_64.sh -b -p ${{ github.workspace }}/../miniconda/
         source ./miniconda/etc/profile.d/conda.sh
-        conda update -n base -c defaults conda
+        conda update -n base -c defaults conda -y
     
     # Installing Scipion
     - name: Install Scipion with dependencies
