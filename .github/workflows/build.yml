@@ -20,11 +20,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y wget gcc-10 g++-10 libopenmpi-dev make
         
-    # Installing Python 3.4.10 for external package compatibility reasons
-    - name: Setup Python 3.4.10
-      uses: actions/setup-python@v3
+    # Installing Python 3.4 for external package compatibility reasons
+    - name: Setup Python 3.4
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.4.10'
+        python-version: '3.4'
         
     # Installing Miniconda
     - name: Install Miniconda
