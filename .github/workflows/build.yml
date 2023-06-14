@@ -25,6 +25,7 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.4'
+        architecture: 'x86' # No x64 version of Python 3.4
         
     # Installing Miniconda
     - name: Install Miniconda
