@@ -24,14 +24,15 @@
 # *
 # **************************************************************************
 
+# General imports
 import os, glob
 
+# Base Scipion viewer imports
 import pyworkflow.viewer as pwviewer
+from pwem.viewers.views import ObjectView
+from pwem.viewers.viewer_chimera import Chimera, ChimeraView
 
-import pwem.viewers as viewers
-import pwem.viewers.views as vi
-from pwem.viewers.viewer_chimera import ChimeraView
-
+# Plugin imports
 from ..protocols.protocol_mainmast_segment_map import ProtMainMastSegmentMap
 
 class MainMastViewer(pwviewer.Viewer):
@@ -46,7 +47,7 @@ class MainMastViewer(pwviewer.Viewer):
         self._views = []
 
     def _getObjView(self, obj, fn, viewParams={}):
-        return vi.ObjectView(
+        return ObjectView(
             self._project, obj.strId(), fn, viewParams=viewParams)
 
     def _visualize(self, obj, **kwargs):
@@ -76,7 +77,7 @@ class MainMastViewer(pwviewer.Viewer):
         # Adding axis to file if requested
         if axis:
             builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
-            viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
+            Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
                 bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
                 sampling=self.protocol.inputVolume.get().getSamplingRate())
             f.write('open %s\n' % builFileName)

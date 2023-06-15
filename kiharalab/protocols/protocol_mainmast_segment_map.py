@@ -36,7 +36,11 @@ from pwem.objects import Volume, SetOfVolumes
 
 # Plugin imports
 from kiharalab import Plugin as Mainmast
-from phenix import Plugin as Phenix
+try:
+    from phenix import Plugin as Phenix
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("Plugin scipion-em-phenix is not installed!\n"
+                              "You can find it at https://github.com/scipion-em/scipion-em-phenix")
 
 # Constants
 REGIONS_PATTERN = "region*.mrc"
