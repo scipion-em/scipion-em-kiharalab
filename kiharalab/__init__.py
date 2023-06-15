@@ -24,11 +24,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import pwem, shutil, os
+import pwem, os
 from .constants import *
 from .install_helper import InstallHelper
 
-__version__ = KIHARALAB_DEFAULT_VERSION
+__version__ = KIHARALAB_VERSION
 _logo = "kiharalab_logo.png"
 _references = ['genki2021DAQ']
 
