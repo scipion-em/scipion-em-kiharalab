@@ -29,7 +29,8 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes, ProtImportPdb
 from ..protocols import ProtEmap2sec
 from kiharalab import Plugin
-from kiharalab.constants import *
+from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SEC, EMAP2SEC_TYPE_EMAP2SECPLUS
+from kiharalab.constants import EMAP2SECPLUS_MODE_DETECT_STRUCTS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS
 
 class TestEmap2sec(BaseTest):
     @classmethod
@@ -60,7 +61,7 @@ class TestEmap2sec(BaseTest):
 
         # Creating arguments for import volumes protocol for evaluation purposes
         args = {
-            'filesPath': os.path.join(Plugin._emap2secRepo, 'data', '1733.mrc'),
+            'filesPath': os.path.join(Plugin._emap2secBinary, 'data', '1733.mrc'),
             'samplingRate': 1.36825,
             'setOrigCoord': False
         }
@@ -77,7 +78,7 @@ class TestEmap2sec(BaseTest):
         # Creating arguments for import pdb protocol
         args = {
             'inputPdbData': 1,
-            'pdbFile': os.path.join(Plugin._emap2secRepo, 'data', '3c91.pdb'),
+            'pdbFile': os.path.join(Plugin._emap2secBinary, 'data', '3c91.pdb'),
             'inputVolume': cls.protImportVolumeEvaluate.outputVolume
         }
 

@@ -24,16 +24,17 @@
 # *
 # **************************************************************************
 
+# General imports
 import os
 from shutil import which
 
+# Base Scipion viewer imports
 import pyworkflow.viewer as pwviewer
+from pwem.viewers.viewer_chimera import Chimera, ChimeraView
 
-import pwem.viewers as viewers
-from pwem.viewers.viewer_chimera import ChimeraView
-
+# Plugin imports
 from ..protocols.protocol_emap2sec import ProtEmap2sec
-from kiharalab.constants import *
+from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS
 
 class Emap2secViewer(pwviewer.Viewer):
     """
@@ -58,7 +59,7 @@ class Emap2secViewer(pwviewer.Viewer):
         This function validates the installation of Chimera so the files can be visualized.
         """
         errors = []
-        if (which(viewers.viewer_chimera.Chimera.getProgram()) is None):
+        if (which(Chimera.getProgram()) is None):
             errors.append("Chimera is not available. Please install it to visualize.")
         return errors
     
@@ -70,25 +71,28 @@ class Emap2secViewer(pwviewer.Viewer):
         filePath = os.path.abspath(self.protocol._getExtraPath('chimera.cxc'))
         inputVolume = self.protocol.getVolumeAbsolutePath()
 
+        # Open command
+        openCommandPrefix = 'open'
+
         f = open(filePath, "w")
         # Adding axis to file if requested
         if axis:
             builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
-            viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
+            Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
                 bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
                 sampling=self.protocol.inputVolume.get().getSamplingRate())
-            f.write('open %s\n' % builFileName)
+            f.write(f'{openCommandPrefix} {builFileName}\n')
             
             # Setting center of coordinates for the axis
             f.write('cofr 0,0,0\n')
 
         # Adding input Volume
-        f.write('open %s\n' % inputVolume)
+        f.write(f'{openCommandPrefix} {inputVolume}\n')
         # Adding output Atom Struct
-        f.write('open %s\n' % self.protocol.getOutputFile(inputVolume))
+        f.write(f'{openCommandPrefix} {self.protocol.getOutputFile(inputVolume)}\n')
         # If evaluation mode on Emap2sec+, add reference pdb
         if self.protocol.executionType.get() == EMAP2SEC_TYPE_EMAP2SECPLUS and self.protocol.mode.get() == EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS:
-            f.write('open %s\n' % self.protocol.getStructAbsolutePath())
+            f.write(f'{openCommandPrefix} {self.protocol.getStructAbsolutePath()}\n')
         f.close()
 
         # Returning written file 

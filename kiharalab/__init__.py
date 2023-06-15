@@ -24,47 +24,47 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import pwem, shutil, os
+import pwem, os
 from .constants import *
 from .install_helper import InstallHelper
 
-__version__ = KIHARALAB_DEFAULT_VERSION
+__version__ = KIHARALAB_VERSION
 _logo = "kiharalab_logo.png"
 _references = ['genki2021DAQ']
 
 class Plugin(pwem.Plugin):
     """
-    Definition of class variables. For each protocol, a variable will be created.
-    _<protocolNameInLowercase>Home will contain the full path of the protocol, ending with a folder whose name will be <protocolNameFirstLetterLowercase>-<defaultProtocolVersion> variable.
+    Definition of class variables. For each package, a variable will be created.
+    _<packageNameInLowercase>Home will contain the full path of the package, ending with a folder whose name will be <packageNameFirstLetterLowercase>-<defaultPackageVersion> variable.
         For example: _emap2secHome = "~/Documents/scipion/software/em/emap2sec-1.0"
     
-    Inside that protocol, for each repo, there will also be another variable.
-    _<repoNameInLowercase>Repo will be a folder inside _<protocolNameInLowercase>Home and its name will be <repoName>.
-        For example: _emap2secplusRepo = "~/Documents/scipion/software/em/emap2sec-1.0/Emap2secPlus"
+    Inside that package, for each binary, there will also be another variable.
+    _<binaryNameInLowercase>Binary will be a folder inside _<packageNameInLowercase>Home and its name will be <binaryName>.
+        For example: _emap2secplusBinary = "~/Documents/scipion/software/em/emap2sec-1.0/Emap2secPlus"
     """
     # DAQ
     daqDefaultVersion = DAQ_DEFAULT_VERSION
     _daqHome = os.path.join(pwem.Config.EM_ROOT, 'daq-' + daqDefaultVersion)
-    _daqRepo = os.path.join(_daqHome, 'daq')
+    _daqBinary = os.path.join(_daqHome, 'daq')
 
     # Emap2sec
     emap2secDefaultVersion = EMAP2SEC_DEFAULT_VERSION
     _emap2secHome = os.path.join(pwem.Config.EM_ROOT, 'emap2sec-' + emap2secDefaultVersion)
-    _emap2secRepo = os.path.join(_emap2secHome, 'Emap2sec')
-    _emap2secplusRepo = os.path.join(_emap2secHome, 'Emap2secPlus')
+    _emap2secBinary = os.path.join(_emap2secHome, 'Emap2sec')
+    _emap2secplusBinary = os.path.join(_emap2secHome, 'Emap2secPlus')
 
     # MainMast
     mainmastDefaultVersion = MAINMAST_DEFAULT_VERSION
     _mainmastHome = os.path.join(pwem.Config.EM_ROOT, 'mainMast-' + mainmastDefaultVersion)
-    _mainmastRepo = os.path.join(_mainmastHome, 'MainMast')
+    _mainmastBinary = os.path.join(_mainmastHome, 'MainMast')
 
     @classmethod
     def _defineVariables(cls):
         """
         Return and write a home and conda enviroment variable in the config file.
-        Each protocol will have a variable called <protocolNameInUppercase>_HOME, and another called <protocolNameInUppercase>_ENV
-        <protocolNameInUppercase>_HOME will contain the path to the protocol installation. For example: "~/Documents/scipion/software/em/daq-1.0"
-        <protocolNameInUppercase>_ENV will contain the name of the conda enviroment for that protocol. For example: "daq-1.0"
+        Each package will have a variable called <packageNameInUppercase>_HOME, and another called <packageNameInUppercase>_ENV
+        <packageNameInUppercase>_HOME will contain the path to the package installation. For example: "~/Documents/scipion/software/em/daq-1.0"
+        <packageNameInUppercase>_ENV will contain the name of the conda enviroment for that package. For example: "daq-1.0"
         """
         # DAQ
         cls._defineEmVar(DAQ_HOME, cls._daqHome)
@@ -94,15 +94,15 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing DAQ.
         """
         # Defining protocol variables
-        protocolName = 'daq'
+        packageName = 'daq'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.daqDefaultVersion)
 
         # Installing protocol
-        installer.getCloneCommand(cls._daqHome, 'https://github.com/kiharalab/DAQ.git', binaryFolderName=protocolName)\
-            .getCondaEnvCommand(protocolName, cls._daqHome, cls._daqRepo, pythonVersion='3.8.5')\
-            .addProtocolPackage(env, protocolName, dependencies=['git', 'conda', 'pip'])
+        installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
+            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqBinary)\
+            .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
     def addEmap2sec(cls, env):
@@ -110,28 +110,30 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing Emap2sec.
         """
         # Defining protocol variables
-        protocolName = 'emap2sec'
+        packageName = 'emap2sec'
         emap2secFolderName = 'Emap2sec'
         emap2secPlusFolderName = 'Emap2secPlus'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.emap2secDefaultVersion)
 
         # Defining extra files to download
+        firstLocation = "models/emap2sec_models_exp1"
+        secondLocation = "models/emap2sec_models_exp2"
         emap2secExtraFiles = [
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", "models/emap2sec_models_exp1"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", "models/emap2sec_models_exp2"),
-            ("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", "models/emap2sec_models_exp2")
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/checkpoint", path=firstLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.data-00000-of-00001", path=firstLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.index", path=firstLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp1/emap2sec_L1_exp.ckpt-108000.meta", path=firstLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/checkpoint", path=secondLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.data-00000-of-00001", path=secondLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.index", path=secondLocation),
+            installer.getFileDict("https://kiharalab.org/Emap2sec_models/emap2sec_models_exp2/emap2sec_L2_exp.ckpt-20000.meta", path=secondLocation)
         ]
 
         emap2secPlusExtraFiles = [
-            ("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz", ''),
-            ("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz", '')
+            installer.getFileDict("https://kiharalab.org/emsuites/emap2secplus_model/best_model.tar.gz"),
+            installer.getFileDict("https://kiharalab.org/emsuites/emap2secplus_model/nocontour_best_model.tar.gz")
         ]
 
         # Defininig extra commands to run
@@ -150,20 +152,17 @@ class Plugin(pwem.Plugin):
             grantExecPermission
         ]
 
-        # Getting dependencies
-        dependencies = ['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar']
-
         # Installing protocol
-        installer.getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
-            .getCloneCommand(cls._emap2secHome, 'https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
-            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secRepo, pythonVersion='3.6')\
-            .getCondaEnvCommand(protocolName, cls._emap2secHome, binaryPath=cls._emap2secplusRepo, binaryName='emap2secPlus', pythonVersion='3.6.9')\
-            .addCondaPackages(protocolName, packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
-            .getExtraFiles(protocolName, cls._emap2secHome, emap2secExtraFiles, workDir=cls._emap2secRepo)\
-            .getExtraFiles(protocolName, cls._emap2secHome, emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo)\
-            .addCommands(protocolName, emap2secExtraCommands, workDir=cls._emap2secRepo, protocolHome=cls._emap2secHome)\
-            .addCommands(protocolName, emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusRepo, protocolHome=cls._emap2secHome)\
-            .addProtocolPackage(env, protocolName, dependencies=dependencies)
+        installer.getCloneCommand('https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
+            .getCloneCommand('https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
+            .getCondaEnvCommand(binaryPath=cls._emap2secBinary, pythonVersion='3.6')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9')\
+            .addCondaPackages(packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
+            .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secBinary)\
+            .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
+            .addCommands(emap2secExtraCommands, workDir=cls._emap2secBinary)\
+            .addCommands(emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
+            .addPackage(env, dependencies=['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar'])
 
     @classmethod    
     def addMainMast(cls, env):
@@ -171,10 +170,10 @@ class Plugin(pwem.Plugin):
         This function provides the neccessary commands for installing MainMast.
         """
         # Defining protocol variables
-        protocolName = 'mainMast'
+        packageName = 'mainMast'
 
         # Instanciating installer
-        installer = InstallHelper()
+        installer = InstallHelper(packageName, packageVersion=cls.mainmastDefaultVersion)
 
         # Extra commands
         grantExecPermission = "chmod -R +x *"
@@ -188,13 +187,10 @@ class Plugin(pwem.Plugin):
             "cd example1 && gunzip emd-0093.mrc.gz MAP_m4A.mrc.gz region0.mrc.gz region1.mrc.gz region2.mrc.gz region3.mrc.gz"
         ]
 
-        # Getting dependencies
-        dependencies = ['git', 'make', 'gcc', 'gzip']
-
         # Installing protocol
-        installer.getCloneCommand(cls._mainmastHome, 'https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
-            .addCommands(protocolName, extraCommands, workDir=cls._mainmastRepo, protocolHome=cls._mainmastHome)\
-            .addProtocolPackage(env, protocolName, dependencies=dependencies)
+        installer.getCloneCommand('https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
+            .addCommands(extraCommands, workDir=cls._mainmastBinary)\
+            .addPackage(env, dependencies=['git', 'make', 'gcc', 'gzip'])
 
     # ---------------------------------- Utils functions  -----------------------
     @classmethod
