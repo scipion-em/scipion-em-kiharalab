@@ -24,14 +24,15 @@
 # *
 # **************************************************************************
 
+# General imports
 import os
 from shutil import which
 
+# Base Scipion viewer imports
 import pyworkflow.viewer as pwviewer
+from pwem.viewers.viewer_chimera import Chimera, ChimeraView
 
-import pwem.viewers as viewers
-from pwem.viewers.viewer_chimera import ChimeraView
-
+# Plugin imports
 from ..protocols.protocol_emap2sec import ProtEmap2sec
 from kiharalab.constants import EMAP2SEC_TYPE_EMAP2SECPLUS, EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS
 
@@ -58,7 +59,7 @@ class Emap2secViewer(pwviewer.Viewer):
         This function validates the installation of Chimera so the files can be visualized.
         """
         errors = []
-        if (which(viewers.viewer_chimera.Chimera.getProgram()) is None):
+        if (which(Chimera.getProgram()) is None):
             errors.append("Chimera is not available. Please install it to visualize.")
         return errors
     
@@ -77,7 +78,7 @@ class Emap2secViewer(pwviewer.Viewer):
         # Adding axis to file if requested
         if axis:
             builFileName = os.path.abspath(self.protocol._getExtraPath("axis.bild"))
-            viewers.viewer_chimera.Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
+            Chimera.createCoordinateAxisFile(self.protocol.inputVolume.get().getDim()[0],
                 bildFileName=os.path.abspath(self.protocol._getExtraPath("axis.bild")),
                 sampling=self.protocol.inputVolume.get().getSamplingRate())
             f.write(f'{openCommandPrefix} {builFileName}\n')
