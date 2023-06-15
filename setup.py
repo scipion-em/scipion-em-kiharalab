@@ -29,13 +29,34 @@ setup(
     description='Scipion plugin in order to use ther kiharalab software',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-kiharalab',  # Optional
-    author='Daniel Del Hoyo',  # Optional
-    author_email='ddelhoyo@cnb.csic.es',  # Optional
+    author='Daniel Del Hoyo, Martín Salinas',  # Optional
+    author_email='ddelhoyo@cnb.csic.es, martin.salinas@cnb.csic.es',  # Optional
     keywords='scipion kiharalab scipion-3.0 EM',  # Optional
+    classifiers=[  # Optional
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 4 - Beta',
+
+        # Indicate who your project is intended for
+        #   'Intended Audience :: Users',
+
+        # Pick your license as you wish
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 3'
+    ],
     packages=find_packages(),
     install_requires=[requirements],
     entry_points={'pyworkflow.plugin': 'kiharalab = kiharalab'},
     package_data={  # Optional
        'kiharalab': [_logo, 'protocols.conf'],
+    },
+    project_urls={  # Optional
+        'Bug Reports': 'https://github.com/scipion-em/scipion-em-kiharalab/issues',
+        'Pull Requests': 'https://github.com/scipion-em/scipion-em-kiharalab/pulls',
     }
 )
