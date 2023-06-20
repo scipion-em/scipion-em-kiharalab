@@ -76,7 +76,7 @@ As of today, Scipion does not automatically uninstall the conda enviroments crea
 ========================================
 External software
 ========================================
-scipion-chem-retrosynthesis integrates the following software:
+This plugin integrates the following software:
   
 .. _daq: https://github.com/kiharalab/DAQ
 .. |daq| replace:: **DAQ model validation**
