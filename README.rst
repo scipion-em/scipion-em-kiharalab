@@ -48,9 +48,9 @@ Protocols
 ========================================
 scipion-em-kiharalab contains the following protocols:
 
-- **DAQ model validation**: Executes the DAQ software to validate a structure model
-- **Emap2sec**: Identifies protein secondary structures
-- **segment map**: performs the segmentation of maps into different regions by using mainmast software
+- **DAQ model validation**: Executes the DAQ software to validate a structure model.
+- **Emap2sec**: Identifies protein secondary structures.
+- **Segment map**: Performs the segmentation of maps into different regions by symmetry using MainMast software.
 
 ========================================
 Packages & enviroments
@@ -72,6 +72,25 @@ Also, the following conda enviroments will be created:
 - emap2secPlus-``version``
 
 As of today, Scipion does not automatically uninstall the conda enviroments created in the installation process when uninstalling a plugin, so keep this list in mind if you want to clean up some disk space if you need to uninstall this one.
+
+========================================
+External software
+========================================
+scipion-chem-retrosynthesis integrates the following software:
+  
+.. _daq: https://github.com/kiharalab/DAQ
+.. |daq| replace:: **DAQ model validation**
+.. _emap2sec: https://github.com/kiharalab/Emap2sec
+.. |emap2sec| replace:: **Emap2sec** 
+.. _emap2secPlus: https://github.com/kiharalab/Emap2secPlus
+.. |emap2secPlus| replace:: **Emap2sec+** 
+.. _mainMast: https://github.com/kiharalab/MAINMASTseg
+.. |mainMast| replace:: **MainMast** 
+
+- |daq|_: Residue-Wise Local Quality Estimation for Protein Models from Cryo-EM Maps.
+- |emap2sec|_: Identifies protein secondary structures.
+- |emap2secPlus|_: Detects Protein and DNA/RNA Structures in Cryo-EM Maps of Intermediate Resolution Using Deep Learning.
+- |mainMast|_: Automated Segmentation Program for EM map with symmetry.
 
 ========================================
 Changelog
