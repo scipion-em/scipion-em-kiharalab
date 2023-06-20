@@ -1,3 +1,6 @@
+.. |organization| replace:: scipion-em
+.. |repository| replace:: scipion-em-kiharalab
+
 ========================================
 Kihara Lab plugin
 ========================================
@@ -24,24 +27,24 @@ DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 
     or
 
-.. code-block::
+.. parsed-literal::
 
-    scipion3 installp -p scipion-em-kiharalab
+    scipion3 installp -p \ |repository|\ 
 
 
 - **Developer's version**
 
     1. Download repository:
 
-    .. code-block::
+    .. parsed-literal::
 
-        git clone https://github.com/scipion-em/scipion-em-kiharalab.git
+        git clone \https://github.com/\ |organization|\ /\ |repository|\ .git
 
     2. Install:
 
-    .. code-block::
+    .. parsed-literal::
 
-        scipion3 installp -p path_to_scipion-em-kiharalab --devel
+        scipion3 installp -p /path/to/\ |repository|\  --devel
 
 ========================================
 Protocols
