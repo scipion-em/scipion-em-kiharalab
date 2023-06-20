@@ -46,7 +46,7 @@ DAQ, Emap2sec, Emap2sec+, and MainMast are installed automatically by scipion.
 ========================================
 Protocols
 ========================================
-scipion-em-kiharalab contains the following protocols:
+This plugin contains the following protocols:
 
 - **DAQ model validation**: Executes the DAQ software to validate a structure model.
 - **Emap2sec**: Identifies protein secondary structures.
