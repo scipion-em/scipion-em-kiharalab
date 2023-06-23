@@ -50,7 +50,8 @@ class ProtEmap2sec(EMProtocol):
     ("Identifies protein secondary structures, in maps of medium to low resolution.\nEmap2sec+ also covers DNA/RNA.\n\n"
     "Original software can be found in https://github.com/kiharalab/Emap2sec and https://github.com/kiharalab/Emap2secPlus\n")
     _label = 'Emap2sec'
-    _possibleOutputs = {'outputAtomStruct': AtomStruct}
+    _OUTNAME = 'outputAtomStruct'
+    _possibleOutputs = {_OUTNAME: AtomStruct}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -195,7 +196,7 @@ class ProtEmap2sec(EMProtocol):
         outputAtomStruct.setVolume(self.inputVolume.get())
 
         # Defining protocol output
-        self._defineOutputs(outputAtomStruct=outputAtomStruct)
+        self._defineOutputs(**{self._OUTNAME: outputAtomStruct})
     
     # --------------------------- EXECUTION functions -----------------------------------
     # ---------------------------------- Emap2sec ----------------------------------
