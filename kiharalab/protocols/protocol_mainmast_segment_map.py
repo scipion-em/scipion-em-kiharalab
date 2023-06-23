@@ -51,7 +51,9 @@ class ProtMainMastSegmentMap(EMProtocol):
     For more information, follow the next link:
     http://kiharalab.org/mainmast_seg/index.html"""
     _label = 'segment map'
-    _possibleOutputs = {'outputMask': Volume, 'outputMasks': SetOfVolumes}
+    _OUTMASKNAME = 'outputMask'
+    _OUTMASKSNAME = 'outputMasks'
+    _possibleOutputs = {_OUTMASKNAME: Volume, _OUTMASKSNAME: SetOfVolumes}
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -149,7 +151,7 @@ class ProtMainMastSegmentMap(EMProtocol):
             volume.setLocation(self._getExtraPath('outMask.mrc'))
 
             # Defining protocol output and source relation
-            self._defineOutputs(outputMask=volume)
+            self._defineOutputs(**{self._OUTMASKNAME: volume})
             self._defineSourceRelation(self.inputVolume, volume)
         else:
             # If combine is not selected, return object is of type SetOfVolumes
@@ -165,7 +167,7 @@ class ProtMainMastSegmentMap(EMProtocol):
                 outSet.append(volume)
             
             # Defining protocol output and source relation
-            self._defineOutputs(outputMasks=outSet)
+            self._defineOutputs(**{self._OUTMASKSNAME: outSet})
             self._defineSourceRelation(self.inputVolume, outSet)
         
         # If clean is selected, clean temporary files
