@@ -25,8 +25,8 @@
 # *
 # **************************************************************************
 import pwem, os
+from scipion.install.funcs import InstallHelper
 from .constants import *
-from .install_helper import InstallHelper
 
 __version__ = KIHARALAB_VERSION
 _logo = "kiharalab_logo.png"
@@ -101,7 +101,7 @@ class Plugin(pwem.Plugin):
 
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
-            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqBinary)\
+            .getCondaEnvCommand(pythonVersion='3.8.5', binaryPath=cls._daqBinary, requirementsFile=True)\
             .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
@@ -155,8 +155,8 @@ class Plugin(pwem.Plugin):
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
             .getCloneCommand('https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
-            .getCondaEnvCommand(binaryPath=cls._emap2secBinary, pythonVersion='3.6')\
-            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secBinary, pythonVersion='3.6', requirementsFile=True)\
+            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9', requirementsFile=True)\
             .addCondaPackages(packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
             .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secBinary)\
             .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
