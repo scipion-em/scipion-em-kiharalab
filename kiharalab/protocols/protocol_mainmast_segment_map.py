@@ -39,8 +39,7 @@ from kiharalab import Plugin as Mainmast
 try:
     from phenix import Plugin as Phenix
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Plugin scipion-em-phenix is not installed!\n"
-                              "You can find it at https://github.com/scipion-em/scipion-em-phenix")
+    pass
 
 # Constants
 REGIONS_PATTERN = "region*.mrc"
@@ -293,5 +292,11 @@ class ProtMainMastSegmentMap(EMProtocol):
             else:
                 if int(symmetry[1:]) < 2:
                     errors.append('Error: Symmetry needs to be C2 or above.')
+        
+        # Check if Phenix plugin is installed
+        try:
+            import phenix
+        except ModuleNotFoundError:
+            errors.append("Plugin scipion-em-phenix is not installed!\nYou can find it at https://github.com/scipion-em/scipion-em-phenix")
 
         return errors
