@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors:		Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # *
 # * [1] Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,9 +24,11 @@
 # *
 # **************************************************************************
 
+# Scipion em imports
 from pwem.wizards import ColorScaleWizardBase
+
+# Plugin imports
 from .viewers import DAQViewer
 
-
 class ColorScaleWizardDAQ(ColorScaleWizardBase):
-    _targets = ColorScaleWizardBase.defineTargets(DAQViewer)
+	_targets = ColorScaleWizardBase.defineTargets(DAQViewer)

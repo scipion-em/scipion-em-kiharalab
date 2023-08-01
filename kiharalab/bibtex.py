@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors:     you (you@yourinstitution.email)
+# * Authors:		Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # *
 # * your institution
 # *
@@ -37,9 +36,9 @@
 """
 @article{wang2021emap2secplus,   
   title={Detecting Protein and DNA/RNA Structures in Cryo-EM Maps of Intermediate Resolution Using Deep Learning},   
-  author={Xiao Wang, Eman Alnabati, Tunde W Aderinwale, Sai Raghavendra Maddhuri Venkata Subramaniya, Genki Terashi, and Daisuke Kihara},    
-  journal={Nature Communications},    
-  year={2021}    
+  author={Xiao Wang, Eman Alnabati, Tunde W Aderinwale, Sai Raghavendra Maddhuri Venkata Subramaniya, Genki Terashi, and Daisuke Kihara},
+  journal={Nature Communications},
+  year={2021}
 }   
 """
 
