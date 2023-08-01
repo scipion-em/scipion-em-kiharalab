@@ -111,7 +111,7 @@ class ProtMainMastSegmentMap(EMProtocol):
 
 		# Generating args and running MainMast
 		args = '-i %s -Y %s -c %d -t %f -M -W > contour.cif' % (pathMap, pathMatrix, self.numberOfThreads.get(),
-																														self.threshold.get())
+			self.threshold.get())
 		self.runSegmentation(args, cwd=self._getExtraPath())
 
 	def createOutputStep(self):
@@ -244,17 +244,14 @@ class ProtMainMastSegmentMap(EMProtocol):
 		"""
 		This method returns a summary of the text provided by '_methods'.
 		"""
-		summary = []
-		summary.append("Input Volume provided: %s\n"
-										% self.inputVolume.get().getFileName())
+		summary = ["Input Volume provided: %s\n" % self.inputVolume.get().getFileName()]
 		if self.getOutputsSize() >= 1:
 			regions = len(glob.glob(self._getExtraPath(REGIONS_PATTERN)))
 			if hasattr(self, 'outputMasks'):
 				msg = ("A total of %d regions have been segmented" % regions)
 				summary.append(msg)
 			if hasattr(self, 'outputMask'):
-				msg = ("Output regions combined to an indentifier mask with %d different "
-								"regions" % regions)
+				msg = ("Output regions combined to an indentifier mask with %d different regions" % regions)
 				summary.append(msg)
 		else:
 			summary.append("Segmentation not ready yet.")
@@ -264,11 +261,12 @@ class ProtMainMastSegmentMap(EMProtocol):
 		"""
 		This method returns a text intended to be copied and pasted in the paper section 'materials & methods'.
 		"""
-		methodsMsgs = []
-		methodsMsgs.append('*Input volume:* %s' % self.inputVolume.get().getFileName())
-		methodsMsgs.append('*Map symmetry:* %s' % self.sym.get())
-		methodsMsgs.append('*Map threshold:* %d' % self.threshold.get())
-		methodsMsgs.append('*Regions combined:* %r' % self.combine.get())
+		methodsMsgs = [
+			'*Input volume:* %s' % self.inputVolume.get().getFileName(),
+			'*Map symmetry:* %s' % self.sym.get(),
+			'*Map threshold:* %d' % self.threshold.get(),
+			'*Regions combined:* %r' % self.combine.get()
+		]
 		if self.getOutputsSize() >= 1:
 			regions = len(glob.glob(self._getExtraPath(REGIONS_PATTERN)))
 			msg = ("*Regions segmented:* %d" % regions)
