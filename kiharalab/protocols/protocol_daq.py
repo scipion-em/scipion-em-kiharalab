@@ -103,8 +103,6 @@ class ProtDAQValidation(EMProtocol):
 	def convertInputStep(self):
 		ext = os.path.splitext(self.getStructFile())[1]
 		pdbFile = self.getPdbStruct()
-		print("EXT:", ext)
-		print("PDBFILE:", pdbFile)
 		if ext not in ['.pdb', '.ent']:
 			toPdb(self.getStructFile(), pdbFile)
 		else:
@@ -226,7 +224,7 @@ class ProtDAQValidation(EMProtocol):
 		return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
 	def getPdbStruct(self):
-		return self._getTmpPath(self.getStructName()) + '.cif'
+		return self._getTmpPath(self.getStructName()) + '.pdb'
 
 	def getLocalVolumeFile(self):
 		oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
