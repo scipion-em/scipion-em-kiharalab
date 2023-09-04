@@ -65,16 +65,17 @@ class ProtEmap2sec(EMProtocol):
 										'Emap2sec+ can only be run on GPU, while Emap2sec runs on CPU.')
 		form.addParam('inputVolume', params.PointerParam, pointerClass='Volume', allowsNull=False,
 										label="Input volume: ", help='Select the electron map to be processed.')
+		form.addParam('contour', params.FloatParam, label='Contour: ', help='The level of isosurface to generate density values for.\n'
+										'When using Emap2sec as Execution type, you can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.\n'
+										'When using Emap2sec+, you can use the author recommended contour level, which will be used by a specific model,'
+										' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
 		form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
 										help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 
 		# Execution type variable
 		executionType = 'executionType=='
 		# -------------------------------------- Emap2sec params --------------------------------------
-		trimmapGroup = form.addGroup('Trimmap generation', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}')
-		trimmapGroup.addParam('emap2secContour', params.FloatParam, label='Contour: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}',
-										help='The level of isosurface to generate density values for.\n'
-												'You can use a value of 0.0 for simulated maps and the author recommended contour level for experimental EM maps.')
+		trimmapGroup = form.addGroup('Trimmap generation', expertLevel=params.LEVEL_ADVANCED, condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SEC}')
 		trimmapGroup.addParam('sstep', params.IntParam, default='4', label='Stride size: ', expertLevel=params.LEVEL_ADVANCED,
 										help='This option sets the stride size of the sliding cube used for input data generation.\n'
 												'We recommend using a value of 4 that slides the cube by 4Å in each direction.\n'
@@ -114,10 +115,6 @@ class ProtEmap2sec(EMProtocol):
 										help='Set this option to define the type of input map.')
 		form.addParam('gpuId', params.IntParam, default='0', label='GPU id: ', condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}',
 										help='Select the GPU id where the process will run on.')
-		form.addParam('emap2secplusContour', params.FloatParam, default='0.0', label='Contour: ',
-										condition=f'{executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS}', help='Contour level for real map.\n'
-												'You can use the author recommended contour level, which will be used by a specific model,'
-												' or 0.0 to indicate that no contour is defined, which will use a general purpose model.')
 		form.addParam('inputStruct', params.PointerParam,
 										condition=f'({executionType}{EMAP2SEC_TYPE_EMAP2SECPLUS} and mode=={EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS})',
 										pointerClass='AtomStruct', allowsNull=False, label="Input atom struct: ", help='Select the atom struct to evaluate the model with.')
@@ -446,7 +443,7 @@ class ProtEmap2sec(EMProtocol):
 		inputfFile = self.getConvertedVolumeAbsolutePath()
 		return '{} -c {} -sstep {} -vw {} {} > data/{}trimmap'\
 		.format(inputfFile,
-			self.emap2secContour.get(),
+			self.contour.get(),
 			self.sstep.get(),
 			self.vw.get(),
 			'-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm',
@@ -547,7 +544,7 @@ class ProtEmap2sec(EMProtocol):
 
 		# Initial param string
 		param = '-F={} --mode={} --type={} --contour={} --gpu={} --no_compilation --output_folder={}{}'\
-			.format(self.getConvertedVolumeAbsolutePath(), executionMode, self.mapType.get(), self.emap2secplusContour.get(),
+			.format(self.getConvertedVolumeAbsolutePath(), executionMode, self.mapType.get(), self.contour.get(),
 				self.gpuId.get(), self.getOutputPath(), self.getCustomModel())
 
 		# If mode is not Detect DNA/RNA & protein, add class
