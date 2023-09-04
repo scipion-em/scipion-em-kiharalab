@@ -32,6 +32,7 @@ import numpy as np
 # Base Scipion imports
 from pwem.protocols import EMProtocol
 from pyworkflow.protocol import params
+from pyworkflow.utils import Message
 from pwem.emlib.image import ImageHandler
 from pwem.objects import Volume, SetOfVolumes
 
@@ -57,7 +58,7 @@ class ProtMainMastSegmentMap(EMProtocol):
 
 	# -------------------------- DEFINE param functions ----------------------
 	def _defineParams(self, form):
-		form.addSection(label='Input data')
+		form.addSection(label=Message.LABEL_INPUT)
 		form.addParam('inputVolume', params.PointerParam, pointerClass='Volume', label='Input volume', important=True,
 										help='Select a Volume to be segmented.')
 		form.addParam('sym', params.StringParam, label='Map symmetry',
