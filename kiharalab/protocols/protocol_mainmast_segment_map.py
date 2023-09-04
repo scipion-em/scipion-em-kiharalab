@@ -32,6 +32,7 @@ import numpy as np
 # Base Scipion imports
 from pwem.protocols import EMProtocol
 from pyworkflow.protocol import params
+from pyworkflow.utils import Message
 from pwem.emlib.image import ImageHandler
 from pwem.objects import Volume, SetOfVolumes
 
@@ -54,7 +55,7 @@ class ProtMainMastSegmentMap(EMProtocol):
 
 	# -------------------------- DEFINE param functions ----------------------
 	def _defineParams(self, form):
-		form.addSection(label='Input data')
+		form.addSection(label=Message.LABEL_INPUT)
 		form.addParam('inputVolume', params.PointerParam, pointerClass='Volume', label='Input volume', important=True,
 										help='Select a Volume to be segmented.')
 		form.addParam('sym', params.StringParam, label='Map symmetry',
@@ -63,9 +64,9 @@ class ProtMainMastSegmentMap(EMProtocol):
 		form.addParam('threshold', params.FloatParam, default=0.0, label='Threshold',
 										help='Threshold of density map.')
 		form.addParam('combine', params.BooleanParam, default=False, label='Combine masks',
-										help='If selected, all the segmented regions detected will be combine into a '
-												'single identifier mask.\nThis means that, if combine is selected, output object'
-												'will be Volume type, or SetOfvolumes otherwise.')
+										help='If selected, all the segmented regions detected will be combined into a '
+												'single identifier mask.\nThis means that, if combine option is selected, output object'
+												'will be type Volume, SetOfVolumes otherwise.')
 		form.addParam('cleanTmps', params.BooleanParam, default='True', label='Clean temporary files: ', expertLevel=params.LEVEL_ADVANCED,
 										help='Clean temporary files after finishing the execution.\nThis is useful to reduce unnecessary disk usage.')
 		form.addParallelSection(threads=4, mpi=0)
