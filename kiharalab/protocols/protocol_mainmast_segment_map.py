@@ -38,10 +38,7 @@ from pwem.objects import Volume, SetOfVolumes
 
 # Plugin imports
 from kiharalab import Plugin as Mainmast
-try:
-	from phenix import Plugin as Phenix
-except ModuleNotFoundError:
-	pass
+from phenix import Plugin as Phenix
 
 # Constants
 REGIONS_PATTERN = "region*.mrc"
