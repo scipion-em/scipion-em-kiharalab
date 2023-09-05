@@ -31,7 +31,7 @@ from pwem.protocols import ProtImportVolumes
 # Plugin imports
 from ..protocols import ProtMainMastSegmentMap
 
-class TestMainMast(BaseTest):
+class TestMainMastSeg(BaseTest):
 	@classmethod
 	def setUpClass(cls):
 		setupTestProject(cls)
