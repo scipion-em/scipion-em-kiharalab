@@ -41,8 +41,10 @@ jobs:
         python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
     
     - name: Install scipion-em-phenix
-      working-directory: ${{ github.workspace }}
-      run: ../scipion/scipion3 installp -p scipion-em-phenix
+      working-directory: ${{ github.workspace }}/../
+      run: |
+        git clone https://github.com/scipion-em/scipion-em-phenix
+        scipion/scipion3 installp -p scipion-em-phenix
     
     # Check out the repository in the pull request
     - name: Checkout repository
