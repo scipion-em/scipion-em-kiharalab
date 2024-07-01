@@ -32,6 +32,13 @@ jobs:
         source miniconda/etc/profile.d/conda.sh
         conda update -n base -c defaults conda -y
     
+      #uses: conda-incubator/setup-miniconda@v3.0.4
+      #with:
+      #  channels: conda-forge
+      #  channel-priority: strict
+      #  auto_update_conda: True
+      #  python-version: ["3.8"]
+    
     # Installing Scipion
     - name: Install Scipion
       working-directory: ${{ github.workspace }}/../
