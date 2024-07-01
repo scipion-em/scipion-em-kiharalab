@@ -50,9 +50,9 @@ jobs:
       env:
         FOLDER_WITH_VERSION: ${{ vars.FOLDER_WITH_VERSION }}
       run: |
-        TAG_NAME=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
-        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "RELEASE_NAME=${TAG_NAME#v}" >> $GITHUB_OUTPUT
+        VERSION=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
+        echo "RELEASE_NAME=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG_NAME=${VERSION#v}" >> $GITHUB_OUTPUT
     
     - name: Generate tag
       id: tag_version
