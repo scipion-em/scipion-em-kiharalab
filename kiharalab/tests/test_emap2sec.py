@@ -100,7 +100,7 @@ class TestEmap2sec(BaseTest):
 			ProtEmap2sec,
 			executionType=EMAP2SEC_TYPE_EMAP2SEC,
 			inputVolume=self.protImportVolumePredict.outputVolume,
-			emap2secContour=5.4)
+			contour=5.4)
 		self.launchProtocol(protEmap2sec)
 
 		# Checking function output
@@ -116,7 +116,7 @@ class TestEmap2sec(BaseTest):
 			inputVolume=self.protImportVolumePredict.outputVolume if predictMode else self.protImportVolumeEvaluate.outputVolume,
 			mode=EMAP2SECPLUS_MODE_DETECT_STRUCTS if predictMode else EMAP2SECPLUS_MODE_DETECT_EVALUATE_STRUCTS,
 			inputStruct=None if predictMode else self.protImportPDB.outputPdb,
-			emap2secplusContour=5.4 if predictMode else 2.5)
+			contour=5.4 if predictMode else 2.5)
 		self.launchProtocol(protEmap2sec)
 
 		# Checking function output
