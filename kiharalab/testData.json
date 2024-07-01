@@ -3,6 +3,15 @@
     "skippable": {
         "gpu": [
             "test_emap2sec.TestEmap2sec"
-        ]
+        ],
+        "dependencies": [
+			{
+				"name": "scipion-chem-phenix",
+				"module": "phenix",
+				"tests": [
+					"test_mainmastseg.TestMainMastSeg"
+				]
+			}
+		]
     }
 }
