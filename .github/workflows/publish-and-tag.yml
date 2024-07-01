@@ -63,4 +63,3 @@ jobs:
       with:
         tag: ${{ steps.tag_version.outputs.new_tag }}
         name: ${{ steps.variables.outputs.TAG_NAME }}
-        bodyFile: latest_changelog.md
