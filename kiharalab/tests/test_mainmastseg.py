@@ -30,6 +30,7 @@ from pwem.protocols import ProtImportVolumes
 
 # Plugin imports
 from ..protocols import ProtMainMastSegmentMap
+from ..utils import assertHandle
 
 class TestMainMastSeg(BaseTest):
 	@classmethod
@@ -68,10 +69,10 @@ class TestMainMastSeg(BaseTest):
 
 		# Checking function output
 		volumesOut = getattr(protMainMast, outputVariable, None)
-		self.assertIsNotNone(volumesOut, "No output volume has been found.")
+		assertHandle(self.assertIsNotNone, volumesOut, message="No output volume has been found.")
 		if not mergeMasks:
 			for volumeOut in volumesOut:
-				self.assertIsNotNone(volumeOut, "At least one of masks has not been found.")
+				assertHandle(self.assertIsNotNone, volumeOut, message="At least one of masks has not been found.")
 
 	def testMainMast1(self):
 		"""First test. Runs MainMast without merging output masks."""
