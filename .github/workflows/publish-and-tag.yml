@@ -45,11 +45,22 @@ jobs:
         python setup.py sdist bdist_wheel
         twine upload dist/* -c "{{ secrets.PYPI_COMMENT }}"
     
-    # Get package version and tag
-    - name: Get version and tag
-      env:
-        FOLDER_WITH_VERSION: ${{ vars.FOLDER_WITH_VERSION }}
+    - name: Get tag name
+      id: variables
       run: |
-        export PACKAGE_VERSION=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
-        git tag $PACKAGE_VERSION
-        git push origin $PACKAGE_VERSION
+        TAG_NAME=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+    
+    - name: Generate tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: ${{ steps.variables.outputs.TAG_NAME }}
+    
+    - name: Create a GitHub release
+      uses: ncipollo/release-action@main
+      with:
+        tag: ${{ steps.tag_version.outputs.new_tag }}
+        name: ${{ steps.variables.outputs.TAG_NAME }}
+        bodyFile: latest_changelog.md
