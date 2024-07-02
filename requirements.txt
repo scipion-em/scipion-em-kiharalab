@@ -1,1 +1,1 @@
-scipion-em-phenix
+scipion-em-phenix>=3.2.1

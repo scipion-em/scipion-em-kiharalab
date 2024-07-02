@@ -36,7 +36,7 @@ MAINMAST_HOME = 'MAINMAST_HOME'
 V1_0 = '1.0'
 
 # Plugin version
-KIHARALAB_VERSION = '1.0.6'
+KIHARALAB_VERSION = '1.0.7'
 
 # Protocol versions 
 DAQ_DEFAULT_VERSION = V1_0
