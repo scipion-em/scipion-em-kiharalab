@@ -15,14 +15,6 @@ jobs:
         
     - name: Checkout repository
       uses: actions/checkout@main
-    
-    - name: Set up MPI
-      uses: mpi4py/setup-mpi@master
-    
-    - name: Set up Python
-      uses: actions/setup-python@main
-      with:
-        python-version: '3.10'
 
     - name: Install Miniconda
       working-directory: ${{ github.workspace }}/../
@@ -50,6 +42,8 @@ jobs:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
+        eval "$(../miniconda/bin/conda shell.bash hook)"
+        conda activate scipion3
         python setup.py sdist bdist_wheel
         twine upload dist/* -c "{{ secrets.PYPI_COMMENT }}"
     
@@ -58,7 +52,8 @@ jobs:
       env:
         FOLDER_WITH_VERSION: ${{ vars.FOLDER_WITH_VERSION }}
       run: |
-        eval "$(miniconda/bin/conda shell.bash hook)"
+        eval "$(../miniconda/bin/conda shell.bash hook)"
+        conda activate scipion3
         VERSION=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
         echo "RELEASE_NAME=$VERSION" >> $GITHUB_OUTPUT
         echo "TAG_NAME=${VERSION#v}" >> $GITHUB_OUTPUT
