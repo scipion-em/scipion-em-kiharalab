@@ -1,2 +1,1 @@
-scipion-app>=3
 scipion-em-phenix
