@@ -30,6 +30,7 @@ from pwem.protocols import ProtImportPdb, ProtImportVolumes
 
 # Plugin imports
 from ..protocols import ProtDAQValidation
+from ..utils import assertHandle
 
 class TestDAQ(BaseTest):
 	@classmethod
@@ -71,8 +72,7 @@ class TestDAQ(BaseTest):
 			stride=2)
 
 		self.launchProtocol(protDAQ)
-		pdbOut = getattr(protDAQ, 'outputAtomStruct', None)
-		self.assertIsNotNone(pdbOut)
+		assertHandle(self.assertIsNotNone, getattr(protDAQ, 'outputAtomStruct', None))
 
 	def testDAQ(self):
 		self._runDAQ()

@@ -1,0 +1,27 @@
+{
+    "datasets": ["model_building_tutorial"],
+    "skippable": {
+        "gpu": [
+            "test_emap2sec.TestEmap2sec"
+        ],
+        "dependencies": [
+			{
+				"name": "scipion-chem-phenix",
+				"module": "phenix",
+				"tests": [
+					"test_mainmastseg.TestMainMastSeg"
+				]
+			}
+		],
+        "others": [
+            {
+                "test": "test_daq.TestDAQ",
+                "reason": "It fails with error 'AttributeError: Image object has no attribute write'. Needs to be investigated."
+            },
+            {
+                "test": "test_mainmastseg.TestMainMastSeg",
+                "reason": "It fails with error '/bin/sh: 1: phenix.python: not found'. Needs to be investigated."
+            }
+        ]
+    }
+}
