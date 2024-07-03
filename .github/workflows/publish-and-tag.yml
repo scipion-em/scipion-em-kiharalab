@@ -1,4 +1,4 @@
-name: master to pypi with comments and tag
+name: Generate release (Pypi, tag, & GitHub Release)
 on:
   push:
     branches: [ master ]
