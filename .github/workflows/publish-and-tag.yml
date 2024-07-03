@@ -3,6 +3,10 @@ on:
   push:
     branches: [ master ]
 
+defaults:
+  run:
+    shell: bash -el {0}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
