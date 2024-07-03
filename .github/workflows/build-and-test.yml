@@ -19,8 +19,6 @@ jobs:
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@main
       with:
-        channels: conda-forge
-        channel-priority: strict
         miniconda-version: "latest"
         auto-update-conda: true
         auto-activate-base: true
