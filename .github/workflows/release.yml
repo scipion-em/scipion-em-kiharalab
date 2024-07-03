@@ -1,0 +1,73 @@
+name: Generate release (Pypi, tag, & GitHub Release)
+on:
+  push:
+    branches: [ master ]
+
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gcc-10 g++-10 libopenmpi-dev make
+        
+    - name: Checkout repository
+      uses: actions/checkout@main
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@main
+      with:
+        channels: conda-forge
+        channel-priority: strict
+        miniconda-version: "latest"
+        auto-update-conda: true
+        auto-activate-base: true
+        activate-environment: scipion3
+        python-version: "3.12"
+    
+    - name: Install Scipion
+      working-directory: ${{ github.workspace }}/../
+      run: |
+        pip3 install --user scipion-installer
+        python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
+
+    - name: Install Python dependencies
+      run: |
+        pip install setuptools wheel twine Pillow
+        pip install -r requirements.txt
+    
+    - name: Get tag name
+      id: variables
+      env:
+        FOLDER_WITH_VERSION: ${{ vars.FOLDER_WITH_VERSION }}
+      run: |
+        VERSION=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g") || (echo "Could not import version, check that variables are correctly set!" && exit 1)
+        echo "TAG_NAME=${VERSION#v}" >> $GITHUB_OUTPUT
+        echo "TAG NAME (must not contain version prefix): ${VERSION#v}"
+    
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/* -c "{{ secrets.PYPI_COMMENT }}"
+    
+    - name: Generate tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: ${{ steps.variables.outputs.TAG_NAME }}
+    
+    - name: Create a GitHub release
+      uses: ncipollo/release-action@main
+      with:
+        tag: ${{ steps.tag_version.outputs.new_tag }}
+        name: ${{ steps.variables.outputs.TAG_NAME }}
