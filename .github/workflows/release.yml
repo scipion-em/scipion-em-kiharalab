@@ -3,41 +3,23 @@ on:
   push:
     branches: [ master ]
 
-defaults:
-  run:
-    shell: bash -el {0}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget gcc-10 g++-10 libopenmpi-dev make
-        
     - name: Checkout repository
       uses: actions/checkout@main
 
-    - name: Install Miniconda
-      uses: conda-incubator/setup-miniconda@main
+    - name: Set up Python
+      uses: actions/setup-python@main
       with:
-        miniconda-version: "latest"
-        auto-update-conda: true
-        auto-activate-base: true
-        activate-environment: scipion3
-        python-version: "3.12"
-    
-    - name: Install Scipion
-      working-directory: ${{ github.workspace }}/../
-      run: |
-        pip3 install --user scipion-installer
-        python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
+        python-version: '3.8'
 
     - name: Install Python dependencies
       run: |
-        pip install setuptools wheel twine Pillow
+        pip install --upgrade pip
+        pip install setuptools wheel twine scipion-app scipion-pyworkflow scipion-em
         pip install -r requirements.txt
     
     - name: Get tag name
