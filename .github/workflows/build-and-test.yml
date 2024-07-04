@@ -28,7 +28,8 @@ jobs:
     - name: Install Scipion
       working-directory: ${{ github.workspace }}/../
       run: |
-        pip3 install --user scipion-installer
+        pip cache purge
+        pip install --user scipion-installer
         python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
     
     - name: Checkout repository
