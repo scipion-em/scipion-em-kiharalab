@@ -1,1 +1,3 @@
-scipion-em-phenix>=3.2.1
+scipion-em-phenix
+scipion-app
+scipion-em

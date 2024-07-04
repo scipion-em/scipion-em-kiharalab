@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 import pwem, os
+from scipion.install.funcs import InstallHelper
 from .constants import *
 
 __version__ = KIHARALAB_VERSION
@@ -92,7 +93,6 @@ class Plugin(pwem.Plugin):
         """
         This function provides the neccessary commands for installing DAQ.
         """
-        from scipion.install.funcs import InstallHelper
         # Defining protocol variables
         packageName = 'daq'
 
@@ -109,7 +109,6 @@ class Plugin(pwem.Plugin):
         """
         This function provides the neccessary commands for installing Emap2sec.
         """
-        from scipion.install.funcs import InstallHelper
         # Defining protocol variables
         packageName = 'emap2sec'
         emap2secFolderName = 'Emap2sec'
@@ -170,7 +169,6 @@ class Plugin(pwem.Plugin):
         """
         This function provides the neccessary commands for installing MainMast.
         """
-        from scipion.install.funcs import InstallHelper
         # Defining protocol variables
         packageName = 'mainMast'
 

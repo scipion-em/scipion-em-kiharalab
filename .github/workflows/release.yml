@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install setuptools wheel twine scipion-app scipion-pyworkflow scipion-em
+        pip install setuptools wheel twine
         pip install -r requirements.txt
     
     - name: Get tag name
