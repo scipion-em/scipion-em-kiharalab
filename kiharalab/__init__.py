@@ -66,9 +66,9 @@ class Plugin(pwem.Plugin):
     _DMMBinary = os.path.join(_DMMHome, 'DMM')
 
     # CryoREAD
-    cryoreadDefaultVersion = CRYOREAD_DEFAULT_VERSION
-    _cryoreadHome = os.path.join(pwem.Config.EM_ROOT, 'CryoREAD-' + cryoreadDefaultVersion)
-    _cryoreadBinary = os.path.join(_cryoreadHome, 'CryoREAD')
+    cryoREADDefaultVersion = CRYOREAD_DEFAULT_VERSION
+    _cryoREADHome = os.path.join(pwem.Config.EM_ROOT, 'CryoREAD-' + cryoREADDefaultVersion)
+    _cryoREADBinary = os.path.join(_cryoREADHome, 'CryoREAD')
 
     @classmethod
     def _defineVariables(cls):
@@ -96,8 +96,8 @@ class Plugin(pwem.Plugin):
         cls._defineVar('DMM_ENV', 'DMM-' + cls.DMMDefaultVersion)
 
         # CryoREAD
-        cls._defineEmVar(CRYOREAD_HOME, cls._cryoreadHome)
-        cls._defineVar('CRYOREAD_ENV', 'CryoREAD-' + cls.cryoreadDefaultVersion)
+        cls._defineEmVar(CRYOREAD_HOME, cls._cryoREADHome)
+        cls._defineVar('CRYOREAD_ENV', 'CryoREAD-' + cls.cryoREADDefaultVersion)
 
     @classmethod
     def defineBinaries(cls, env):
@@ -223,15 +223,15 @@ class Plugin(pwem.Plugin):
         packageName = 'CryoREAD'
 
         # Instantiating installer
-        installer = InstallHelper(packageName, packageVersion=cls.cryoreadDefaultVersion)
+        installer = InstallHelper(packageName, packageVersion=cls.cryoREADDefaultVersion)
 
         # Installing protocol
         currentPath = os.path.dirname(os.path.abspath(__file__))
         enFilePath = os.path.join(currentPath, "environment.yml")
         targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
-        envName = f"{packageName}-{cls.cryoreadDefaultVersion}"
+        envName = f"{packageName}-{cls.cryoREADDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/CryoREAD.git', binaryFolderName=packageName) \
-            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._cryoreadBinary, targetName=targetFile)\
+            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._cryoREADBinary, targetName=targetFile)\
             .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
