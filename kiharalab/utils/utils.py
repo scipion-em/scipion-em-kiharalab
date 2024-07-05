@@ -1,3 +1,5 @@
+import os, subprocess
+
 def assertHandle(func, *args, cwd='', message=''):
   """
   ### This function runs the given assertion and handles the potential error, showing the protocol's error trace instead of a generic assertion.
