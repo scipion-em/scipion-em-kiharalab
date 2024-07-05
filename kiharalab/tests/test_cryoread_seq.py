@@ -1,8 +1,9 @@
-# Scipion em imports
+import os
+
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes
 
-# Plugin imports
+from .. import Plugin
 from ..protocols import ProtCryoREAD
 
 class TestCryoREADSeq(BaseTest):
@@ -16,7 +17,7 @@ class TestCryoREADSeq(BaseTest):
     @classmethod
     def _runImportVolume(cls):
         args = {
-            'filesPath': cls.ds.getFile('volumes/21051.mrc'),
+            'filesPath': os.path.join(Plugin._cryoreadBinary, 'example', '21051.mrc'),
             'samplingRate': 1.05,
             'setOrigCoord': True,
             'x': 0.0,
@@ -32,7 +33,7 @@ class TestCryoREADSeq(BaseTest):
         protCryoREAD = self.newProtocol(
             ProtCryoREAD,
             inputVolume=self.protImportVolume.outputVolume,
-            inputSequence=self.ds.getFile('Sequences/21051.fasta'),
+            inputSequence=os.path.join(Plugin._cryoreadBinary, 'example', '21051.fasta'),
             contour_level=0.6,
             resolution=3.7,
             batch_size=4,
