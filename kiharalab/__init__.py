@@ -229,7 +229,7 @@ class Plugin(pwem.Plugin):
         targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
         envName = f"{packageName}-{cls.cryoreadDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/CryoREAD.git', binaryFolderName=packageName) \
-            .addCommand(f"conda create -y -n {envName} -f {enFilePath}", workDir=cls._cryoreadBinary, targetName=targetFile)\
+            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._cryoreadBinary, targetName=targetFile)\
             .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     @classmethod    
@@ -249,7 +249,7 @@ class Plugin(pwem.Plugin):
         targetFile = f"{packageName}_CONDA_ENV_CREATED"
         envName = f"{packageName}-{cls.DMMDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/DeepMainMast.git', binaryFolderName=packageName)\
-            .addCommand(f"conda create -y -n {envName} python=3.8.5 -f {enFilePath}", workDir=cls._DMMBinary, targetName=targetFile)\
+            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._DMMBinary, targetName=targetFile)\
             .addPackage(env, dependencies=['git', 'conda', 'pip'])
 
     # ---------------------------------- Utils functions  -----------------------
