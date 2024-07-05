@@ -24,7 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import pwem, os
+import os
+
+import pwem
 from scipion.install.funcs import InstallHelper
 from .constants import *
 
