@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pwem.viewers import ChimeraAttributeViewer
+from pwem.wizards.wizard import ColorScaleWizardBase
 
 from ..protocols import ProtDMM
 
@@ -39,7 +40,6 @@ class DMMViewer(ChimeraAttributeViewer):
     def _defineParams(self, form):
         super()._defineParams(form)
         # Overwrite defaults
-        from pwem.wizards.wizard import ColorScaleWizardBase
         group = form.addGroup('Color settings')
         ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=-1, defaultHighest=1, defaultIntervals=21,
                                                     defaultColorMap='RdBu_r')
