@@ -117,7 +117,7 @@ class ProtCryoREAD(EMProtocol):
         args = self.getcryoREADArgs()
 
         envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(),
-                                              Plugin.getProtocolActivationCommandCryo('CryoREAD'))
+                                              Plugin.getProtocolActivationCommand('CryoREAD'))
         fullProgram = '{} && {}'.format(envActivationCommand, 'python3')
 
 
