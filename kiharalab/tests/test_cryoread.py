@@ -5,6 +5,7 @@ from pwem.protocols import ProtImportVolumes
 
 from .. import Plugin
 from ..protocols import ProtCryoREAD
+from ..utils import assertHandle
 
 class TestCryoREAD(BaseTest):
     @classmethod
@@ -41,7 +42,7 @@ class TestCryoREAD(BaseTest):
             args['inputSequence'] = os.path.join(Plugin._cryoreadBinary, 'example', '21051.fasta')
         protCryoREAD = self.newProtocol(ProtCryoREAD, **args)
         self.launchProtocol(protCryoREAD)
-        self.assertIsNotNone(getattr(protCryoREAD, protCryoREAD._OUTNAME))
+        assertHandle(self.assertIsNotNone, getattr(protCryoREAD, protCryoREAD._OUTNAME))
 
     def testCryoREAD(self):
         self._runCryoREAD()

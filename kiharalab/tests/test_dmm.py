@@ -2,6 +2,7 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportPdb, ProtImportVolumes
 
 from ..protocols import ProtDMM
+from ..utils import assertHandle
 
 class TestDMM(BaseTest):
     @classmethod
@@ -46,7 +47,7 @@ class TestDMM(BaseTest):
             args['af2Structure'] = self.protImportPDB.outputPdb
         protDMM = self.newProtocol(ProtDMM, **args)
         self.launchProtocol(protDMM)
-        self.assertIsNotNone(getattr(protDMM, protDMM._OUTNAME))
+        assertHandle(self.assertIsNotNone, getattr(protDMM, protDMM._OUTNAME))
 
     def testDMM(self):
         self._runDMM()
