@@ -1,4 +1,3 @@
-
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportPdb, ProtImportVolumes
 
@@ -25,8 +24,7 @@ class TestDMMaf2(BaseTest):
     @classmethod
     def _runImportVolume(cls):
         args = {
-            'filesPath': cls.ds.getFile(
-            'volumes/emd_2513.mrc'),
+            'filesPath': cls.ds.getFile('volumes/emd_2513.mrc'),
             'samplingRate': 1.05,
             'setOrigCoord': True,
             'x': 0.0,
@@ -41,7 +39,7 @@ class TestDMMaf2(BaseTest):
         protDMM = self.newProtocol(
             ProtDMM,
             inputVolume=self.protImportVolume.outputVolume,
-            inputSeq='/home/kihara/jbaghiro/scipion/data/tests/model_building_tutorial/Sequences/emd_2513.fasta', # Change to dynamic
+            inputSeq=self.ds.getFile('Sequences/emd_2513.fasta'),
             af2Structure=self.protImportPDB.outputPdb,
             path_training_time=600,
             fragment_assembling_time=600,
