@@ -89,6 +89,14 @@ class Plugin(pwem.Plugin):
         cls._defineEmVar(MAINMAST_HOME, cls._mainmastHome)
         cls._defineVar('MAINMAST_ENV', 'mainMast-' + cls.mainmastDefaultVersion)
 
+        # DMM
+        cls._defineEmVar(DMM_HOME, cls._DMMHome)
+        cls._defineVar('DMM_ENV', 'DMM-' + cls.DMMDefaultVersion)
+
+        # CryoREAD
+        cls._defineEmVar(CRYOREAD_HOME, cls._cryoreadHome)
+        cls._defineVar('CRYOREAD_ENV', 'CryoREAD-' + cls.cryoreadDefaultVersion)
+
     @classmethod
     def defineBinaries(cls, env):
         """
