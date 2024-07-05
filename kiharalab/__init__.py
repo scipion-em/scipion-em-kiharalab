@@ -216,7 +216,7 @@ class Plugin(pwem.Plugin):
         installer = InstallHelper(packageName, packageVersion=cls.cryoreadDefaultVersion)
 
         # Installing protocol
-        enFilePath = os.path.abspath("kiharalab/environment.yml")
+        enFilePath = os.path.abspath("environment.yml")
         targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
         envName = f"{packageName}-{cls.cryoreadDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/CryoREAD.git', binaryFolderName=packageName) \
@@ -235,7 +235,7 @@ class Plugin(pwem.Plugin):
         installer = InstallHelper(packageName, packageVersion=cls.DMMDefaultVersion)
         
         # Installing protocol
-        enFilePath = os.path.abspath("kiharalab/environment.yml")
+        enFilePath = os.path.abspath("environment.yml")
         targetFile = f"{packageName}_CONDA_ENV_CREATED"
         envName = f"{packageName}-{cls.DMMDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/DeepMainMast.git', binaryFolderName=packageName)\
