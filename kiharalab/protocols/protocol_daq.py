@@ -30,6 +30,7 @@
 This protocol is used to perform a pocket search on a protein structure using the FPocket software
 """
 import os, shutil, time
+from decimal import Decimal
 
 from pyworkflow.protocol import params
 from pwem.protocols import EMProtocol
@@ -119,7 +120,7 @@ class ProtDAQValidation(EMProtocol):
 
 		#Resample volume to 1A/px with ChimeraX if present
 		daqSR = 1.0
-		if self.chimeraResampling and inVol.getSamplingRate() != daqSR:
+		if self.chimeraResampling and Decimal(inVol.getSamplingRate()) != Decimal(daqSR):
 			if chimeraInstalled():
 				resampledFile = os.path.abspath(self._getTmpPath('resampled.mrc'))
 				mrcFile = self.chimeraResample(mrcFile, daqSR, resampledFile)
@@ -166,7 +167,7 @@ class ProtDAQValidation(EMProtocol):
 		AS = AtomStruct(filename=outStructFileName)
 		outVol = self._getInputVolume().clone()
 		outVol.setLocation(self.getLocalVolumeFile())
-		if self.chimeraResampling and self._getInputVolume().getSamplingRate() != 1.0 and chimeraInstalled():
+		if self.chimeraResampling and Decimal(self._getInputVolume().getSamplingRate()) != Decimal(1.0) and chimeraInstalled():
 			outVol.setSamplingRate(1.0)
 		AS.setVolume(outVol)
 
