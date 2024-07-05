@@ -28,19 +28,23 @@ class TestCryoREAD(BaseTest):
         cls.launchProtocol(protImportVolume)
         cls.protImportVolume = protImportVolume
 
-    def _runCryoREAD(self):
-        protCryoREAD = self.newProtocol(
-            ProtCryoREAD,
-            inputVolume=self.protImportVolume.outputVolume,
-            contour_level=0.6,
-            resolution=3.7,
-            batch_size=4,
-            rule_soft=0,
-            thread=1
-        )
-
+    def _runCryoREAD(self, useSequence=False):
+        args = {
+            "inputVolume": self.protImportVolume.outputVolume,
+            "contour_level": 0.6,
+            "resolution": 3.7,
+            "batch_size": 4,
+            "rule_soft": 0,
+            "thread": 1
+        }
+        if useSequence:
+            args.update('inputSequence', os.path.join(Plugin._cryoreadBinary, 'example', '21051.fasta'))
+        protCryoREAD = self.newProtocol(ProtCryoREAD, **args)
         self.launchProtocol(protCryoREAD)
         self.assertIsNotNone(getattr(protCryoREAD, protCryoREAD._OUTNAME))
 
     def testCryoREAD(self):
         self._runCryoREAD()
+    
+    def testCryoREADWithSequence(self):
+        self._runCryoREAD(useSequence=True)

@@ -34,17 +34,22 @@ class TestDMM(BaseTest):
         cls.launchProtocol(protImportVolume)
         cls.protImportVolume = protImportVolume
 
-    def _runDMM(self):
-        protDMM = self.newProtocol(
-            ProtDMM,
-            inputVolume=self.protImportVolume.outputVolume,
-            inputSeq=self.ds.getFile('Sequences/emd_2513.fasta'),
-            path_training_time=600,
-            fragment_assembling_time=600,
-            contourLevel=0.01
-        )
+    def _runDMM(self, withAf2=False):
+        args = {
+            "inputVolume": self.protImportVolume.outputVolume,
+            "inputSeq": self.ds.getFile('Sequences/emd_2513.fasta'),
+            "path_training_time": 600,
+            "fragment_assembling_time": 600,
+            "contourLevel": 0.01
+        }
+        if withAf2:
+            args['af2Structure'] = self.protImportPDB.outputPdb
+        protDMM = self.newProtocol(ProtDMM, **args)
         self.launchProtocol(protDMM)
         self.assertIsNotNone(getattr(protDMM, protDMM._OUTNAME))
 
     def testDMM(self):
         self._runDMM()
+    
+    def testDMMAf2(self):
+        self._runDMM(withAf2=True)
