@@ -88,13 +88,13 @@ class ProtMainMastSegmentMap(EMProtocol):
 		pathMap = self.getVolumeAbsolutePath()
 
 		# Generating args for Phenix
-		args = '%s symmetry=%s' % (pathMap, self.sym.get())
+		args = f'{pathMap} symmetry={self.sym.get()}'
 
 		# Running Phenix command
 		Phenix.runPhenixProgram(Phenix.getProgram('map_symmetry.py'), args, cwd=self._getExtraPath())
 
 		# Generating args and running last matrix conversion phase
-		args = '%s > sym_mat.txt' % ('symmetry_from_map.ncs_spec')
+		args = 'symmetry_from_map.ncs_spec > sym_mat.txt'
 		self.convertMatrix(args, cwd=self._getExtraPath())
 
 	def segmentStep(self):
@@ -108,8 +108,7 @@ class ProtMainMastSegmentMap(EMProtocol):
 		pathMatrix = self.scapePath(os.path.abspath(self._getExtraPath('sym_mat.txt')))
 
 		# Generating args and running MainMast
-		args = '-i %s -Y %s -c %d -t %f -M -W > contour.cif' % (pathMap, pathMatrix, self.numberOfThreads.get(),
-			self.threshold.get())
+		args = f'-i {pathMap} -Y {pathMatrix} -c {self.numberOfThreads.get()} -t {self.threshold.get()} -M -W > contour.cif'
 		self.runSegmentation(args, cwd=self._getExtraPath())
 
 	def createOutputStep(self):
@@ -242,14 +241,14 @@ class ProtMainMastSegmentMap(EMProtocol):
 		"""
 		This method returns a summary of the text provided by '_methods'.
 		"""
-		summary = ["Input Volume provided: %s\n" % self.inputVolume.get().getFileName()]
+		summary = [f"Input Volume provided: {self.inputVolume.get().getFileName()}\n"]
 		if self.getOutputsSize() >= 1:
 			regions = len(glob.glob(self._getExtraPath(REGIONS_PATTERN)))
 			if hasattr(self, 'outputMasks'):
-				msg = ("A total of %d regions have been segmented" % regions)
+				msg = (f"A total of {regions} regions have been segmented")
 				summary.append(msg)
 			if hasattr(self, 'outputMask'):
-				msg = ("Output regions combined to an indentifier mask with %d different regions" % regions)
+				msg = (f"Output regions combined to an indentifier mask with {regions} different regions")
 				summary.append(msg)
 		else:
 			summary.append("Segmentation not ready yet.")
@@ -260,14 +259,14 @@ class ProtMainMastSegmentMap(EMProtocol):
 		This method returns a text intended to be copied and pasted in the paper section 'materials & methods'.
 		"""
 		methodsMsgs = [
-			'*Input volume:* %s' % self.inputVolume.get().getFileName(),
-			'*Map symmetry:* %s' % self.sym.get(),
-			'*Map threshold:* %d' % self.threshold.get(),
-			'*Regions combined:* %r' % self.combine.get()
+			f'*Input volume:* {self.inputVolume.get().getFileName()}',
+			f'*Map symmetry:* {self.sym.get()}',
+			f'*Map threshold:* {self.threshold.get()}',
+			f'*Regions combined:* {self.combine.get()}'
 		]
 		if self.getOutputsSize() >= 1:
 			regions = len(glob.glob(self._getExtraPath(REGIONS_PATTERN)))
-			msg = ("*Regions segmented:* %d" % regions)
+			msg = (f"*Regions segmented:* {regions}")
 			methodsMsgs.append(msg)
 		else:
 			methodsMsgs.append("Segmentation not ready yet.")

@@ -1,12 +1,12 @@
 # **************************************************************************
 # *
-# * Authors:		Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors:     Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # *
-# * [1] Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -24,14 +24,22 @@
 # *
 # **************************************************************************
 
-# Scipion em imports
-from pwem.wizards import ColorScaleWizardBase
+from pwem.viewers import ChimeraAttributeViewer
+from pwem.wizards.wizard import ColorScaleWizardBase
 
-# Plugin imports
-from .viewers import DAQViewer, DMMViewer
+from ..protocols import ProtDMM
 
-class ColorScaleWizardDAQ(ColorScaleWizardBase):
-	_targets = ColorScaleWizardBase.defineTargets(DAQViewer)
+class DMMViewer(ChimeraAttributeViewer):
+    """
+    Viewer for attribute DMM score of an AtomStruct.
+    Includes visualization in chimera and in histograms
+    """
+    _targets = [ProtDMM]
+    _label = 'Atomic structure attributes viewer'
 
-class ColorScaleWizardDMM(ColorScaleWizardBase):
-	_targets = ColorScaleWizardBase.defineTargets(DMMViewer)
+    def _defineParams(self, form):
+        super()._defineParams(form)
+        # Overwrite defaults
+        group = form.addGroup('Color settings')
+        ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=-1, defaultHighest=1, defaultIntervals=21,
+                                                    defaultColorMap='RdBu_r')

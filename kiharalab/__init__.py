@@ -24,7 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import pwem, os
+import os
+
+import pwem
 from scipion.install.funcs import InstallHelper
 from .constants import *
 
@@ -44,19 +46,29 @@ class Plugin(pwem.Plugin):
     """
     # DAQ
     daqDefaultVersion = DAQ_DEFAULT_VERSION
-    _daqHome = os.path.join(pwem.Config.EM_ROOT, 'daq-' + daqDefaultVersion)
+    _daqHome = os.path.join(pwem.Config.EM_ROOT, f'daq-{daqDefaultVersion}')
     _daqBinary = os.path.join(_daqHome, 'daq')
 
     # Emap2sec
     emap2secDefaultVersion = EMAP2SEC_DEFAULT_VERSION
-    _emap2secHome = os.path.join(pwem.Config.EM_ROOT, 'emap2sec-' + emap2secDefaultVersion)
+    _emap2secHome = os.path.join(pwem.Config.EM_ROOT, f'emap2sec-{emap2secDefaultVersion}')
     _emap2secBinary = os.path.join(_emap2secHome, 'Emap2sec')
     _emap2secplusBinary = os.path.join(_emap2secHome, 'Emap2secPlus')
 
     # MainMast
     mainmastDefaultVersion = MAINMAST_DEFAULT_VERSION
-    _mainmastHome = os.path.join(pwem.Config.EM_ROOT, 'mainMast-' + mainmastDefaultVersion)
+    _mainmastHome = os.path.join(pwem.Config.EM_ROOT, f'mainMast-{mainmastDefaultVersion}')
     _mainmastBinary = os.path.join(_mainmastHome, 'MainMast')
+
+    # DMM
+    dmmDefaultVersion = DMM_DEFAULT_VERSION
+    _DMMHome = os.path.join(pwem.Config.EM_ROOT, f'dmm-{dmmDefaultVersion}')
+    _DMMBinary = os.path.join(_DMMHome, 'DMM')
+
+    # CryoREAD
+    cryoREADDefaultVersion = CRYOREAD_DEFAULT_VERSION
+    _cryoREADHome = os.path.join(pwem.Config.EM_ROOT, f'cryoREAD-{cryoREADDefaultVersion}')
+    _cryoREADBinary = os.path.join(_cryoREADHome, 'CryoREAD')
 
     @classmethod
     def _defineVariables(cls):
@@ -68,16 +80,24 @@ class Plugin(pwem.Plugin):
         """
         # DAQ
         cls._defineEmVar(DAQ_HOME, cls._daqHome)
-        cls._defineVar('DAQ_ENV', 'daq-' + cls.daqDefaultVersion)
+        cls._defineVar('DAQ_ENV', f'daq-{cls.daqDefaultVersion}')
 
         # Emap2sec
         cls._defineEmVar(EMAP2SEC_HOME, cls._emap2secHome)
-        cls._defineVar('EMAP2SEC_ENV', 'emap2sec-' + cls.emap2secDefaultVersion)
-        cls._defineVar('EMAP2SECPLUS_ENV', 'emap2secPlus-' + cls.emap2secDefaultVersion)
+        cls._defineVar('EMAP2SEC_ENV', f'emap2sec-{cls.emap2secDefaultVersion}')
+        cls._defineVar('EMAP2SECPLUS_ENV', f'emap2secPlus-{cls.emap2secDefaultVersion}')
 
         # MainMast
         cls._defineEmVar(MAINMAST_HOME, cls._mainmastHome)
-        cls._defineVar('MAINMAST_ENV', 'mainMast-' + cls.mainmastDefaultVersion)
+        cls._defineVar('MAINMAST_ENV', f'mainMast-{cls.mainmastDefaultVersion}')
+
+        # DMM
+        cls._defineEmVar(DMM_HOME, cls._DMMHome)
+        cls._defineVar('DMM_ENV', f'dmm-{cls.dmmDefaultVersion}')
+
+        # CryoREAD
+        cls._defineEmVar(CRYOREAD_HOME, cls._cryoREADHome)
+        cls._defineVar('CRYOREAD_ENV', f'cryoREAD-{cls.cryoREADDefaultVersion}')
 
     @classmethod
     def defineBinaries(cls, env):
@@ -87,6 +107,8 @@ class Plugin(pwem.Plugin):
         cls.addDAQ(env)
         cls.addEmap2sec(env)
         cls.addMainMast(env)
+        cls.addCryoREAD(env)
+        cls.addDMM(env)
     
     @classmethod    
     def addDAQ(cls, env):
@@ -102,7 +124,7 @@ class Plugin(pwem.Plugin):
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
             .getCondaEnvCommand(pythonVersion='3.9', binaryPath=cls._daqBinary, requirementsFile=True)\
-            .addPackage(env, dependencies=['git', 'conda', 'pip'])
+            .addPackage(env, dependencies=['git', 'conda'])
 
     @classmethod    
     def addEmap2sec(cls, env):
@@ -162,7 +184,7 @@ class Plugin(pwem.Plugin):
             .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
             .addCommands(emap2secExtraCommands, workDir=cls._emap2secBinary)\
             .addCommands(emap2secPlusExtraCommands, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
-            .addPackage(env, dependencies=['git', 'conda', 'pip', 'wget', 'make', 'gcc', 'tar'])
+            .addPackage(env, dependencies=['git', 'conda', 'wget', 'make', 'gcc', 'tar'])
 
     @classmethod    
     def addMainMast(cls, env):
@@ -191,6 +213,46 @@ class Plugin(pwem.Plugin):
         installer.getCloneCommand('https://github.com/kiharalab/MAINMASTseg.git', binaryFolderName='MainMast')\
             .addCommands(extraCommands, workDir=cls._mainmastBinary)\
             .addPackage(env, dependencies=['git', 'make', 'gcc', 'gzip'])
+    
+    @classmethod
+    def addCryoREAD(cls, env):
+        """
+        This function provides the necessary commands for installing CryoREAD.
+        """
+        # Defining protocol variables
+        packageName = 'cryoREAD'
+
+        # Instantiating installer
+        installer = InstallHelper(packageName, packageVersion=cls.cryoREADDefaultVersion)
+
+        # Installing protocol
+        currentPath = os.path.dirname(os.path.abspath(__file__))
+        enFilePath = os.path.join(currentPath, "environment.yml")
+        targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
+        envName = f"{packageName}-{cls.cryoREADDefaultVersion}"
+        installer.getCloneCommand('https://github.com/kiharalab/CryoREAD.git', binaryFolderName=os.path.basename(cls._cryoREADBinary)) \
+            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._cryoREADBinary, targetName=targetFile)\
+            .addPackage(env, dependencies=['git', 'conda'])
+
+    @classmethod    
+    def addDMM(cls, env):
+        """
+        This function provides the neccessary commands for installing DMM.
+        """
+        # Defining protocol variables
+        packageName = 'dmm'
+
+        # Instanciating installer
+        installer = InstallHelper(packageName, packageVersion=cls.dmmDefaultVersion)
+        
+        # Installing protocol
+        currentPath = os.path.dirname(os.path.abspath(__file__))
+        enFilePath = os.path.join(currentPath, "environment.yml")
+        targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
+        envName = f"{packageName}-{cls.dmmDefaultVersion}"
+        installer.getCloneCommand('https://github.com/kiharalab/DeepMainMast.git', binaryFolderName=os.path.basename(cls._DMMBinary))\
+            .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._DMMBinary, targetName=targetFile)\
+            .addPackage(env, dependencies=['git', 'conda'])
 
     # ---------------------------------- Utils functions  -----------------------
     @classmethod
@@ -198,11 +260,11 @@ class Plugin(pwem.Plugin):
         """
         This function returns the env name for a given protocol and repo.
         """
-        return (repoName if repoName else protocolName) + "-" + getattr(cls, protocolName + 'DefaultVersion')
+        return f"{repoName if repoName else protocolName}-{getattr(cls, protocolName + 'DefaultVersion')}"
     
     @classmethod
     def getProtocolActivationCommand(cls, protocolName, repoName=None):
         """
         Returns the conda activation command for the given protocol.
         """
-        return "conda activate " + cls.getProtocolEnvName(protocolName, repoName)
+        return f"conda activate {cls.getProtocolEnvName(protocolName, repoName)}"

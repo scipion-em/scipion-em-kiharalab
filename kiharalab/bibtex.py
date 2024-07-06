@@ -25,6 +25,15 @@
 # **************************************************************************
 
 """
+@article{genki2021DMM,
+  title={Residue-Wise Local Quality Estimation for Protein Models from Cryo-EM Maps},
+  author={Genki Terashi, Xiao Wang, Sai Raghavendra Maddhuri Venkata Subramaniya, John J. G. Tesmer, and Daisuke Kihara},
+  journal={(Submitted)},
+  year={2021}
+}
+"""
+
+"""
 @article{genki2021DAQ,
   title={Residue-Wise Local Quality Estimation for Protein Models from Cryo-EM Maps},
   author={Genki Terashi, Xiao Wang, Sai Raghavendra Maddhuri Venkata Subramaniya, John J. G. Tesmer, and Daisuke Kihara},
