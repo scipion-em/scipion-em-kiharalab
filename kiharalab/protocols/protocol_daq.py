@@ -139,10 +139,9 @@ class ProtDAQValidation(EMProtocol):
 		outDir = self._getTmpPath('predictions')
 		args = self.getDAQArgs()
 
-		fullProgram = '{} {} && {}'\
-			.format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('daq'), 'python3')
+		fullProgram = f'{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('daq')} && python3'
 		if 'main.py' not in args:
-			args = '{}/main.py {}'.format(Plugin._daqBinary, args)
+			args = f'{Plugin._daqBinary}/main.py {args}'
 		self.runJob(fullProgram, args, cwd=Plugin._daqBinary)
 
 		if outDir is None:
@@ -186,22 +185,20 @@ class ProtDAQValidation(EMProtocol):
 		""" Try to find warnings on define params. """
 		warnings=[]
 		if self.chimeraResampling and not chimeraInstalled():
-			warnings.append('Chimera program is not found were it was expected: \n\n{}\n\n' \
+			warnings.append(f'Chimera program is not found were it was expected: \n\n{Chimera.getProgram()}\n\n' \
 				'Either install ChimeraX in this path or install our ' \
-				'scipion-em-chimera plugin'.format(Chimera.getProgram()))
+				'scipion-em-chimera plugin')
 		return warnings
 
 	# --------------------------- UTILS functions -----------------------------------
 	def getDAQArgs(self):
-		args = ' --mode=0 -F {} -P {} --window {} --stride {}'. \
-		  format(os.path.abspath(self.getLocalVolumeFile()), os.path.abspath(self.getPdbStruct()),
-				 self.window.get(), self.stride.get())
+		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} -P 
+					{os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
 
-		args += ' --voxel_size {} --batch_size {} --cardinality {}'.\
-		  format(self.voxelSize.get(), self.batchSize.get(), self.cardinality.get())
+		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 
 		if getattr(self, params.USE_GPU):
-			args += ' --gpu {}'.format(self.getGPUIds()[0])
+			args += f' --gpu {self.getGPUIds()[0]}'
 		
 		return args
 
@@ -225,11 +222,11 @@ class ProtDAQValidation(EMProtocol):
 		return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
 	def getPdbStruct(self):
-		return self._getTmpPath(self.getStructName()) + '.pdb'
+		return f"{self._getTmpPath(self.getStructName())}.pdb"
 
 	def getLocalVolumeFile(self):
 		oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
-		return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
+		return self._getExtraPath(f'{oriName}_{self.getObjId()}.mrc')
 
 	def parseDAQScores(self, pdbFile):
 		'''Return a dictionary with {spec: value}
@@ -238,7 +235,7 @@ class ProtDAQValidation(EMProtocol):
 		with open(pdbFile) as f:
 			for line in f:
 				if line.startswith('ATOM') or line.startswith('HETATM'):
-					resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
+					resId = f'{line[21].strip()}:{line[22:26].strip()}'
 					if resId not in daqDic:
 						daqScore = line[60:66].strip()
 						daqDic[resId] = daqScore
@@ -248,15 +245,15 @@ class ProtDAQValidation(EMProtocol):
 		return getattr(self, params.GPU_LIST).get().split(',')
 
 	def getDAQScoreFile(self):
-		return self._getPath('{}.defattr'.format(self._ATTRNAME))
+		return self._getPath(f'{self._ATTRNAME}.defattr')
 
 	def chimeraResampleScript(self, inVolFile, newSampling, outFile):
 		scriptFn = self._getExtraPath('resampleVolume.cxc')
 		with open(scriptFn, 'w') as f:
-			f.write('cd %s\n' % os.getcwd())
-			f.write("open %s\n" % inVolFile)
-			f.write('vol resample #1 spacing {}\n'.format(newSampling))
-			f.write('save {} model #2\n'.format(outFile))
+			f.write(f'cd {os.getcwd()}\n')
+			f.write(f"open {inVolFile}\n")
+			f.write(f'vol resample #1 spacing {newSampling}\n')
+			f.write(f'save {outFile} model #2\n')
 			f.write('exit\n')
 		return scriptFn
 
@@ -264,7 +261,7 @@ class ProtDAQValidation(EMProtocol):
 		with weakImport("chimera"):
 			from chimera import Plugin as chimeraPlugin
 			resampleScript = self.chimeraResampleScript(inVolFile, newSampling=newSR, outFile=outFile)
-			chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram() + ' --nogui --silent',
+			chimeraPlugin.runChimeraProgram(f"{chimeraPlugin.getProgram()} --nogui --silent",
 				resampleScript, cwd=os.getcwd())
 			while not os.path.exists(outFile):
 				time.sleep(1)

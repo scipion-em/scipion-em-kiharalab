@@ -29,15 +29,14 @@
 """
 This protocol is used to perform a pocket search on a protein structure using the FPocket software
 """
-import os, shutil, time
+import os, shutil
 
 from pyworkflow.protocol import params
-from pyworkflow.utils import Message, weakImport
+from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct
 from pwem.convert import Ccp4Header
 from pwem.convert.atom_struct import toCIF, AtomicStructHandler, addScipionAttribute
-from pwem.viewers.viewer_chimera import Chimera
 from pwem.emlib.image import ImageHandler
 
 from kiharalab import Plugin
@@ -53,7 +52,9 @@ class ProtDMM(EMProtocol):
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
-        """ """
+        """
+        Defines DeepMainMast's input params.
+        """
         form.addHidden(params.USE_GPU, params.BooleanParam, default=True,
                        label="Use GPU for execution: ",
                        help="This protocol has both CPU and GPU implementation.\
@@ -123,11 +124,11 @@ class ProtDMM(EMProtocol):
         forGpu = ""
         if getattr(self, params.USE_GPU):
             forGpu = 'export CUDA_VISIBLE_DEVICES={}'.format(self.getGPUIds()[0])
-        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('dmm'))
-        fullProgram = '{} && {} && {}/dmm_full_multithreads.sh'.format(forGpu,envActivationCommand,Plugin._DMMBinary)
+        envActivationCommand = f"{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('dmm')}"
+        fullProgram = f'{forGpu} && {envActivationCommand} && {Plugin._DMMBinary}/dmm_full_multithreads.sh'
 
         if 'dmm_full_multithreads.sh' not in args:
-            args = '-o predictions -p {}{}'.format(Plugin._DMMBinary, args)
+            args = f'-o predictions -p {Plugin._DMMBinary}{args}'
         print(fullProgram)
         print(args)
         self.runJob(fullProgram,args, cwd=programPath)
@@ -141,12 +142,10 @@ class ProtDMM(EMProtocol):
         fragmentAssemblingTime = self.fragment_assembling_time.get()
         outputPath = os.path.abspath(self._getTmpPath('predictions'))
         print(self.af2Structure)
+        args = f" -m {mapPath} -f {fastaPath} -c {contour} -o {outputPath} -t {pathTrainingTime} -T {fragmentAssemblingTime}"
         if self.af2Structure.get() != None:
             alphafoldPdbPath = os.path.abspath(self.af2Structure.get().getFileName()) if self.af2Structure.get() else ""
-            args = f" -m {mapPath} -f {fastaPath} -A {alphafoldPdbPath} -c {contour} -o {outputPath} -t {pathTrainingTime} -T {fragmentAssemblingTime}"
-        else:
-            args = f" -m {mapPath} -f {fastaPath} -c {contour} -o {outputPath} -t {pathTrainingTime} -T {fragmentAssemblingTime}"
-
+            args += f" -A {alphafoldPdbPath}"
 
         return args
     
@@ -200,16 +199,16 @@ class ProtDMM(EMProtocol):
         return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
 
     def getPdbStruct(self):
-        return self._getTmpPath(self.getStructName()) + '.pdb'
+        return f"{self._getTmpPath(self.getStructName())}.pdb"
 
     def getLocalVolumeFile(self):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
-        return self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
+        return self._getExtraPath(f'{oriName}_{self.getObjId()}.mrc')
     
     def getLocalSequenceFile(self):
         
         oriName = os.path.basename(os.path.splitext(self.getSequenceFile())[0])
-        extrapath = self._getExtraPath('{}_{}.fasta'.format(oriName, self.getObjId()))
+        extrapath = self._getExtraPath(f'{oriName}_{self.getObjId()}.fasta')
         parts = extrapath.split('/')
         res = '/'.join(parts[:-1])
         print("HAHA")
@@ -226,7 +225,7 @@ class ProtDMM(EMProtocol):
         with open(pdbFile) as f:
             for line in f:
                 if line.startswith('ATOM') or line.startswith('HETATM'):
-                    resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
+                    resId = f'{line[21].strip()}:{line[22:26].strip()}'
                     if resId not in dmmDic:
                       dmmScore = line[60:66].strip()
                       dmmDic[resId] = dmmScore
@@ -236,4 +235,4 @@ class ProtDMM(EMProtocol):
         return getattr(self, params.GPU_LIST).get().split(',')
 
     def getDMMScoreFile(self):
-      return self._getPath('{}.defattr'.format(self._ATTRNAME))
+      return self._getPath(f'{self._ATTRNAME}.defattr')

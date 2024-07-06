@@ -111,18 +111,16 @@ class ProtCryoREAD(EMProtocol):
     def cryoREADStep(self):
         inputFilePath = self.getLocalVolumeFile()
         if not os.path.exists(inputFilePath):
-            self.error("Input file not found: %s" % inputFilePath)
+            self.error(f"Input file not found: {inputFilePath}")
             return
         outDir = self._getTmpPath('predictions')
         args = self.getcryoREADArgs()
 
-        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(),
-                                              Plugin.getProtocolActivationCommand('cryoREAD'))
-        fullProgram = '{} && {}'.format(envActivationCommand, 'python3')
-
+        envActivationCommand = f"{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('cryoREAD')}"
+        fullProgram = f'{envActivationCommand} && python3'
 
         if 'main.py' not in args:
-            args = '{}/main.py{}'.format(Plugin._cryoREADBinary, args)
+            args = f'{Plugin._cryoREADBinary}/main.py{args}'
 
         print(f'Running CryoREAD with input file: {inputFilePath}')
         self.runJob(fullProgram, args, cwd=Plugin._cryoREADBinary)
@@ -172,19 +170,18 @@ class ProtCryoREAD(EMProtocol):
         return methods
     # --------------------------- UTILS functions -----------------------------------
     def getcryoREADArgs(self):
-        args = ' --mode=0 -F={} -M={}/best_model --contour={} --resolution={}'.format(
-            self.getLocalVolumeFile(), Plugin._cryoREADBinary, self.contour_level.get(), self.resolution.get())
+        args = (f' --mode=0 -F={self.getLocalVolumeFile()} -M={Plugin._cryoREADBinary}/best_model 
+                --contour={self.contour_level.get()} --resolution={self.resolution.get()}')
 
-        args += ' --batch_size={} --rule_soft={} --thread={}'.format(
-            self.batch_size.get(), self.rule_soft.get(), self.thread.get())
+        args += f' --batch_size={self.batch_size.get()} --rule_soft={self.rule_soft.get()} --thread={self.thread.get()}'
 
         if self.inputSequence.hasValue():
-            args += ' -P={}'.format(self.getFastaFilePath())
+            args += f' -P={self.getFastaFilePath()}'
         else:
             args += ' --no_seqinfo'
 
         if getattr(self, params.USE_GPU):
-            args += ' --gpu={}'.format(self.getGPUIds()[0])
+            args += f' --gpu={self.getGPUIds()[0]}'
 
         return args
 
@@ -199,7 +196,7 @@ class ProtCryoREAD(EMProtocol):
 
     def getLocalVolumeFile(self):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
-        localPath = self._getExtraPath('{}_{}.mrc'.format(oriName, self.getObjId()))
+        localPath = self._getExtraPath(f'{oriName}_{self.getObjId()}.mrc')
         return os.path.abspath(localPath)
 
     def getFastaFilePath(self):
@@ -213,7 +210,7 @@ class ProtCryoREAD(EMProtocol):
         with open(pdbFile) as f:
             for line in f:
                 if line.startswith('ATOM') or line.startswith('HETATM'):
-                    resId = '{}:{}'.format(line[21].strip(), line[22:26].strip())
+                    resId = f'{line[21].strip()}:{line[22:26].strip()}'
                     if resId not in cryoDic:
                         cryoScore = line[60:66].strip()
                         cryoDic[resId] = cryoScore
