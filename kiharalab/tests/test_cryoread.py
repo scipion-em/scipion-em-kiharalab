@@ -18,7 +18,7 @@ class TestCryoREAD(BaseTest):
     @classmethod
     def _runImportVolume(cls):
         args = {
-            'filesPath': os.path.join(Plugin._cryoreadBinary, 'example', '21051.mrc'),
+            'filesPath': os.path.join(Plugin._cryoREADBinary, 'example', '21051.mrc'),
             'samplingRate': 1.05,
             'setOrigCoord': True,
             'x': 0.0,
@@ -39,7 +39,7 @@ class TestCryoREAD(BaseTest):
             "thread": 1
         }
         if useSequence:
-            args['inputSequence'] = os.path.join(Plugin._cryoreadBinary, 'example', '21051.fasta')
+            args['inputSequence'] = os.path.join(Plugin._cryoREADBinary, 'example', '21051.fasta')
         protCryoREAD = self.newProtocol(ProtCryoREAD, **args)
         self.launchProtocol(protCryoREAD)
         assertHandle(self.assertIsNotNone, getattr(protCryoREAD, protCryoREAD._OUTNAME))

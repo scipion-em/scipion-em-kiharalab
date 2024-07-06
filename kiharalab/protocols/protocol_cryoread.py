@@ -122,15 +122,15 @@ class ProtCryoREAD(EMProtocol):
 
 
         if 'main.py' not in args:
-            args = '{}/main.py{}'.format(Plugin._cryoreadBinary, args)
+            args = '{}/main.py{}'.format(Plugin._cryoREADBinary, args)
 
         print(f'Running CryoREAD with input file: {inputFilePath}')
-        self.runJob(fullProgram, args, cwd=Plugin._cryoreadBinary)
+        self.runJob(fullProgram, args, cwd=Plugin._cryoREADBinary)
 
         if outDir is None:
             outDir = self._getExtraPath('predictions')
 
-        cryoDir = os.path.join(Plugin._cryoreadBinary, 'Predict_Result', self.getVolumeName())
+        cryoDir = os.path.join(Plugin._cryoREADBinary, 'Predict_Result', self.getVolumeName())
         shutil.copytree(cryoDir, outDir)
         shutil.rmtree(cryoDir)
 
@@ -173,7 +173,7 @@ class ProtCryoREAD(EMProtocol):
     # --------------------------- UTILS functions -----------------------------------
     def getcryoREADArgs(self):
         args = ' --mode=0 -F={} -M={}/best_model --contour={} --resolution={}'.format(
-            self.getLocalVolumeFile(), Plugin._cryoreadBinary, self.contour_level.get(), self.resolution.get())
+            self.getLocalVolumeFile(), Plugin._cryoREADBinary, self.contour_level.get(), self.resolution.get())
 
         args += ' --batch_size={} --rule_soft={} --thread={}'.format(
             self.batch_size.get(), self.rule_soft.get(), self.thread.get())
