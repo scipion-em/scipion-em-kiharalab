@@ -1,6 +1,6 @@
 import os
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.tests import BaseTest, setupTestProject
 from pwem.protocols import ProtImportVolumes
 
 from .. import Plugin
@@ -10,8 +10,6 @@ from ..utils import assertHandle
 class TestCryoREAD(BaseTest):
     @classmethod
     def setUpClass(cls):
-        cls.ds = DataSet.getDataSet('model_building_tutorial')
-
         setupTestProject(cls)
         cls._runImportVolume()
 

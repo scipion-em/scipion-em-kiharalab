@@ -1,13 +1,15 @@
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+import os
+
+from pyworkflow.tests import BaseTest, setupTestProject
 from pwem.protocols import ProtImportPdb, ProtImportVolumes
 
+from .. import Plugin
 from ..protocols import ProtDMM
 from ..utils import assertHandle
 
 class TestDMM(BaseTest):
     @classmethod
     def setUpClass(cls):
-        cls.ds = DataSet.getDataSet('model_building_tutorial')
         setupTestProject(cls)
         cls._runImportPDB()
         cls._runImportVolume()
@@ -17,14 +19,15 @@ class TestDMM(BaseTest):
         protImportPDB = cls.newProtocol(
             ProtImportPdb,
             inputPdbData=1,
-            pdbFile=cls.ds.getFile('PDBx_mmCIF/emd_2513_af2.pdb'))
+            pdbFile=os.path.join(Plugin._DMMBinary, 'data', '2513', 'emd_2513_af2.pdb'),
+        )
         cls.launchProtocol(protImportPDB)
         cls.protImportPDB = protImportPDB
 
     @classmethod
     def _runImportVolume(cls):
         args = {
-            'filesPath': cls.ds.getFile('volumes/emd_2513.mrc'),
+            'filesPath': os.path.join(Plugin._DMMBinary, 'data', '2513', 'emd_2513.mrc'),
             'samplingRate': 1.05,
             'setOrigCoord': True,
             'x': 0.0,
@@ -37,11 +40,11 @@ class TestDMM(BaseTest):
 
     def _runDMM(self, withAf2=False):
         args = {
-            "inputVolume": self.protImportVolume.outputVolume,
-            "inputSeq": self.ds.getFile('Sequences/emd_2513.fasta'),
-            "path_training_time": 600,
-            "fragment_assembling_time": 600,
-            "contourLevel": 0.01
+            'inputVolume': self.protImportVolume.outputVolume,
+            'inputSeq': os.path.join(Plugin._DMMBinary, 'data', '2513', 'emd_2513.fasta'),
+            'path_training_time': 600,
+            'fragment_assembling_time': 600,
+            'contourLevel': 0.01
         }
         if withAf2:
             args['af2Structure'] = self.protImportPDB.outputPdb
