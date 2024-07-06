@@ -220,7 +220,7 @@ class Plugin(pwem.Plugin):
         This function provides the necessary commands for installing CryoREAD.
         """
         # Defining protocol variables
-        packageName = 'CryoREAD'
+        packageName = 'cryoREAD'
 
         # Instantiating installer
         installer = InstallHelper(packageName, packageVersion=cls.cryoREADDefaultVersion)
