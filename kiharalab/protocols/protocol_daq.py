@@ -139,7 +139,7 @@ class ProtDAQValidation(EMProtocol):
 		outDir = self._getTmpPath('predictions')
 		args = self.getDAQArgs()
 
-		fullProgram = f'{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('daq')} && python3'
+		fullProgram = f'{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand("daq")} && python'
 		if 'main.py' not in args:
 			args = f'{Plugin._daqBinary}/main.py {args}'
 		self.runJob(fullProgram, args, cwd=Plugin._daqBinary)
@@ -192,8 +192,8 @@ class ProtDAQValidation(EMProtocol):
 
 	# --------------------------- UTILS functions -----------------------------------
 	def getDAQArgs(self):
-		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} -P 
-					{os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
+		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} -P '
+					f'{os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
 
 		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 

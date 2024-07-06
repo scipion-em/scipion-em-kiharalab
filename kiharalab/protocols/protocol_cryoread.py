@@ -170,8 +170,8 @@ class ProtCryoREAD(EMProtocol):
         return methods
     # --------------------------- UTILS functions -----------------------------------
     def getcryoREADArgs(self):
-        args = (f' --mode=0 -F={self.getLocalVolumeFile()} -M={Plugin._cryoREADBinary}/best_model 
-                --contour={self.contour_level.get()} --resolution={self.resolution.get()}')
+        args = (f' --mode=0 -F={self.getLocalVolumeFile()} -M={Plugin._cryoREADBinary}/best_model '
+                f'--contour={self.contour_level.get()} --resolution={self.resolution.get()}')
 
         args += f' --batch_size={self.batch_size.get()} --rule_soft={self.rule_soft.get()} --thread={self.thread.get()}'
 

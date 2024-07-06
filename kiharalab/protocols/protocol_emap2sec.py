@@ -441,8 +441,8 @@ class ProtEmap2sec(EMProtocol):
 		This method returns a list with the arguments neccessary for the trimmap generation for the volume.
 		"""
 		inputfFile = self.getConvertedVolumeAbsolutePath()
-		return (f'{inputfFile} -c {self.contour.get()} -sstep {self.sstep.get()} -vw {self.vw.get()} 
-					{'-gnorm' if self.norm.get() == EMAP2SEC_NORM_GLOBAL else '-Inorm'} > data/{self.getProtocolFilePrefix(inputfFile)}trimmap')
+		return (f'{inputfFile} -c {self.contour.get()} -sstep {self.sstep.get()} -vw {self.vw.get()} '
+					f'{"-gnorm" if self.norm.get() == EMAP2SEC_NORM_GLOBAL else "-Inorm"} > data/{self.getProtocolFilePrefix(inputfFile)}trimmap')
 	
 	def getDatasetArgs(self):
 		"""
@@ -470,8 +470,8 @@ class ProtEmap2sec(EMProtocol):
 		This method returns the arguments neccessary for the Secondary Structure visualization.
 		"""
 		inputFile = self.getVolumeAbsolutePath()
-		return (f'data/{self.getProtocolFilePrefix(inputFile)}trimmap 
-					results/{self.getProtocolPrefix()}outputP2_{self.getProtocolFilePrefix(inputFile)}dataset -p > {self.getOutputFile(inputFile)}')
+		return (f'data/{self.getProtocolFilePrefix(inputFile)}trimmap '
+					f'results/{self.getProtocolPrefix()}outputP2_{self.getProtocolFilePrefix(inputFile)}dataset -p > {self.getOutputFile(inputFile)}')
 	
 	# -------------------------------- Emap2sec+ specific functions --------------------------------
 	def getFoldModel(self):
@@ -534,8 +534,8 @@ class ProtEmap2sec(EMProtocol):
 		executionMode = self.getMode()
 
 		# Initial param string
-		param = (f'-F={self.getConvertedVolumeAbsolutePath()} --mode={executionMode} --type={self.mapType.get()} 
-					 --contour={self.contour.get()} --gpu={self.gpuId.get()} --no_compilation --output_folder={self.getOutputPath()}{self.getCustomModel()}')
+		param = (f'-F={self.getConvertedVolumeAbsolutePath()} --mode={executionMode} --type={self.mapType.get()} '
+					 f'--contour={self.contour.get()} --gpu={self.gpuId.get()} --no_compilation --output_folder={self.getOutputPath()}{self.getCustomModel()}')
 
 		# If mode is not Detect DNA/RNA & protein, add class
 		if executionMode != EMAP2SECPLUS_MODE_DETECT_DNA_EXPERIMENTAL_FOLD4:
