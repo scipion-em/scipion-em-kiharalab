@@ -61,8 +61,8 @@ class Plugin(pwem.Plugin):
     _mainmastBinary = os.path.join(_mainmastHome, 'MainMast')
 
     # DMM
-    DMMDefaultVersion = DMM_DEFAULT_VERSION
-    _DMMHome = os.path.join(pwem.Config.EM_ROOT, 'dmm-' + DMMDefaultVersion)
+    dmmDefaultVersion = DMM_DEFAULT_VERSION
+    _DMMHome = os.path.join(pwem.Config.EM_ROOT, 'dmm-' + dmmDefaultVersion)
     _DMMBinary = os.path.join(_DMMHome, 'DMM')
 
     # CryoREAD
@@ -93,7 +93,7 @@ class Plugin(pwem.Plugin):
 
         # DMM
         cls._defineEmVar(DMM_HOME, cls._DMMHome)
-        cls._defineVar('DMM_ENV', 'dmm-' + cls.DMMDefaultVersion)
+        cls._defineVar('DMM_ENV', 'dmm-' + cls.dmmDefaultVersion)
 
         # CryoREAD
         cls._defineEmVar(CRYOREAD_HOME, cls._cryoREADHome)
@@ -243,13 +243,13 @@ class Plugin(pwem.Plugin):
         packageName = 'dmm'
 
         # Instanciating installer
-        installer = InstallHelper(packageName, packageVersion=cls.DMMDefaultVersion)
+        installer = InstallHelper(packageName, packageVersion=cls.dmmDefaultVersion)
         
         # Installing protocol
         currentPath = os.path.dirname(os.path.abspath(__file__))
         enFilePath = os.path.join(currentPath, "environment.yml")
         targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
-        envName = f"{packageName}-{cls.DMMDefaultVersion}"
+        envName = f"{packageName}-{cls.dmmDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/DeepMainMast.git', binaryFolderName=os.path.basename(cls._DMMBinary))\
             .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._DMMBinary, targetName=targetFile)\
             .addPackage(env, dependencies=['git', 'conda'])

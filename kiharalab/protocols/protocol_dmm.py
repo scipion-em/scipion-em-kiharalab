@@ -123,7 +123,7 @@ class ProtDMM(EMProtocol):
         forGpu = ""
         if getattr(self, params.USE_GPU):
             forGpu = 'export CUDA_VISIBLE_DEVICES={}'.format(self.getGPUIds()[0])
-        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('DMM'))
+        envActivationCommand = "{} {}".format(Plugin.getCondaActivationCmd(), Plugin.getProtocolActivationCommand('dmm'))
         fullProgram = '{} && {} && {}/dmm_full_multithreads.sh'.format(forGpu,envActivationCommand,Plugin._DMMBinary)
 
         if 'dmm_full_multithreads.sh' not in args:
