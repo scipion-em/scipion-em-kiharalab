@@ -55,11 +55,6 @@ class ProtDAQValidation(EMProtocol):
 	# -------------------------- DEFINE param functions ----------------------
 	def _defineParams(self, form):
 		""" """
-		form.addHidden(params.USE_GPU, params.BooleanParam, default=True,
-			label="Use GPU for execution: ",
-			help="This protocol has both CPU and GPU implementation.\
-				Select the one you want to use.")
-
 		form.addHidden(params.GPU_LIST, params.StringParam, default='0', label="Choose GPU IDs",
 			help="Add a list of GPU devices that can be used")
 
@@ -197,8 +192,10 @@ class ProtDAQValidation(EMProtocol):
 
 		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 
-		if getattr(self, params.USE_GPU):
-			args += f' --gpu {self.getGPUIds()[0]}'
+		gpuId = self.getGPUIds()[0]
+		if not gpuId:
+			gpuId = 0
+		args += f' --gpu {gpuId}'
 		
 		return args
 
