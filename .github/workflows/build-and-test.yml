@@ -1,7 +1,6 @@
 name: Build plugin on Pull Request
 on:
   pull_request:
-    branches: [main]
 
 jobs:
   build:
@@ -13,6 +12,8 @@ jobs:
 
     - name: Set up MPI
       uses: mpi4py/setup-mpi@master
+      with:
+        mpi: 'openmpi'
 
     - name: Install dependencies
       run: |
