@@ -24,11 +24,9 @@
 # *
 # **************************************************************************
 
-# Scipion em imports
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportVolumes
 
-# Plugin imports
 from ..protocols import ProtMainMastSegmentMap
 from ..utils import assertHandle
 
@@ -38,27 +36,22 @@ class TestMainMastSeg(BaseTest):
 		setupTestProject(cls)
 		cls.ds = DataSet.getDataSet('model_building_tutorial')
 
-		# Running test with volume as input
 		cls._runImportVolumes()
 
 	@classmethod
 	def _runImportVolumes(cls):
-		# Creating arguments for import volumes protocol
 		args = {
 			'filesPath': cls.ds.getFile('volumes/emd_6838.mrc'),
 			'samplingRate': 1.0,
 			'setOrigCoord': False
 		}
 
-		# Creating and launching import volumes protocol
 		cls.protImportVolume = cls.newProtocol(ProtImportVolumes, **args)
 		cls.launchProtocol(cls.protImportVolume)
 	
 	def _runMainMast(self, mergeMasks=False):
-		# Defining output variable string
 		outputVariable = 'outputMask' + ('' if mergeMasks else 's')
 
-		# Running protocol
 		protMainMast = self.newProtocol(
 			ProtMainMastSegmentMap,
 			inputVolume=self.protImportVolume.outputVolume,
@@ -67,7 +60,6 @@ class TestMainMastSeg(BaseTest):
 			combine=mergeMasks)
 		self.launchProtocol(protMainMast)
 
-		# Checking function output
 		volumesOut = getattr(protMainMast, outputVariable, None)
 		assertHandle(self.assertIsNotNone, volumesOut, message="No output volume has been found.")
 		if not mergeMasks:
