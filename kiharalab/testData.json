@@ -2,7 +2,7 @@
     "datasets": ["model_building_tutorial"],
     "skippable": {
         "gpu": [
-            "test_emap2sec.TestEmap2sec"
+            "test_emap2sec.TestEmap2secPlus"
         ],
         "dependencies": [
 			{
