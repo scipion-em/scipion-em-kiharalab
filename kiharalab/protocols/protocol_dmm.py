@@ -45,7 +45,7 @@ class ProtDMM(EMProtocol):
     """
     Executes the DMM software to validate a structure model
     """
-    _label = 'DMM'
+    _label = 'DeepMainMast'
     _ATTRNAME = 'DMM_score'
     _OUTNAME = 'outputAtomStruct'
     _possibleOutputs = {_OUTNAME: AtomStruct}
