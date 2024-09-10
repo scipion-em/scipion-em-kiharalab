@@ -37,9 +37,6 @@ jobs:
         pip install --user scipion-installer
         python3 -m scipioninstaller -conda -noAsk scipion
     
-    - name: Test conda
-      run: conda info --envs
-    
     - name: Checkout repository
       uses: actions/checkout@main
       with:
