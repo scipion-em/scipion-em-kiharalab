@@ -35,7 +35,7 @@ jobs:
       run: |
         pip cache purge
         pip install --user scipion-installer
-        python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
+        python3 -m scipioninstaller -conda -noAsk scipion
     
     - name: Checkout repository
       uses: actions/checkout@main
