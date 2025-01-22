@@ -114,8 +114,6 @@ class ProtDMM(EMProtocol):
                            inVolSR, Ccp4Header.ORIGIN)
 
     def DMMStep(self):
-        print("in dmm step")
-
         """
         Run DMM script.
         """
@@ -126,22 +124,17 @@ class ProtDMM(EMProtocol):
             forGpu = 'export CUDA_VISIBLE_DEVICES={}'.format(self.getGPUIds()[0])
         envActivationCommand = f"{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('dmm')}"
         fullProgram = f'{forGpu} && {envActivationCommand} && {Plugin._DMMBinary}/dmm_full_multithreads.sh'
-
         if 'dmm_full_multithreads.sh' not in args:
             args = f'-o predictions -p {Plugin._DMMBinary}{args}'
-        print(fullProgram)
-        print(args)
         self.runJob(fullProgram,args, cwd=programPath)
         
     def getDMMArgs(self):
-        print("in dmm args")
         mapPath = os.path.abspath(self.getLocalVolumeFile())
         fastaPath = os.path.abspath(self.getLocalSequenceFile())
         contour = self.contourLevel.get()
         pathTrainingTime = self.path_training_time.get()
         fragmentAssemblingTime = self.fragment_assembling_time.get()
         outputPath = os.path.abspath(self._getTmpPath('predictions'))
-        print(self.af2Structure)
         args = f" -m {mapPath} -f {fastaPath} -c {contour} -o {outputPath} -t {pathTrainingTime} -T {fragmentAssemblingTime}"
         if self.af2Structure.get() != None:
             alphafoldPdbPath = os.path.abspath(self.af2Structure.get().getFileName()) if self.af2Structure.get() else ""
@@ -211,9 +204,6 @@ class ProtDMM(EMProtocol):
         extrapath = self._getExtraPath(f'{oriName}_{self.getObjId()}.fasta')
         parts = extrapath.split('/')
         res = '/'.join(parts[:-1])
-        print("HAHA")
-        print(os.path.abspath(extrapath))
-        print(os.path.abspath(res))
         shutil.copyfile(self.getSequenceFile(),os.path.abspath(extrapath))
         return extrapath
 
