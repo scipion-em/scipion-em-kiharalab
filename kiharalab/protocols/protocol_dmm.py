@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors: Martín Salinas (ssalinasmartin@gmail.com)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,7 +27,7 @@
 
 
 """
-This protocol is used to perform a pocket search on a protein structure using the FPocket software
+This protocol is used to to automatically build full protein complex structure from cryo-EM map.
 """
 import os, shutil
 
@@ -43,7 +43,7 @@ from kiharalab import Plugin
 
 class ProtDMM(EMProtocol):
     """
-    Executes the DMM software to validate a structure model
+    Executes the DMM software to build full protein complex structure from cryo-EM map
     """
     _label = 'DeepMainMast'
     _ATTRNAME = 'DMM_score'
