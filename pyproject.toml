@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scipion-em-kiharalab"
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 authors = [
     {name = "Daniel Del Hoyo", email = "ddelhoyo@cnb.csic.es"},
     {name = "Martín Salinas", email = "ssalinasmartin@gmail.com"},
@@ -13,18 +13,11 @@ description = "Scipion plugin that integrates Kiharalab's software."
 keywords = ["scipion", "kiharalab", "scipion-3.0", "EM"]
 classifiers = [
     "Programming Language :: Python",
-    'Development Status :: 5 - Production/Stable'
+    "Development Status :: 5 - Production/Stable"
 ]
 readme = "README.md"
 license = { "file" = "LICENSE" }
-
 requires-python = ">=3.8"
-dependencies = [
-  "scipion-em-phenix",
-  "scipion-app>=3.3.0",
-  "scipion-em",
-  "scipion-pyworkflow"
-]
 
 [project.urls]
 Homepage = "https://github.com/scipion-em/scipion-em-kiharalab"
@@ -32,6 +25,7 @@ Issues = "https://github.com/scipion-em/scipion-em-kiharalab/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "kiharalab.__version__"}
+dependencies = {file = ["requirements.txt"]}
 
 [project.entry-points."pyworkflow.plugin"]
 kiharalab = "kiharalab"
