@@ -24,7 +24,7 @@ Homepage = "https://github.com/scipion-em/scipion-em-kiharalab"
 Issues = "https://github.com/scipion-em/scipion-em-kiharalab/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "kiharalab.__version__"}
+version = {attr = "kiharalab.constants.__version__"}
 dependencies = {file = ["requirements.txt"]}
 
 [project.entry-points."pyworkflow.plugin"]
