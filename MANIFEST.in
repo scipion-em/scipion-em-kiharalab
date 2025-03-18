@@ -1,3 +1,9 @@
-include *.txt
+# Include the README
 include *.rst
-include LICENSE
+
+# Include the license file
+include *.txt
+
+# Include conf file
+include kiharalab/protocols.conf
+include kiharalab/kiharalab_logo.png

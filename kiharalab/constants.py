@@ -38,7 +38,7 @@ DMM_HOME = 'DMM_HOME'
 V1_0 = '1.0'
 
 # Plugin version
-KIHARALAB_VERSION = '1.1.2'
+__version__ = '1.1.2'
 
 # Protocol versions 
 DAQ_DEFAULT_VERSION = V1_0
