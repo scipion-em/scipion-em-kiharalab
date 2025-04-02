@@ -97,13 +97,6 @@ class ProtDAQValidation(EMProtocol):
 		self._insertFunctionStep('createOutputStep')
 
 	def convertInputStep(self):
-		ext = os.path.splitext(self.getStructFile())[1]
-		pdbFile = self.getPdbStruct()
-		if ext not in ['.pdb', '.ent']:
-			toPdb(self.getStructFile(), pdbFile)
-		else:
-			shutil.copy(self.getStructFile(), pdbFile)
-
 		inVol = self._getInputVolume()
 		inVolFile, inVolSR = inVol.getFileName(), inVol.getSamplingRate()
 
@@ -188,7 +181,7 @@ class ProtDAQValidation(EMProtocol):
 	# --------------------------- UTILS functions -----------------------------------
 	def getDAQArgs(self):
 		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} -P '
-					f'{os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
+					f'{self.getStructFile()} --window {self.window.get()} --stride {self.stride.get()}')
 
 		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 
@@ -217,9 +210,6 @@ class ProtDAQValidation(EMProtocol):
 
 	def getVolumeName(self):
 		return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
-
-	def getPdbStruct(self):
-		return f"{self._getTmpPath(self.getStructName())}.pdb"
 
 	def getLocalVolumeFile(self):
 		oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
