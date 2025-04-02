@@ -1,7 +1,7 @@
-name: Build plugin on Pull Request
+name: Build & test plugin
 on:
+  workflow_dispatch:
   pull_request:
-    branches: [main]
 
 jobs:
   build:
@@ -13,6 +13,8 @@ jobs:
 
     - name: Set up MPI
       uses: mpi4py/setup-mpi@master
+      with:
+        mpi: 'openmpi'
 
     - name: Install dependencies
       run: |
@@ -33,7 +35,7 @@ jobs:
       run: |
         pip cache purge
         pip install --user scipion-installer
-        python3 -m scipioninstaller -conda -noXmipp -noAsk scipion
+        python3 -m scipioninstaller -conda -noAsk scipion
     
     - name: Checkout repository
       uses: actions/checkout@main
@@ -46,11 +48,8 @@ jobs:
         pip cache purge
         ../scipion/scipion3 installp -p . --devel
     
-    # Currently, test script is being downloaded from scipion-chem, but that should be temporary
-    # Ideally, the script might be included in scipion core to be able to import it,
-    # or maybe host it in a separate repository common with useful scripts for all scipion plugins
-    #- name: Run tests
-    #  working-directory: ${{ github.workspace }}/${{ vars.FOLDER_WITH_VERSION }}
-    #  run: |
-    #    wget https://raw.githubusercontent.com/scipion-chem/scipion-chem/devel/pwchem/runTests.py
-    #    python runTests.py ${{ github.workspace }}/../scipion/scipion3 ${{ vars.FOLDER_WITH_VERSION }} -noGPU -testData=testData.json
+    - name: Run tests
+      working-directory: ${{ github.workspace }}/${{ vars.FOLDER_WITH_VERSION }}
+      run: |
+        pip install --user scipion-testrunner
+        scipion_testrunner ${{ github.workspace }}/../scipion/scipion3 ${{ vars.FOLDER_WITH_VERSION }} --noGpu --testData=testData.json

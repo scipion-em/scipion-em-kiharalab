@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors: Martín Salinas (ssalinasmartin@gmail.com)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,7 +27,7 @@
 
 
 """
-This protocol is used to perform a pocket search on a protein structure using the FPocket software
+This protocol is used to to automatically build full protein complex structure from cryo-EM map.
 """
 import os, shutil
 
@@ -43,9 +43,9 @@ from kiharalab import Plugin
 
 class ProtDMM(EMProtocol):
     """
-    Executes the DMM software to validate a structure model
+    Executes the DMM software to build full protein complex structure from cryo-EM map
     """
-    _label = 'DMM'
+    _label = 'DeepMainMast'
     _ATTRNAME = 'DMM_score'
     _OUTNAME = 'outputAtomStruct'
     _possibleOutputs = {_OUTNAME: AtomStruct}
@@ -114,8 +114,6 @@ class ProtDMM(EMProtocol):
                            inVolSR, Ccp4Header.ORIGIN)
 
     def DMMStep(self):
-        print("in dmm step")
-
         """
         Run DMM script.
         """
@@ -126,22 +124,17 @@ class ProtDMM(EMProtocol):
             forGpu = 'export CUDA_VISIBLE_DEVICES={}'.format(self.getGPUIds()[0])
         envActivationCommand = f"{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('dmm')}"
         fullProgram = f'{forGpu} && {envActivationCommand} && {Plugin._DMMBinary}/dmm_full_multithreads.sh'
-
         if 'dmm_full_multithreads.sh' not in args:
             args = f'-o predictions -p {Plugin._DMMBinary}{args}'
-        print(fullProgram)
-        print(args)
         self.runJob(fullProgram,args, cwd=programPath)
         
     def getDMMArgs(self):
-        print("in dmm args")
         mapPath = os.path.abspath(self.getLocalVolumeFile())
         fastaPath = os.path.abspath(self.getLocalSequenceFile())
         contour = self.contourLevel.get()
         pathTrainingTime = self.path_training_time.get()
         fragmentAssemblingTime = self.fragment_assembling_time.get()
         outputPath = os.path.abspath(self._getTmpPath('predictions'))
-        print(self.af2Structure)
         args = f" -m {mapPath} -f {fastaPath} -c {contour} -o {outputPath} -t {pathTrainingTime} -T {fragmentAssemblingTime}"
         if self.af2Structure.get() != None:
             alphafoldPdbPath = os.path.abspath(self.af2Structure.get().getFileName()) if self.af2Structure.get() else ""
@@ -211,9 +204,6 @@ class ProtDMM(EMProtocol):
         extrapath = self._getExtraPath(f'{oriName}_{self.getObjId()}.fasta')
         parts = extrapath.split('/')
         res = '/'.join(parts[:-1])
-        print("HAHA")
-        print(os.path.abspath(extrapath))
-        print(os.path.abspath(res))
         shutil.copyfile(self.getSequenceFile(),os.path.abspath(extrapath))
         return extrapath
 
