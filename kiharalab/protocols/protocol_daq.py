@@ -131,7 +131,6 @@ class ProtDAQValidation(EMProtocol):
 		"""
 		Run DAQ script.
 		"""
-		outDir = self._getTmpPath('predictions')
 		args = self.getDAQArgs()
 
 		fullProgram = f'{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand("daq")} && python'
@@ -139,21 +138,19 @@ class ProtDAQValidation(EMProtocol):
 			args = f'{Plugin._daqBinary}/main.py {args}'
 		self.runJob(fullProgram, args, cwd=Plugin._daqBinary)
 
-		if outDir is None:
-			outDir = self._getExtraPath('predictions')
-
+		outDir = self._getExtraPath('predictions')
 		daqDir = os.path.join(Plugin._daqBinary, 'Predict_Result', self.getVolumeName())
 		shutil.copytree(daqDir, outDir)
 		shutil.rmtree(daqDir)
 	
 	def createOutputStep(self):
 		outStructFileName = self._getPath('outputStructure.cif')
-		outDAQFile = os.path.abspath(self._getTmpPath('predictions/daq_score_w9.pdb'))
+		outDAQFile = os.path.abspath(self._getExtraPath('predictions/daq_score_w9.pdb'))
 
 		#Write DAQ_score in a section of the output cif file
 		ASH = AtomicStructHandler()
 		daqScoresDic = self.parseDAQScores(outDAQFile)
-		inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
+		inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getExtraPath('inputStruct.cif'))
 		cifDic = ASH.readLowLevel(inpAS)
 		cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
 		ASH._writeLowLevel(outStructFileName, cifDic)
