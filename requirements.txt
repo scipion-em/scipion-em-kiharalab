@@ -1,4 +1,0 @@
-scipion-em-phenix
-scipion-app>=3.3.0
-scipion-em
-scipion-pyworkflow

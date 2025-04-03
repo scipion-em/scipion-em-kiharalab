@@ -2,14 +2,22 @@
     "datasets": ["model_building_tutorial"],
     "skippable": {
         "gpu": [
-            "test_emap2sec.TestEmap2sec"
+            "test_emap2sec.TestEmap2secPlus"
         ],
         "dependencies": [
 			{
-				"name": "scipion-chem-phenix",
+				"name": "scipion-em-phenix",
 				"module": "phenix",
 				"tests": [
 					"test_mainmastseg.TestMainMastSeg"
+				]
+			},
+            {
+				"name": "scipion-em-xmipp",
+				"module": "xmipp3",
+				"tests": [
+					"test_cryoread.TestCryoREAD",
+                    "test_dmm.TestDMM"
 				]
 			}
 		],

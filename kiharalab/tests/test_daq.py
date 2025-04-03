@@ -24,11 +24,9 @@
 # *
 # **************************************************************************
 
-# Scipion em imports
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportPdb, ProtImportVolumes
 
-# Plugin imports
 from ..protocols import ProtDAQValidation
 from ..utils import assertHandle
 

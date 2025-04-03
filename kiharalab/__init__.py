@@ -30,7 +30,6 @@ import pwem
 from scipion.install.funcs import InstallHelper
 from .constants import *
 
-__version__ = KIHARALAB_VERSION
 _logo = "kiharalab_logo.png"
 _references = ['genki2021DAQ']
 
