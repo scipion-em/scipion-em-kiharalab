@@ -185,7 +185,7 @@ class ProtDAQValidation(EMProtocol):
 	# --------------------------- UTILS functions -----------------------------------
 	def getDAQArgs(self):
 		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} '
-						f'-P {self.getPdbStruct()} --window {self.window.get()} --stride {self.stride.get()}')
+						f'-P {os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
 
 		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 
