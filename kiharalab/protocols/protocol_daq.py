@@ -55,11 +55,6 @@ class ProtDAQValidation(EMProtocol):
 	# -------------------------- DEFINE param functions ----------------------
 	def _defineParams(self, form):
 		""" """
-		form.addHidden(params.USE_GPU, params.BooleanParam, default=True,
-			label="Use GPU for execution: ",
-			help="This protocol has both CPU and GPU implementation.\
-				Select the one you want to use.")
-
 		form.addHidden(params.GPU_LIST, params.StringParam, default='0', label="Choose GPU IDs",
 			help="Add a list of GPU devices that can be used")
 
@@ -136,7 +131,6 @@ class ProtDAQValidation(EMProtocol):
 		"""
 		Run DAQ script.
 		"""
-		outDir = self._getTmpPath('predictions')
 		args = self.getDAQArgs()
 
 		fullProgram = f'{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand("daq")} && python'
@@ -144,21 +138,19 @@ class ProtDAQValidation(EMProtocol):
 			args = f'{Plugin._daqBinary}/main.py {args}'
 		self.runJob(fullProgram, args, cwd=Plugin._daqBinary)
 
-		if outDir is None:
-			outDir = self._getExtraPath('predictions')
-
+		outDir = self._getExtraPath('predictions')
 		daqDir = os.path.join(Plugin._daqBinary, 'Predict_Result', self.getVolumeName())
 		shutil.copytree(daqDir, outDir)
 		shutil.rmtree(daqDir)
 	
 	def createOutputStep(self):
 		outStructFileName = self._getPath('outputStructure.cif')
-		outDAQFile = os.path.abspath(self._getTmpPath('predictions/daq_score_w9.pdb'))
+		outDAQFile = os.path.abspath(self._getExtraPath('predictions/daq_score_w9.pdb'))
 
 		#Write DAQ_score in a section of the output cif file
 		ASH = AtomicStructHandler()
 		daqScoresDic = self.parseDAQScores(outDAQFile)
-		inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getTmpPath('inputStruct.cif'))
+		inpAS = toCIF(self.inputAtomStruct.get().getFileName(), self._getExtraPath('inputStruct.cif'))
 		cifDic = ASH.readLowLevel(inpAS)
 		cifDic = addScipionAttribute(cifDic, daqScoresDic, self._ATTRNAME)
 		ASH._writeLowLevel(outStructFileName, cifDic)
@@ -192,13 +184,15 @@ class ProtDAQValidation(EMProtocol):
 
 	# --------------------------- UTILS functions -----------------------------------
 	def getDAQArgs(self):
-		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} -P '
-					f'{os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
+		args = (f' --mode=0 -F {os.path.abspath(self.getLocalVolumeFile())} '
+						f'-P {os.path.abspath(self.getPdbStruct())} --window {self.window.get()} --stride {self.stride.get()}')
 
 		args += f' --voxel_size {self.voxelSize.get()} --batch_size {self.batchSize.get()} --cardinality {self.cardinality.get()}'
 
-		if getattr(self, params.USE_GPU):
-			args += f' --gpu {self.getGPUIds()[0]}'
+		gpuId = self.getGPUIds()[0]
+		if not gpuId:
+			gpuId = 0
+		args += f' --gpu {gpuId}'
 		
 		return args
 
@@ -212,6 +206,9 @@ class ProtDAQValidation(EMProtocol):
 	def getStructFile(self):
 		return os.path.abspath(self.inputAtomStruct.get().getFileName())
 
+	def getPdbStruct(self):
+		return os.path.abspath(self._getTmpPath(self.getStructName())) + ".pdb"
+
 	def getVolumeFile(self):
 		return os.path.abspath(self._getInputVolume().getFileName())
 
@@ -220,9 +217,6 @@ class ProtDAQValidation(EMProtocol):
 
 	def getVolumeName(self):
 		return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
-
-	def getPdbStruct(self):
-		return f"{self._getTmpPath(self.getStructName())}.pdb"
 
 	def getLocalVolumeFile(self):
 		oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
