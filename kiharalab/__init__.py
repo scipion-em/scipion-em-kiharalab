@@ -122,7 +122,7 @@ class Plugin(pwem.Plugin):
 
         # Installing protocol
         installer.getCloneCommand('https://github.com/kiharalab/DAQ.git', binaryFolderName=packageName)\
-            .addCommands(['./install.sh'], workDir=cls._daqBinary)\
+            .addCommands(['chmod +x install.sh', './install.sh'], workDir=cls._daqBinary)\
             .addPackage(env, dependencies=['git', 'conda'])
 
     @classmethod    
