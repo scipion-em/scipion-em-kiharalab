@@ -11,11 +11,6 @@ jobs:
     - name: Free Disk Space (Ubuntu only)
       uses: jlumbroso/free-disk-space@main
 
-    - name: Set up MPI
-      uses: mpi4py/setup-mpi@v1
-      with:
-        mpi: 'openmpi'
-
     - name: Install dependencies
       run: |
         sudo apt-get update
