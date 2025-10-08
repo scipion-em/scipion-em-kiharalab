@@ -74,18 +74,21 @@ class ProtDMM(EMProtocol):
                       label='contourLevel', important=True,
                       help='contourLevel')
 
-        form.addParam('inputSeq', params.PathParam,
+        form.addParam('inputSeq', params.PointerParam,
+                      pointerClass="Sequence", allowsNull=True, important=True,
                       label="Input Sequence",
                       help="Directory with the input files. \n"
                            "Check protocol help for more details.")
         
         form.addParam('path_training_time', params.IntParam,
+                    default=600,
                     label="path training time",
-                    help="path training time\n")
+                    help="path training time in seconds\n")
         
         form.addParam('fragment_assembling_time', params.IntParam,
+                    default=600,
                     label="fragment assembling time",
-                    help="fragment assembling time\n")
+                    help="fragment assembling time in seconds\n")
         
         form.addParam('af2Structure', params.PointerParam,
                 allowsNull=True,
