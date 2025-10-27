@@ -38,7 +38,7 @@ DMM_HOME = 'DMM_HOME'
 V1_0 = '1.0'
 
 # Plugin version
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 # Protocol versions 
 DAQ_DEFAULT_VERSION = V1_0
