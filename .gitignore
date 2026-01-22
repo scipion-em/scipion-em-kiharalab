@@ -131,3 +131,6 @@ dmypy.json
 
 # Conda temporary files
 conda.env*
+
+# Visual Studio Code
+.vscode/launch.json

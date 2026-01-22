@@ -103,9 +103,9 @@ class Plugin(pwem.Plugin):
         """
         This function defines the binaries for each protocol.
         """
-        cls.addDAQ(env)
-        cls.addEmap2sec(env)
-        cls.addMainMast(env)
+        #cls.addDAQ(env)
+        #cls.addEmap2sec(env)
+        #cls.addMainMast(env)
         cls.addCryoREAD(env)
         cls.addDMM(env)
     
@@ -225,8 +225,7 @@ class Plugin(pwem.Plugin):
         installer = InstallHelper(packageName, packageVersion=cls.cryoREADDefaultVersion)
 
         # Installing protocol
-        currentPath = os.path.dirname(os.path.abspath(__file__))
-        enFilePath = os.path.join(currentPath, "environment.yml")
+        enFilePath = os.path.join(cls._cryoREADBinary, "environment.yml")
         targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
         envName = f"{packageName}-{cls.cryoREADDefaultVersion}"
         installer.getCloneCommand('https://github.com/kiharalab/CryoREAD.git', binaryFolderName=os.path.basename(cls._cryoREADBinary)) \
