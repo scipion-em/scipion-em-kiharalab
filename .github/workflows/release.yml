@@ -3,8 +3,14 @@ on: workflow_dispatch
 
 jobs:
   deploy:
+    environment:
+      name: release
+
+    permissions:
+      contents: write
+
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -16,17 +22,17 @@ jobs:
 
     - name: Install dependencies
       run: pip install build twine
-    
+
     - name: Install Package
       run: pip install .
-    
+
     - name: Get tag name
       id: variables
       run: |
         export VERSION=$(python -c "import importlib.metadata; print(importlib.metadata.version(\"scipion-em-kiharalab\"))")
         echo "TAG_NAME=${VERSION#v}" >> $GITHUB_OUTPUT
         echo "TAG NAME (must not contain version prefix): ${VERSION#v}"
-    
+
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
@@ -34,14 +40,14 @@ jobs:
       run: |
         python -m build
         twine upload dist/* -c "${{ secrets.PYPI_COMMENT }}"
-    
+
     - name: Generate tag
       id: tag_version
       uses: mathieudutour/github-tag-action@v6.2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: ${{ steps.variables.outputs.TAG_NAME }}
-    
+
     - name: Create a GitHub release
       uses: ncipollo/release-action@v1
       with:
