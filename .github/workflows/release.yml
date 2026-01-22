@@ -23,7 +23,7 @@ jobs:
     - name: Get tag name
       id: variables
       run: |
-        export VERSION=$(python -c "import importlib.metadata; print(importlib.metadata.version(\"${{ vars.FOLDER_WITH_VERSION }}\"))")
+        export VERSION=$(python -c "import importlib.metadata; print(importlib.metadata.version(\"scipion-em-kiharalab\"))")
         echo "TAG_NAME=${VERSION#v}" >> $GITHUB_OUTPUT
         echo "TAG NAME (must not contain version prefix): ${VERSION#v}"
     
