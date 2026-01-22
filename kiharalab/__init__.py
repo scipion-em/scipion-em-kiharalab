@@ -103,9 +103,9 @@ class Plugin(pwem.Plugin):
         """
         This function defines the binaries for each protocol.
         """
-        #cls.addDAQ(env)
-        #cls.addEmap2sec(env)
-        #cls.addMainMast(env)
+        cls.addDAQ(env)
+        cls.addEmap2sec(env)
+        cls.addMainMast(env)
         cls.addCryoREAD(env)
         cls.addDMM(env)
     
