@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "scipion-em-kiharalab"
 dynamic = ["version"]
 authors = [
-    {name = "Daniel Del Hoyo", email = "ddelhoyo@cnb.csic.es"},
     {name = "Martín Salinas", email = "ssalinasmartin@gmail.com"},
+    {name = "Daniel Del Hoyo", email = "ddelhoyo@cnb.csic.es"},
 ]
 description = "Scipion plugin that integrates Kiharalab's software."
 keywords = ["scipion", "kiharalab", "scipion-3.0", "EM"]
