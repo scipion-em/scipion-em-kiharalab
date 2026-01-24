@@ -205,7 +205,6 @@ class ProtDMM(EMProtocol):
         
         oriName = os.path.basename(os.path.splitext(self.getSequenceFile())[0])
         extrapath = self._getExtraPath(f'{oriName}_{self.getObjId()}.fasta')
-        parts = extrapath.split('/')
         shutil.copyfile(self.getSequenceFile(),os.path.abspath(extrapath))
         return extrapath
 
