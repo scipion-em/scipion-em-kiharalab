@@ -1,0 +1,48 @@
+name: Build & test plugin in production
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build-and-test:
+    permissions: {}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Free Disk Space (Ubuntu only)
+      uses: jlumbroso/free-disk-space@main
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gcc-10 g++-10 make
+        
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniconda-version: "latest"
+        auto-update-conda: true
+        auto-activate-base: true
+        activate-environment: scipion3
+        python-version: "3.8"
+    
+    - name: Install Scipion
+      working-directory: ${{ github.workspace }}/../
+      run: |
+        pip cache purge
+        pip install --user scipion-installer
+        python3 -m scipioninstaller -conda -noAsk scipion
+
+    - name: Install plugin from production
+      working-directory: ${{ github.workspace }}/../
+      run: |
+        pip cache purge
+        ../scipion/scipion3 installp -p scipion-em-kiharalab
+    
+    - name: Run tests
+      working-directory: ${{ github.workspace }}/${{ vars.FOLDER_WITH_VERSION }}
+      run: |
+        pip install --user scipion-testrunner
+        scipion_testrunner ${{ github.workspace }}/../scipion/scipion3 ${{ vars.FOLDER_WITH_VERSION }} --noGpu --testData=testData.json
