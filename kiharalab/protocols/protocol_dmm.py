@@ -177,7 +177,8 @@ class ProtDMM(EMProtocol):
       return fnVol
     
     def _getinputSeq(self):
-        return self.inputSeq.get()
+        print(self.inputSeq.get().getFileName())
+        return self.inputSeq.get().getFileName()
 
     def getStructFile(self):
         return os.path.abspath(self.inputAtomStruct.get().getFileName())
