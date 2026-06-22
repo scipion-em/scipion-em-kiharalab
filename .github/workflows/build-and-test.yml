@@ -36,7 +36,7 @@ jobs:
         python3 -m scipioninstaller -conda -noAsk scipion
     
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         ref: ${{ github.head_ref }}
 
