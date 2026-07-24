@@ -112,7 +112,7 @@ class ProtDMcloud(EMProtocol):
             args += ['--diffusion_gpu', str(self.getGPUIds())]
         self.runJob(fullProgram, args, cwd=Plugin._dmcloudBinary)
 
-    def createOutputStep(self):
+    def createOutputStep(self): #todo
         outStructFileName = self._getPath('CryoREAD.cif')
         outPdbFileName = os.path.abspath(self._getTmpPath('predictions/CryoREAD_norefine.pdb'))
 
@@ -149,38 +149,16 @@ class ProtDMcloud(EMProtocol):
         methods = []
         return methods
     # --------------------------- UTILS functions -----------------------------------
-    def getcryoREADArgs(self):
-        args = (f' --mode=0 -F={self.getLocalVolumeFile()} -M={Plugin._cryoREADBinary}/best_model '
-                f'--contour={self.contour_level.get()} --resolution={self.resolution.get()}')
-
-        args += f' --batch_size={self.batch_size.get()} --rule_soft={self.rule_soft.get()} --thread={self.thread.get()}'
-
-        if self.inputSequence.hasValue():
-            args += f' -P={self.getFastaFilePath()}'
-        else:
-            args += ' --no_seqinfo'
-
-        if getattr(self, params.USE_GPU):
-            args += f' --gpu={self.getGPUIds()[0]}'
-
-        return args
-
     def _getInputVolume(self):
         return self.inputVolume.get()
 
     def getVolumeFile(self):
         return os.path.abspath(self._getInputVolume().getFileName())
 
-    def getVolumeName(self):
-        return os.path.basename(os.path.splitext(self.getLocalVolumeFile())[0])
-
     def getLocalVolumeFile(self):
         oriName = os.path.basename(os.path.splitext(self.getVolumeFile())[0])
         localPath = self._getExtraPath(f'{oriName}_{self.getObjId()}.mrc')
         return os.path.abspath(localPath)
-
-    def getFastaFilePath(self):
-        return self.inputSequence.get()
 
     def getGPUIds(self):
         return getattr(self, params.GPU_LIST).get().split(',')[0].strip()
