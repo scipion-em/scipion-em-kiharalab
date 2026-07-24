@@ -9,3 +9,4 @@ from .protocol_emap2sec import ProtEmap2sec
 from .protocol_mainmast_segment_map import ProtMainMastSegmentMap
 from .protocol_cryoread import ProtCryoREAD
 from .protocol_dmm import ProtDMM
+from .protocol_dmcloud import ProtDMcloud

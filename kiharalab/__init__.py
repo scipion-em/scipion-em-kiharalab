@@ -69,6 +69,11 @@ class Plugin(pwem.Plugin):
     _cryoREADHome = os.path.join(pwem.Config.EM_ROOT, f'cryoREAD-{cryoREADDefaultVersion}')
     _cryoREADBinary = os.path.join(_cryoREADHome, 'CryoREAD')
 
+    # DMcloud
+    dmcloudDefaultVersion = DMCLOUD_DEFAULT_VERSION
+    _dmcloudHome = os.path.join(pwem.Config.EM_ROOT, f'dmcloud-{dmcloudDefaultVersion}')
+    _dmcloudBinary = os.path.join(_dmcloudHome, 'DMcloud')
+
     @classmethod
     def _defineVariables(cls):
         """
@@ -98,6 +103,10 @@ class Plugin(pwem.Plugin):
         cls._defineEmVar(CRYOREAD_HOME, cls._cryoREADHome)
         cls._defineVar('CRYOREAD_ENV', f'cryoREAD-{cls.cryoREADDefaultVersion}')
 
+        # DMcloud
+        cls._defineEmVar(DMCLOUD_HOME, cls._dmcloudHome)
+        cls._defineVar('DMCLOUD_ENV', f'dmcloud-{cls.dmcloudDefaultVersion}')
+
     @classmethod
     def defineBinaries(cls, env):
         """
@@ -108,6 +117,7 @@ class Plugin(pwem.Plugin):
         cls.addMainMast(env)
         cls.addCryoREAD(env)
         cls.addDMM(env)
+        cls.addDMcloud(env)
     
     @classmethod    
     def addDAQ(cls, env):
@@ -251,6 +261,45 @@ class Plugin(pwem.Plugin):
         installer.getCloneCommand('https://github.com/kiharalab/DeepMainMast.git', binaryFolderName=os.path.basename(cls._DMMBinary))\
             .addCommand(f"conda env create -y -n {envName} -f {enFilePath}", workDir=cls._DMMBinary, targetName=targetFile)\
             .addPackage(env, dependencies=['git', 'conda'])
+
+    @classmethod
+    def addDMcloud(cls, env):
+        """
+        This function provides the necessary commands for installing DMCloud.
+        """
+        # Defining protocol variables
+        packageName = 'dmcloud'
+
+        # Instantiating installer
+        installer = InstallHelper(packageName, packageVersion=cls.dmcloudDefaultVersion)
+
+        # Installing protocol
+        enFilePath = os.path.join(cls._dmcloudBinary, "environment.yml")
+        targetFile = f"{packageName.upper()}_CONDA_ENV_CREATED"
+        envName = f"{packageName}-{cls.dmcloudDefaultVersion}"
+
+        installer.getCloneCommand(
+            'https://github.com/kiharalab/DMCloud.git',
+            binaryFolderName=os.path.basename(cls._dmcloudBinary)
+        ) \
+            .addCommand(
+            f"conda env create -y -n {envName} -f {enFilePath}",
+            workDir=cls._dmcloudBinary,
+        ) \
+            .addCommand(
+            f'eval "$({Plugin.getCondaBase()} shell.bash hook)" && '
+            f'conda activate {envName} && '
+            f'pip install --force-reinstall ortools==9.10.4067',
+            workDir=cls._dmcloudBinary,
+            targetName=targetFile
+        ) \
+            .addCommand(
+            "mkdir -p best_model && "
+            "wget -O best_model/diffusion_best.pth.tar "
+            "https://github.com/kiharalab/DMCloud/releases/download/weights/diffusion_best.pth.tar",
+            workDir=cls._dmcloudBinary
+        ) \
+            .addPackage(env, dependencies=['git', 'wget', 'conda'])
 
     # ---------------------------------- Utils functions  -----------------------
     @classmethod
