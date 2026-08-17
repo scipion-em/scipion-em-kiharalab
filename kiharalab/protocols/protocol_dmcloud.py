@@ -66,6 +66,8 @@ class ProtDMcloud(EMProtocol):
         group = form.addGroup('Parameters')
         group.addParam('contour_level', params.FloatParam, default=0.0, label='Contour level: ',
                        help='Contour level for input map.')
+        group.addParam('cluster_size', params.IntParam, default=200, label='Minimum cluster size: ', expertLevel=params.LEVEL_ADVANCED,
+                       help='Minimum Size of fitting')
 
 
 
@@ -103,10 +105,11 @@ class ProtDMcloud(EMProtocol):
         fullProgram = f'{envActivationCommand} && python DMcloud.py'
 
         args = [
-            '--Source', str(self.inputStructure.get().getFileName()),
-            '--Target', str(inputFilePath),
+            '--Source', str(os.path.abspath(self.inputStructure.get().getFileName())),
+            '--Target', str(os.path.abspath(inputFilePath)),
             '--OutPath', str(outDir),
-            '--contour', self.contour_level.get()
+            '--contour', self.contour_level.get(),
+            '--MinClstSize', self.cluster_size.get()
         ]
         if getattr(self, params.USE_GPU).get():
             args += ['--diffusion_gpu', str(self.getGPUIds())]
