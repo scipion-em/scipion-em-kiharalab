@@ -34,6 +34,11 @@ from pwem.objects import AtomStruct
 from pwem.convert import Ccp4Header
 from pwem.convert.atom_struct import toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.emlib.image import ImageHandler
+from glob import glob
+import os
+
+from Bio.PDB import PDBParser, Structure, Model, PDBIO
+
 
 from kiharalab import Plugin
 
@@ -41,6 +46,7 @@ class ProtDMcloud(EMProtocol):
     """
     Executes DMcloud software to construct full atomic structure of protein and DNA/RNA.
     """
+    stepsExecutionMode = params.STEPS_PARALLEL
     _label = 'DMcloud'
 
     # -------------------------- DEFINE param functions ----------------------
@@ -66,9 +72,12 @@ class ProtDMcloud(EMProtocol):
         group = form.addGroup('Parameters')
         group.addParam('contour_level', params.FloatParam, default=0.0, label='Contour level: ',
                        help='Contour level for input map.')
+        group.addParam('pLDDT', params.FloatParam, default=0.50, label='pLDDT threshold: ',
+                       help='pLDDT filtering. If negative, use all points. Set to 100 for all points.')
         group.addParam('cluster_size', params.IntParam, default=200, label='Minimum cluster size: ', expertLevel=params.LEVEL_ADVANCED,
                        help='Minimum Size of fitting')
 
+        form.addParallelSection(threads=4, mpi=1)
 
 
     # --------------------------- STEPS functions ----------------------------------
@@ -76,7 +85,7 @@ class ProtDMcloud(EMProtocol):
         """Insert processing steps for the protocol."""
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('dmCloudStep')
-        #self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep')
 
     def convertInputStep(self):
         ext = os.path.splitext(self.getVolumeFile())[1]
@@ -103,40 +112,43 @@ class ProtDMcloud(EMProtocol):
 
         envActivationCommand = f"{Plugin.getCondaActivationCmd()} {Plugin.getProtocolActivationCommand('dmcloud')}"
         fullProgram = f'{envActivationCommand} && python DMcloud.py'
+        threads = self.numberOfThreads.get()
 
         args = [
             '--Source', str(os.path.abspath(self.inputStructure.get().getFileName())),
             '--Target', str(os.path.abspath(inputFilePath)),
             '--OutPath', str(outDir),
             '--contour', self.contour_level.get(),
-            '--MinClstSize', self.cluster_size.get()
+            '--MinClstSize', self.cluster_size.get(),
+            '--pLDDT', self.pLDDT.get(),
+            '--Threads', threads
         ]
         if getattr(self, params.USE_GPU).get():
             args += ['--diffusion_gpu', str(self.getGPUIds())]
         self.runJob(fullProgram, args, cwd=Plugin._dmcloudBinary)
 
-    def createOutputStep(self): #todo
-        outStructFileName = self._getPath('CryoREAD.cif')
-        outPdbFileName = os.path.abspath(self._getTmpPath('predictions/CryoREAD_norefine.pdb'))
+    def createOutputStep(self):
+        selectedDir = os.path.join(self._getPath("predictions"), "Selected")
+        filledFiles = sorted(glob(os.path.join(selectedDir, "Filled_*.pdb")))
+        print(filledFiles)
 
-        ASH = AtomicStructHandler()
-        cryoScoresDic = self.parseCryoScores(outPdbFileName)
+        if not filledFiles:
+            raise Exception("No Filled_*.pdb files were generated.")
+        parser = PDBParser(QUIET=True)
+        merged = Structure.Structure("DMCloud")
+        for i, pdbFile in enumerate(filledFiles):
+            structure = parser.get_structure(f"fit_{i}", pdbFile)
 
-        outputVolume = toCIF(outPdbFileName, self._getTmpPath('inputStruct.cif'))
-        cifDic = ASH.readLowLevel(outputVolume)
-        cifDic = addScipionAttribute(cifDic, cryoScoresDic, self._ATTRNAME)
-        ASH._writeLowLevel(outStructFileName, cifDic)
+            model = next(structure.get_models()).copy()
+            model.id = i
+            merged.add(model)
+        outputPdb = self._getPath("dmcloud_output.pdb")
+        io = PDBIO()
+        io.set_structure(merged)
+        io.save(outputPdb)
 
-        # Create AtomStruct object with the CIF file
-        AS = AtomStruct(filename=outStructFileName)
-
-        # Set the volume of the AtomStruct object
-        outVol = self._getInputVolume().clone()
-        outVol.setLocation(self.getLocalVolumeFile())
-        AS.setVolume(outVol)
-
-        # Define the outputs for the protocol
-        self._defineOutputs(**{self._OUTNAME: AS})
+        outStruct = AtomStruct(filename=outputPdb)
+        self._defineOutputs(outputStructure=outStruct)
 
     # --------------------------- INFO functions -----------------------------------
     def _validate(self):
