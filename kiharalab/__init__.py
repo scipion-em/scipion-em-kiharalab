@@ -187,8 +187,12 @@ class Plugin(pwem.Plugin):
         installer.getCloneCommand('https://github.com/kiharalab/emap2sec.git', binaryFolderName=emap2secFolderName)\
             .getCloneCommand('https://github.com/kiharalab/emap2secPlus.git', binaryFolderName=emap2secPlusFolderName)\
             .getCondaEnvCommand(binaryPath=cls._emap2secBinary, pythonVersion='3.6', requirementsFile=True)\
-            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9', requirementsFile=True)\
-            .addCondaPackages(packages=['pytorch==1.1.0', 'cudatoolkit=10.0'], binaryName='emap2secPlus', channel='pytorch')\
+            .getCondaEnvCommand(binaryPath=cls._emap2secplusBinary, binaryName='emap2secPlus', pythonVersion='3.6.9', requirementsFile=True) \
+            .addCondaPackages(
+            packages=['pytorch', 'cpuonly'],
+            binaryName='emap2secPlus',
+            channel='pytorch'
+        )\
             .getExtraFiles(emap2secExtraFiles, workDir=cls._emap2secBinary)\
             .getExtraFiles(emap2secPlusExtraFiles, binaryName='emap2secPlus', workDir=cls._emap2secplusBinary)\
             .addCommands(emap2secExtraCommands, workDir=cls._emap2secBinary)\
@@ -287,9 +291,7 @@ class Plugin(pwem.Plugin):
             workDir=cls._dmcloudBinary,
         ) \
             .addCommand(
-            f'eval "$({Plugin.getCondaBase()} shell.bash hook)" && '
-            f'conda activate {envName} && '
-            f'pip install --force-reinstall ortools==9.10.4067',
+            f"conda run -n {envName} pip install --force-reinstall ortools==9.10.4067",
             workDir=cls._dmcloudBinary,
             targetName=targetFile
         ) \
