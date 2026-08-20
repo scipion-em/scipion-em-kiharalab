@@ -26,16 +26,23 @@
 # **************************************************************************
 
 import os, shutil
+from enum import Enum
 
 from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct
+from pwem.objects import Sequence, SetOfSequences
 from pwem.convert import Ccp4Header
 from pwem.convert.atom_struct import toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.emlib.image import ImageHandler
 
 from kiharalab import Plugin
+
+class SequenceChoices(Enum):
+    NONE = 0
+    SEQUENCE = 1
+    FASTA_FILE = 2
 
 class ProtCryoREAD(EMProtocol):
     """
@@ -62,9 +69,16 @@ class ProtCryoREAD(EMProtocol):
                       label="Input 3D cryo-EM map: ",
                       help='Select the 3D cry-EM map to be analyzed in .map or .mrc format.')
 
-        form.addParam('inputSequence', params.FileParam, allowsNull=True,
-                      label="Input Sequence (optional): ",
-                      help='Select the sequence in .fasta format. It is optional.')
+        form.addParam('inputOrigin', params.EnumParam, default=SequenceChoices.NONE,
+                      label='Input origin (optional): ', choices=['None', 'Sequence', 'FASTA file'],
+                      help='Input origin to add to the set.')
+        form.addParam('inputSequence', params.PointerParam,
+                      pointerClass='Sequence', allowsNull=True,
+                      label="Input sequence: ", condition=f'inputOrigin=={SequenceChoices.SEQUENCE}',
+                      help='Select the sequence object to add to the set.')
+        form.addParam('inputSequenceFile', params.FileParam, allowsNull=True,
+                      label="Input Sequence file: ", condition=f'inputOrigin=={SequenceChoices.FASTA_FILE}',
+                      help='Select the sequence in .fasta format.')
 
         group = form.addGroup('CryoREAD parameters')
         group.addParam('contour_level', params.FloatParam, default=0.0, label='Contour level: ',
@@ -175,8 +189,9 @@ class ProtCryoREAD(EMProtocol):
 
         args += f' --batch_size={self.batch_size.get()} --rule_soft={self.rule_soft.get()} --thread={self.thread.get()}'
 
-        if self.inputSequence.hasValue():
-            args += f' -P={self.getFastaFilePath()}'
+        fastaFile = self.createFastaFile()
+        if fastaFile:
+            args += f' -P={fastaFile}'
         else:
             args += ' --no_seqinfo'
 
@@ -215,3 +230,26 @@ class ProtCryoREAD(EMProtocol):
                         cryoScore = line[60:66].strip()
                         cryoDic[resId] = cryoScore
         return cryoDic
+
+    def createFastaFile(self):
+        """Create a FASTA file from the selected sequence input."""
+        sequenceOrigin = (
+            self.inputSequence if self.inputOrigin.get() == SequenceChoices.SEQUENCE else self.inputSequenceFile
+        )
+        if not sequenceOrigin.hasValue():
+            return None
+
+        if self.inputOrigin.get() == SequenceChoices.SEQUENCE:
+            # Sequence
+            sequence = sequenceOrigin.get()
+            fastaFile = self._getTmpPath('inputSequence.fasta')
+            with open(fastaFile, 'w') as f:
+                f.write(f'>{sequence.getObjId()}\n')
+                f.write(f'{sequence.getSequence()}\n')
+            return fastaFile
+
+        elif self.inputOrigin.get() == SequenceChoices.FASTA_FILE:
+            # FASTA file
+            return os.path.abspath(sequenceOrigin.get())
+
+        return None
