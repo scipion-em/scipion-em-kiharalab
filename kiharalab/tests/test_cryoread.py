@@ -37,7 +37,7 @@ class TestCryoREAD(BaseTest):
             "thread": 1
         }
         if useSequence:
-            args['inputSequence'] = os.path.join(Plugin._cryoREADBinary, 'example', '21051.fasta')
+            args['inputSequenceFile'] = os.path.join(Plugin._cryoREADBinary, 'example', '21051.fasta')
         protCryoREAD = self.newProtocol(ProtCryoREAD, **args)
         self.launchProtocol(protCryoREAD)
         assertHandle(self.assertIsNotNone, getattr(protCryoREAD, protCryoREAD._OUTNAME))

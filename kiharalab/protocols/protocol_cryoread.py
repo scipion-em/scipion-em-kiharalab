@@ -31,6 +31,7 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 from pwem.objects import AtomStruct
+from pwem.objects import Sequence, SetOfSequences
 from pwem.convert import Ccp4Header
 from pwem.convert.atom_struct import toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.emlib.image import ImageHandler
@@ -62,8 +63,15 @@ class ProtCryoREAD(EMProtocol):
                       label="Input 3D cryo-EM map: ",
                       help='Select the 3D cry-EM map to be analyzed in .map or .mrc format.')
 
-        form.addParam('inputSequence', params.FileParam, allowsNull=True,
-                      label="Input Sequence (optional): ",
+        form.addParam('inputOrigin', params.EnumParam, default=0,
+                      label='Input origin (optional): ', choices=['Sequence', 'FASTA file'],
+                      help='Input origin to add to the set')
+        form.addParam('inputSequence', params.PointerParam,
+                      pointerClass='Sequence', allowsNull=True,
+                      label="Input sequence: ", condition='inputOrigin==0',
+                      help='Select the sequence object to add to the set')
+        form.addParam('inputSequenceFile', params.FileParam, allowsNull=True,
+                      label="Input Sequence (optional): ", condition='inputOrigin==1',
                       help='Select the sequence in .fasta format. It is optional.')
 
         group = form.addGroup('CryoREAD parameters')
@@ -175,8 +183,9 @@ class ProtCryoREAD(EMProtocol):
 
         args += f' --batch_size={self.batch_size.get()} --rule_soft={self.rule_soft.get()} --thread={self.thread.get()}'
 
-        if self.inputSequence.hasValue():
-            args += f' -P={self.getFastaFilePath()}'
+        fastaFile = self.createFastaFile()
+        if fastaFile:
+            args += f' -P={fastaFile}'
         else:
             args += ' --no_seqinfo'
 
@@ -215,3 +224,25 @@ class ProtCryoREAD(EMProtocol):
                         cryoScore = line[60:66].strip()
                         cryoDic[resId] = cryoScore
         return cryoDic
+
+    def createFastaFile(self):
+        """Create a FASTA file from the selected sequence input."""
+        if self.inputOrigin.get() == 0:
+            # Sequence
+            if not self.inputSequence.hasValue():
+                return None
+            sequence = self.inputSequence.get()
+            fastaFile = self._getTmpPath('inputSequence.fasta')
+            with open(fastaFile, 'w') as f:
+                f.write(f'>{sequence.getObjId()}\n')
+                f.write(f'{sequence.getSequence()}\n')
+            return fastaFile
+
+        elif self.inputOrigin.get() == 1:
+            # FASTA file
+            if not self.inputSequenceFile.hasValue():
+                return None
+
+            return os.path.abspath(self.inputSequenceFile.get())
+
+        return None
