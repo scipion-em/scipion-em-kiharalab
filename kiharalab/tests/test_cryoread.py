@@ -5,6 +5,7 @@ from pwem.protocols import ProtImportVolumes
 
 from .. import Plugin
 from ..protocols import ProtCryoREAD
+from ..protocols.ProtCryoREAD import SequenceChoices
 from ..utils import assertHandle
 
 class TestCryoREAD(BaseTest):
@@ -37,6 +38,7 @@ class TestCryoREAD(BaseTest):
             "thread": 1
         }
         if useSequence:
+            args['inputOrigin'] = SequenceChoices.FASTA_FILE
             args['inputSequenceFile'] = os.path.join(Plugin._cryoREADBinary, 'example', '21051.fasta')
         protCryoREAD = self.newProtocol(ProtCryoREAD, **args)
         self.launchProtocol(protCryoREAD)
